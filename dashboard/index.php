@@ -390,7 +390,7 @@ if ($validTicketFound && !empty($buydate) && !empty($expiredate)) {
         .dsh-wsum .wval { font-size: 22px; font-weight: 800; color: var(--d-ink); }
         .dsh-wsum .wlbl { font-size: 11px; color: var(--d-muted); font-weight: 600; margin-top: 2px; }
     </style>
-</head>
+    <link rel="stylesheet" href="{../}assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css"></head>
 <!-- ApexCharts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
@@ -719,3 +719,5 @@ if ($validTicketFound && !empty($buydate) && !empty($expiredate)) {
 </body>
 
 </html>
+
+

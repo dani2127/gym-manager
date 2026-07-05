@@ -138,7 +138,7 @@ $result = $conn->query($sql);
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="author" content="<?php echo $business_name; ?>">
 
-</head>
+    <link rel="stylesheet" href="../assets/css/unified-theme.css"></head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo $gkey; ?>"></script>
 <script>

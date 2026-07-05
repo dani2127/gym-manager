@@ -151,6 +151,7 @@ $result = $stmt->get_result();
             }
         }
     </style>
+    <link rel="stylesheet" >    <link rel="stylesheet" href="{../}assets/css/admin-theme.css">    <link rel="stylesheet" href="../../assets/css/admin-theme.css">
 </head>
 <!-- ApexCharts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -563,3 +564,5 @@ $result = $stmt->get_result();
 </body>
 
 </html>
+
+

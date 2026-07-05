@@ -142,7 +142,7 @@ $conn->close();
         .dsh-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 48px 16px; color: var(--d-muted); }
         .dsh-empty i { font-size: 38px; opacity: .5; }
     </style>
-</head>
+    <link rel="stylesheet" href="{../../}assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css"></head>
 
 <body>
     <nav class="navbar navbar-inverse visible-xs">
@@ -314,3 +314,5 @@ $conn->close();
 </body>
 
 </html>
+
+

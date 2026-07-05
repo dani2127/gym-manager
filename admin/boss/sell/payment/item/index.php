@@ -511,6 +511,7 @@ $inv_pm = ($method == 'profile') ? $translations["profilebalancepay"] : (($metho
             text-decoration: none;
         }
     </style>
+    <link rel="stylesheet" >    <link rel="stylesheet" href="{../../../../}assets/css/admin-theme.css">    <link rel="stylesheet" href="../../../../../assets/css/admin-theme.css">
 </head>
 
 <body>
@@ -616,6 +617,7 @@ $is_new_version_available = version_compare($latest_version, $current_version) >
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="../../../../../assets/css/dashboard.css">
     <link rel="shortcut icon" href="https://gymoneglobal.com/assets/img/logo.png" type="image/x-icon">
+    <link rel="stylesheet" >    <link rel="stylesheet" href="{../../../../}assets/css/admin-theme.css">    <link rel="stylesheet" href="../../../../../assets/css/admin-theme.css">
 </head>
 <!-- ApexCharts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -1005,3 +1007,5 @@ $is_new_version_available = version_compare($latest_version, $current_version) >
 </body>
 
 </html>
+
+

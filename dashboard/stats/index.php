@@ -189,7 +189,7 @@ $conn->close();
         .dsh-card-head .dsh-chip { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--d-accent); background: #eef4ff; padding: 4px 12px; border-radius: 999px; }
         .dsh-card-body { padding: 14px 12px 6px; }
     </style>
-</head>
+    <link rel="stylesheet" href="{../../}assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css"></head>
 <!-- ApexCharts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
@@ -396,3 +396,5 @@ $conn->close();
 </body>
 
 </html>
+
+

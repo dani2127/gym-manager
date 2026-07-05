@@ -113,6 +113,7 @@ $total_pages = ceil($total_records / $records_per_page);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
     <link rel="shortcut icon" href="https://gymoneglobal.com/assets/img/logo.png" type="image/x-icon">
+    <link rel="stylesheet" >    <link rel="stylesheet" href="{../}assets/css/admin-theme.css">    <link rel="stylesheet" href="../../assets/css/admin-theme.css">
 </head>
 
 <body>
@@ -420,3 +421,5 @@ $total_pages = ceil($total_records / $records_per_page);
 </body>
 
 </html>
+
+

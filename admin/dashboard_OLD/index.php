@@ -232,6 +232,7 @@ foreach ($data as $item) {
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
     <link rel="shortcut icon" href="https://gymoneglobal.com/assets/img/logo.png" type="image/x-icon">
+    <link rel="stylesheet" >    <link rel="stylesheet" href="{../}assets/css/admin-theme.css">    <link rel="stylesheet" href="../../assets/css/admin-theme.css">
 </head>
 <!-- ApexCharts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -1153,3 +1154,5 @@ foreach ($data as $item) {
 </body>
 
 </html>
+
+

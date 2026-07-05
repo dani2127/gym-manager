@@ -222,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['userid'])) {
         .footer { background: #f8f9fa; padding: 24px 30px; text-align: center; color: #6B7280; font-size: 12px; }
         .footer a { color: #0950DC; text-decoration: none; }
     </style>
-</head>
+    <link rel="stylesheet" href="{../../}assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css"></head>
 <body>
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
         <tr>
@@ -389,7 +389,7 @@ $initials = strtoupper(mb_substr((string) $lastname, 0, 1) . mb_substr((string) 
 
     .dsh-col { display: flex; flex-direction: column; }
     .dsh-equal { display: flex; flex-direction: column; height: 100%; }
-  </style></head>
+  </style>    <link rel="stylesheet" href="{../../}assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css"></head>
 
 <body>
   <nav class="navbar navbar-inverse visible-xs">
@@ -648,3 +648,5 @@ $initials = strtoupper(mb_substr((string) $lastname, 0, 1) . mb_substr((string) 
 </body>
 
 </html>
+
+
