@@ -123,187 +123,278 @@ $result = $conn->query($sql);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $business_name; ?> - <?php echo $translations["trainerspage"]; ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title><?php echo $business_name; ?> - <?php echo $translations["pricespage"]; ?></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- CUSTOM STYLE INSERT HERE! -->
-    <link rel="stylesheet" href="../assets/css/default.css">
-    <!-- CUSTOM STYLE INSERT HERE! -->
+    <link rel="stylesheet" href="../assets/css/unified-theme.css">
     <link rel="shortcut icon" href="../assets/img/brand/favicon.png" type="image/x-icon">
-    <meta name="title" content="<?php echo $business_name; ?> - <?php echo $translations["trainerspage"]; ?>">
+    <meta name="title" content="<?php echo $business_name; ?> - <?php echo $translations["pricespage"]; ?>">
     <meta name="description" content="<?php echo $description; ?>">
     <meta name="keywords" content="<?php echo $metakey; ?>">
     <meta name="robots" content="index, follow">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="author" content="<?php echo $business_name; ?>">
-
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo $gkey; ?>"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', '<?php echo $gkey; ?>');
+    </script>
+    <style>
+        .prices-hero {
+            padding: 8rem 2rem 3rem;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.8)),
+                        radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.08) 0%, transparent 50%);
+        }
+        .prices-hero h1 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        .prices-hero p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        .prices-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+        }
+        .price-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .price-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        .price-card:hover::before {
+            transform: scaleX(1);
+        }
+        .price-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary);
+        }
+        .price-card h5 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        .price-card .price-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--foreground);
+            margin-bottom: 0.5rem;
+        }
+        .price-card .price-value span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+        .price-card .price-detail {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+        .price-card .price-detail strong {
+            color: var(--foreground);
+        }
+        .site-footer {
+            background: var(--background);
+            border-top: 1px solid var(--border);
+            padding: 4rem 2rem 2rem;
+        }
+        .footer-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+        }
+        .footer-brand img {
+            height: 60px;
+            margin-bottom: 1rem;
+        }
+        .footer-brand p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .footer-hours h5 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--foreground);
+        }
+        .hours-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        .hours-item:last-child {
+            border-bottom: none;
+        }
+        .hours-item .day {
+            font-weight: 600;
+            color: var(--foreground);
+        }
+        .hours-item .time {
+            color: var(--primary);
+        }
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 3rem auto 0;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .footer-bottom a {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .prices-grid {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+        }
+    </style>
 </head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo $gkey; ?>"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-
-    function gtag() {
-        dataLayer.push(arguments);
-    }
-    gtag('js', new Date());
-
-    gtag('config', '<?php echo $gkey; ?>');
-</script>
 
 <body>
-    <div class="container">
-        <nav class="navbar navbar-expand-lg navbar-light">
-            <img class="img" src="../assets/img/brand/logo.png" width="148px" alt="<?php echo $business_name; ?> Logo">
-            <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
-                aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="../"><?php echo $translations["mainpage"]; ?></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../trainers"><?php echo $translations["trainerspage"]; ?></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#"><?php echo $translations["pricespage"]; ?></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../contact/"><?php echo $translations["contactpage"]; ?></a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a href="../login/" rel="noopener noreferrer" title="Login" class="nav-link ps-0 ps-lg-3 pe-3">
-                            <i class="bi bi-person-circle"></i>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-    </div>
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col bg-imageback">
-            </div>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <a href="../" class="navbar-brand">
+            <img src="../assets/img/brand/logo.png" alt="<?php echo $business_name; ?> Logo">
+            <span><?php echo $business_name; ?></span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a href="../"><?php echo $translations["mainpage"]; ?></a></li>
+            <li><a href="../trainers"><?php echo $translations["trainerspage"]; ?></a></li>
+            <li><a href="#" class="active" style="color: var(--primary);"><?php echo $translations["pricespage"]; ?></a></li>
+            <li><a href="../contact/"><?php echo $translations["contactpage"]; ?></a></li>
+        </ul>
+        <div class="d-flex align-center gap-2">
+            <a href="../login/" class="btn btn-outline btn-sm">
+                <i class="bi bi-person-circle"></i> <?php echo $translations["login"] ?? 'Login'; ?>
+            </a>
         </div>
-        <div class="row mt-2 text-center justify-content-center">
-            <div class="col-sm-5">
-                <h1><?php echo $translations["pricelist"]; ?></h1>
-            </div>
-        </div>
-        <?php
-        if ($result->num_rows > 0) {
-            echo "<div class='row mt-3'>";
+    </nav>
 
-            while ($row = $result->fetch_assoc()) {
-                echo "<div class='col-sm-3 mb-4'>";
-                echo "<div class='card shadow-sm border-light'>";
-                echo "<div class='card-body'>";
-                echo "<h5 class='card-title text-first'>" . htmlspecialchars($row["name"]) . "</h5>";
-                echo "<p class='card-text'>" . $translations["tickettableexpiry"] . ": " . htmlspecialchars($row["expire_days"]) . "</p>";
-                echo "<p class='card-text'><strong>" . $translations["price"] . ": " . htmlspecialchars($row["price"]) . " " . htmlspecialchars($currency) . "</strong></p>";
-                $occasions = $row["occasions"] === NULL ? $translations["unlimited"] : htmlspecialchars($row["occasions"]);
+    <!-- Page Content -->
+    <div class="page-content">
+        <!-- Hero -->
+        <section class="prices-hero">
+            <h1><?php echo $translations["pricelist"]; ?></h1>
+            <p><?php echo $business_name; ?> - <?php echo $translations["pricespage"]; ?></p>
+        </section>
 
-                echo "<p class='card-text'>" . $translations["tickettableoccassion"] . ": " . $occasions . "</p>";
+        <!-- Pricing Cards -->
+        <section style="padding: 2rem;">
+            <?php
+            if ($result->num_rows > 0) {
+                echo "<div class='prices-grid'>";
+
+                while ($row = $result->fetch_assoc()) {
+                    echo "<div class='price-card'>";
+                    echo "<h5>" . htmlspecialchars($row["name"]) . "</h5>";
+                    echo "<div class='price-value'>" . htmlspecialchars($row["price"]) . " " . htmlspecialchars($currency) . "</div>";
+                    echo "<p class='price-detail'>" . $translations["tickettableexpiry"] . ": <strong>" . htmlspecialchars($row["expire_days"]) . " " . ($translations["days"] ?? 'days') . "</strong></p>";
+                    $occasions = $row["occasions"] === NULL ? $translations["unlimited"] : htmlspecialchars($row["occasions"]);
+                    echo "<p class='price-detail'>" . $translations["tickettableoccassion"] . ": <strong>" . $occasions . "</strong></p>";
+                    echo "</div>";
+                }
+
                 echo "</div>";
-                echo "</div>";
-                echo "</div>";
+            } else {
+                echo "<div class='alert alert-warning' style='max-width: 600px; margin: 2rem auto;'>" . $translations["notickets"] . "</div>";
             }
+            ?>
+        </section>
 
-            echo "</div>";
-        } else {
-            echo "<div class='alert alert-warning' role='alert'>" . $translations["notickets"] . "</div>";
-        }
-        ?>
-
-
-        <div class="footer">
-            <div class="container">
-                <div class="row gy-4">
-                    <div class="mt-3"></div>
-                    <div class="col-md-4 mb-1">
-                        <h2 class="mb-4">
-                            <img src="../assets/img/brand/logo.png" alt="<?php echo $business_name; ?> - Logo"
-                                height="105">
-                        </h2>
-
-                        <p><?php echo $city; ?></p>
-                        <p><?php echo $street; ?> <?php echo $hause_no; ?></p>
-                    </div>
-                    <div class="col-md-3 offset-md-1">
-                        <?php if (!empty($days)): ?>
-                            <div class="list-group">
-                                <?php foreach ($days as $day): ?>
-                                    <div class="list-group-itemcustom d-flex justify-content-between align-items-center">
-                                        <span><strong><?= htmlspecialchars($dayNames[$day['day']]) ?></strong></span>
-                                        <span class="text-center justify-content-center">
-                                            <?php if (is_null($day['open_time']) && is_null($day['close_time'])): ?>
-                                                <span class="badge bg-danger"><?= $translations["closed"]; ?></span>
-                                            <?php else: ?>
-                                                <span class="badge bg-success">
-                                                    <?= date('H:i', strtotime($day['open_time'])) ?> -
-                                                    <?= date('H:i', strtotime($day['close_time'])) ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </span>
-                                    </div>
-                                <?php endforeach; ?>
-                                <hr>
-                                <?php foreach ($exceptions as $ex): ?>
-                                    <?php
-                                    $date = new DateTime($ex['date']);
-                                    $monthName = $months[(int) $date->format('n')];
-                                    $day = $date->format('j');
-                                    ?>
-                                    <div class="list-group-itemcustom d-flex justify-content-between align-items-center">
-                                        <span><strong><?= $monthName . ' ' . $day . '.' ?></strong></span>
-
-                                        <span class="text-center justify-content-center">
-                                            <?php if ($ex['is_closed']): ?>
-                                                <span class="badge bg-danger"><?= $translations["closed"]; ?></span>
-                                            <?php else: ?>
-                                                <span class="badge bg-warning text-dark">
-                                                    <?= date('H:i', strtotime($ex['open_time'])) ?> -
-                                                    <?= date('H:i', strtotime($ex['close_time'])) ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </span>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="col-md-2 offset-md-1">
-                        <h5 class="text-light mb-4"></h5>
-
-                    </div>
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <img src="../assets/img/brand/logo.png" alt="<?php echo $business_name; ?> Logo">
+                    <p><?php echo $city; ?></p>
+                    <p><?php echo $street; ?> <?php echo $hause_no; ?></p>
                 </div>
-
-                <div class="border-top border-secondary pt-3 mt-3">
-                    <p class="small text-center mb-0">
-                        Copyright © <?php echo $copyright_year; ?> <?php echo $business_name; ?> -
-                        <?php echo $translations["copyright"]; ?>
-                        &nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red"
-                            class="bi bi-heart-fill" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd"
-                                d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314">
-                            </path>
-                        </svg>
-                        <a href="https://www.gymoneglobal.com/?lang=<?php echo $lang_code; ?>">GYM One</a>
-                    </p>
+                <div class="footer-hours">
+                    <h5><?php echo $translations["openinghours"] ?? 'Opening Hours'; ?></h5>
+                    <?php if (!empty($days)): ?>
+                        <?php foreach ($days as $day): ?>
+                            <div class="hours-item">
+                                <span class="day"><?= htmlspecialchars($dayNames[$day['day']]) ?></span>
+                                <?php if (is_null($day['open_time']) && is_null($day['close_time'])): ?>
+                                    <span class="time" style="color: var(--accent);"><?= $translations["closed"]; ?></span>
+                                <?php else: ?>
+                                    <span class="time">
+                                        <?= date('H:i', strtotime($day['open_time'])) ?> -
+                                        <?= date('H:i', strtotime($day['close_time'])) ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php foreach ($exceptions as $ex): ?>
+                            <?php
+                            $date = new DateTime($ex['date']);
+                            $monthName = $months[(int) $date->format('n')];
+                            $dayNum = $date->format('j');
+                            ?>
+                            <div class="hours-item">
+                                <span class="day"><?= $monthName . ' ' . $dayNum . '.' ?></span>
+                                <?php if ($ex['is_closed']): ?>
+                                    <span class="time" style="color: var(--accent);"><?= $translations["closed"]; ?></span>
+                                <?php else: ?>
+                                    <span class="time" style="color: var(--primary-light);">
+                                        <?= date('H:i', strtotime($ex['open_time'])) ?> -
+                                        <?= date('H:i', strtotime($ex['close_time'])) ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
-        </div>
+            <div class="footer-bottom">
+                <p>
+                    Copyright &copy; <?php echo $copyright_year; ?> <?php echo $business_name; ?> -
+                    <?php echo $translations["copyright"]; ?>
+                    &nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red"
+                        class="bi bi-heart-fill" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314">
+                        </path>
+                    </svg>
+                    <a href="https://www.gymoneglobal.com/?lang=<?php echo $lang_code; ?>">GYM One</a>
+                </p>
+            </div>
+        </footer>
+    </div>
 </body>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-    crossorigin="anonymous"></script>
 
 </html>

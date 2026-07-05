@@ -10,19 +10,19 @@ $userid = $_SESSION['adminuser'];
 
 function read_env_file($file_path)
 {
-    $env_file = file_get_contents($file_path);
-    $env_lines = explode("\n", $env_file);
+    if (!is_readable($file_path)) {
+        return [];
+    }
     $env_data = [];
-
-    foreach ($env_lines as $line) {
-        $line_parts = explode('=', $line);
-        if (count($line_parts) == 2) {
-            $key = trim($line_parts[0]);
-            $value = trim($line_parts[1]);
-            $env_data[$key] = $value;
+    foreach (preg_split("/\r\n|\n|\r/", (string) file_get_contents($file_path)) as $line) {
+        if (trim($line) === '' || strpos(ltrim($line), '#') === 0) {
+            continue;
+        }
+        $parts = explode('=', $line, 2);
+        if (count($parts) === 2) {
+            $env_data[trim($parts[0])] = trim($parts[1]);
         }
     }
-
     return $env_data;
 }
 
@@ -38,13 +38,11 @@ $lang_code = $env_data['LANG_CODE'] ?? '';
 $version = $env_data["APP_VERSION"] ?? '';
 
 $lang = $lang_code;
-
 $langDir = __DIR__ . "/../../assets/lang/";
-
 $langFile = $langDir . "$lang.json";
 
 if (!file_exists($langFile)) {
-    die("A nyelvi fájl nem található: $langFile");
+    die("Language file not found: $langFile");
 }
 
 $translations = json_decode(file_get_contents($langFile), true);
@@ -52,51 +50,47 @@ $translations = json_decode(file_get_contents($langFile), true);
 $conn = new mysqli($db_host, $db_username, $db_password, $db_name);
 
 if ($conn->connect_error) {
-    die("Kapcsolódási hiba: " . $conn->connect_error);
+    die("Connection error: " . $conn->connect_error);
 }
+$conn->set_charset('utf8mb4');
 
 $sql = "SELECT is_boss FROM workers WHERE userid = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $userid);
 $stmt->execute();
 $stmt->store_result();
-
 $is_boss = null;
-
 if ($stmt->num_rows > 0) {
     $stmt->bind_result($is_boss);
     $stmt->fetch();
 }
 $stmt->close();
 
-// API!
-$file_path = 'https://api.gymoneglobal.com/latest/version.txt';
-
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $file_path);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-$latest_version = curl_exec($ch);
-curl_close($ch);
-
+// Version check
+$latest_version = @file_get_contents('https://api.gymoneglobal.com/latest/version.txt');
 $current_version = $version;
+$is_new_version_available = is_string($latest_version) && version_compare(trim($latest_version), $current_version) > 0;
 
-$is_new_version_available = version_compare($latest_version, $current_version) > 0;
+// Get admin name
+$sql = "SELECT lastname FROM workers WHERE userid = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param('i', $userid);
+$stmt->execute();
+$stmt->bind_result($username);
+$stmt->fetch();
+$stmt->close();
 
+// Pagination
 $per_page = 10;
-if (isset($_GET['page']) && is_numeric($_GET['page'])) {
-    $page = $_GET['page'];
-} else {
-    $page = 1;
-}
-
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $start_from = ($page - 1) * $per_page;
 
 $search_name = isset($_GET['search_name']) ? $_GET['search_name'] : '';
 $search_email = isset($_GET['search_email']) ? $_GET['search_email'] : '';
 
 $sql = "SELECT * FROM users";
-$conditions = array();
-$params = array();
+$conditions = [];
+$params = [];
 $types = "";
 
 if (!empty($search_name)) {
@@ -124,442 +118,212 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
+
+$page_title = $translations["users"];
+include __DIR__ . '/../includes/head.php';
 ?>
 
+<?php include __DIR__ . '/../includes/sidebar.php'; ?>
 
-<!DOCTYPE html>
-<html lang="<?php echo $lang_code; ?>">
+<main class="admin-main">
+    <?php include __DIR__ . '/../includes/topbar.php'; ?>
 
-<head>
-    <meta charset="UTF-8">
-    <title><?php echo $translations["dashboard"]; ?></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="../../assets/css/dashboard.css">
-    <link rel="shortcut icon" href="https://gymoneglobal.com/assets/img/logo.png" type="image/x-icon">
-    <style>
-        .search-form .form-group {
-            margin-bottom: 15px;
-        }
-
-        @media (max-width: 768px) {
-            .search-form .btn {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-        }
-    </style>
-</head>
-<!-- ApexCharts -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
-<body>
-    <nav class="navbar navbar-inverse visible-xs">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#"><img src="../../assets/img/logo.png" width="50px" alt="Logo"></a>
+    <div class="admin-content">
+        <!-- Search Form -->
+        <div class="card animate-in" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-header-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--accent-blue);">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">Search Members</div>
+                        <div class="card-subtitle">Find members by name or email</div>
+                    </div>
+                </div>
             </div>
-            <div class="collapse navbar-collapse" id="myNavbar">
-                <ul class="nav navbar-nav">
-                    <li><a href="../dashboard"><i class="bi bi-speedometer"></i>
-                            <?php echo $translations["mainpage"]; ?></a></li>
-                    <li class="active"><a href="#"><i class="bi bi-people"></i>
-                            <?php echo $translations["users"]; ?></a></li>
-                    <li><a href="../statistics"><i class="bi bi-bar-chart"></i>
-                            <?php echo $translations["statspage"]; ?></a></li>
-                    <li><a href="../boss/sell"><i class="bi bi-shop"></i> <?php echo $translations["sellpage"]; ?></a>
-                    </li>
-                    <li><a href="../invoices"><i class="bi bi-receipt"></i>
-                            <?php echo $translations["invoicepage"]; ?></a></li>
-                    <?php if ($is_boss === 1) { ?>
-                        <li class="dropdown">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="bi bi-gear"></i>
-                                <?php echo $translations["settings"]; ?> <span class="caret"></span></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="../boss/mainsettings"><?php echo $translations["businesspage"]; ?></a></li>
-                                <li><a href="../boss/workers"><?php echo $translations["workers"]; ?></a></li>
-                                <li><a href="../boss/packages"><?php echo $translations["packagepage"]; ?></a></li>
-                                <li><a href="../boss/hours"><?php echo $translations["openhourspage"]; ?></a></li>
-                                <li><a href="../boss/smtp"><?php echo $translations["mailpage"]; ?></a></li>
-                                <li><a href="../boss/chroom"><?php echo $translations["chroompage"]; ?></a></li>
-                                <li><a href="../boss/rule"><?php echo $translations["rulepage"]; ?></a></li>
-                            </ul>
-                        </li>
-                    <?php } ?>
-                    <li><a href="../shop/tickets"><i class="bi bi-ticket"></i>
-                            <?php echo $translations["ticketspage"]; ?></a></li>
-                    <li><a href="../trainers/timetable"><i class="bi bi-calendar-event"></i>
-                            <?php echo $translations["timetable"]; ?></a></li>
-                    <li><a href="../trainers/personal"><i class="bi bi-award"></i>
-                            <?php echo $translations["trainers"]; ?></a></li>
-                    <?php if ($is_boss === 1) { ?>
-                        <li><a href="../updater"><i class="bi bi-cloud-download"></i>
-                                <?php echo $translations["updatepage"]; ?>
-                                <?php if ($is_new_version_available): ?>
-                                    <span class="badge badge-warning"><i class="bi bi-exclamation-circle"></i></span>
-                                <?php endif; ?>
-                            </a></li>
-                    <?php } ?>
-                    <li><a href="../log"><i class="bi bi-clock-history"></i> <?php echo $translations["logpage"]; ?></a>
-                    </li>
-                </ul>
+            <div class="card-body">
+                <form method="GET">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 16px; align-items: end;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
+                                <?php echo $translations["name-search"]; ?>
+                            </label>
+                            <input type="text" name="search_name" 
+                                value="<?php echo htmlspecialchars($search_name); ?>"
+                                placeholder="<?php echo $translations["name-search"]; ?>"
+                                style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-light); border-radius: 10px; color: var(--text-primary); font-size: 14px; font-family: inherit;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
+                                <?php echo $translations["email-search"]; ?>
+                            </label>
+                            <input type="text" name="search_email" 
+                                value="<?php echo htmlspecialchars($search_email); ?>"
+                                placeholder="<?php echo $translations["email-search"]; ?>"
+                                style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-light); border-radius: 10px; color: var(--text-primary); font-size: 14px; font-family: inherit;">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i>
+                            <?php echo $translations["search"]; ?>
+                        </button>
+                        <a href="index.php" class="btn btn-ghost">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            <?php echo $translations["resetbtn"]; ?>
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
-    </nav>
 
-    <div class="container-fluid">
-        <div class="row content">
-            <div class="col-sm-2 sidenav hidden-xs text-center">
-                <h2><img src="../../assets/img/logo.png" width="105px" alt="Logo"></h2>
-                <p class="lead mb-4 fs-4"><?php echo $business_name ?> - <?php echo $version; ?></p>
-                <ul class="nav nav-pills nav-stacked">
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="../dashboard/">
-                            <i class="bi bi-speedometer"></i> <?php echo $translations["mainpage"]; ?>
-                        </a>
-                    </li>
-                    <li class="sidebar-item active">
-                        <a class="sidebar-link" href="#">
-                            <i class="bi bi-people"></i> <?php echo $translations["users"]; ?>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="../statistics">
-                            <i class="bi bi-bar-chart"></i> <?php echo $translations["statspage"]; ?>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="../boss/sell">
-                            <i class="bi bi-shop"></i> <?php echo $translations["sellpage"]; ?>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="../invoices/" class="sidebar-link">
-                            <i class="bi bi-receipt"></i> <?php echo $translations["invoicepage"]; ?>
-                        </a>
-                    </li>
-                    <?php
-                    if ($is_boss === 1) {
-                        ?>
-                        <li class="sidebar-header">
-                            <?php echo $translations["settings"]; ?>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/mainsettings">
-                                <i class="bi bi-gear"></i>
-                                <span><?php echo $translations["businesspage"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/workers">
-                                <i class="bi bi-people"></i>
-                                <span><?php echo $translations["workers"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/packages">
-                                <i class="bi bi-box-seam"></i>
-                                <span><?php echo $translations["packagepage"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/hours">
-                                <i class="bi bi-clock"></i>
-                                <span><?php echo $translations["openhourspage"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/smtp">
-                                <i class="bi bi-envelope-at"></i>
-                                <span><?php echo $translations["mailpage"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/chroom">
-                                <i class="bi bi-duffle"></i>
-                                <span><?php echo $translations["chroompage"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/rule">
-                                <i class="bi bi-file-ruled"></i>
-                                <span><?php echo $translations["rulepage"]; ?></span>
-                            </a>
-                        </li>
-                        <?php
-                    }
-                    ?>
-                    <li class="sidebar-header">
-                        <?php echo $translations["shopcategory"]; ?>
-
-                    </li>
-                    <li class="sidebar-item">
-                        <!-- <a class="sidebar-ling" href="../shop/gateway">
-                            <i class="bi bi-shield-lock"></i>
-                            <span><?php echo $translations["gatewaypage"]; ?></span>
-                        </a> -->
-                        <a class="sidebar-ling" href="../shop/tickets">
-                            <i class="bi bi-ticket"></i>
-                            <span><?php echo $translations["ticketspage"]; ?></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-header">
-                        <?php echo $translations["trainersclass"]; ?>
-                    </li>
-                    <li><a class="sidebar-link" href="../trainers/timetable">
-                            <i class="bi bi-calendar-event"></i>
-                            <span><?php echo $translations["timetable"]; ?></span>
-                        </a></li>
-                    <li><a class="sidebar-link" href="../trainers/personal">
-                            <i class="bi bi-award"></i>
-                            <span><?php echo $translations["trainers"]; ?></span>
-                        </a></li>
-                    <li class="sidebar-header"><?php echo $translations["other-header"]; ?></li>
-                    <?php
-                    if ($is_boss === 1) {
-                        ?>
-                        <li class="sidebar-item">
-                            <a class="sidebar-ling" href="../updater">
-                                <i class="bi bi-cloud-download"></i>
-                                <span><?php echo $translations["updatepage"]; ?></span>
-                                <?php if ($is_new_version_available): ?>
-                                    <span class="sidebar-badge badge">
-                                        <i class="bi bi-exclamation-circle"></i>
-                                    </span>
-                                <?php endif; ?>
-                            </a>
-                        </li>
-                        <?php
-                    }
-                    ?>
-                    <li class="sidebar-item">
-                        <a class="sidebar-ling" href="../log">
-                            <i class="bi bi-clock-history"></i>
-                            <span><?php echo $translations["logpage"]; ?></span>
-                        </a>
-                    </li>
-                </ul><br>
-            </div>
-            <br>
-            <div class="col-sm-10">
-                <div class="d-none topnav d-sm-inline-block">
-                    <a href="https://gymoneglobal.com/discord" class="btn btn-primary mx-1" target="_blank"
-                        rel="noopener noreferrer">
-                        <i class="bi bi-question-circle"></i>
-                        <?php echo $translations["support"]; ?>
-                    </a>
-
-                    <a href="https://gymoneglobal.com/docs" class="btn btn-danger" target="_blank"
-                        rel="noopener noreferrer">
-                        <i class="bi bi-journals"></i>
-                        <?php echo $translations["docs"]; ?>
-                    </a>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#logoutModal">
-                        <?php echo $translations["logout"]; ?>
-                    </button>
-                    <h5 id="clock" style="display: inline-block; margin-bottom: 0;"></h5>
+        <!-- Users Table -->
+        <div class="card animate-in">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-header-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div>
+                        <div class="card-title"><?php echo $translations["users"]; ?></div>
+                        <div class="card-subtitle">Manage all registered members</div>
+                    </div>
                 </div>
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="card shadow">
-                            <form method="GET" class="mb-4 search-form">
-                                <div class="row">
-                                    <div class="col-lg-3 col-md-4 col-sm-6 col-12">
-                                        <div class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="<?= $translations["name-search"]; ?>" name="search_name"
-                                                value="<?php echo htmlspecialchars($search_name); ?>">
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th><?php echo $translations["firstname"]; ?></th>
+                            <th><?php echo $translations["lastname"]; ?></th>
+                            <th><?php echo $translations["email"]; ?></th>
+                            <th><?php echo $translations["expiredate"]; ?></th>
+                            <th><?php echo $translations["action"]; ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        if ($result->num_rows > 0) {
+                            while ($row = $result->fetch_assoc()) {
+                                $initials = strtoupper(substr($row["firstname"], 0, 1) . substr($row["lastname"], 0, 1));
+                                ?>
+                                <tr>
+                                    <td>
+                                        <div class="table-user">
+                                            <div class="table-avatar"><?php echo $initials; ?></div>
+                                            <div class="table-user-info">
+                                                <h4><?php echo htmlspecialchars($row["firstname"]); ?></h4>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-lg-3 col-md-4 col-sm-6 col-12">
-                                        <div class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="<?= $translations["email-search"]; ?>" name="search_email"
-                                                value="<?php echo htmlspecialchars($search_email); ?>">
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-3 col-md-4 col-sm-6 col-12">
-                                        <div class="form-group">
-                                            <button type="submit" class="btn btn-primary btn-block"><i
-                                                    class="bi bi-search"></i>
-                                                <?php echo $translations["search"]; ?></button>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-3 col-md-4 col-sm-6 col-12">
-                                        <div class="form-group">
-                                            <a href="index.php" class="btn btn-success btn-block"><i
-                                                    class="bi bi-arrow-clockwise"></i>
-                                                <?php echo $translations["resetbtn"]; ?></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-
-                            <div class="table-responsive">
-                                <table class="table table-dark table-bordered text-center">
-                                    <thead>
-                                        <tr>
-                                            <th><?php echo $translations["firstname"]; ?></th>
-                                            <th><?php echo $translations["lastname"]; ?></th>
-                                            <th><?php echo $translations["email"]; ?></th>
-                                            <th><?php echo $translations["expiredate"]; ?></th>
-                                            <th><?php echo $translations["action"]; ?></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($row["lastname"]); ?></td>
+                                    <td>
+                                        <?php echo htmlspecialchars($row["email"]); ?>
+                                        <?php if ($row["confirmed"] == "No"): ?>
+                                            <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--accent-yellow); background: rgba(251, 191, 36, 0.1); padding: 2px 8px; border-radius: 12px; margin-left: 8px;">
+                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                                <?php echo $translations["waitingconfirm"]; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
                                         <?php
-                                        if ($result->num_rows > 0) {
-                                            while ($row = $result->fetch_assoc()) {
+                                        $uid = $row["userid"];
+                                        $ticket_sql = "SELECT expiredate FROM current_tickets WHERE userid = ? ORDER BY expiredate DESC LIMIT 1";
+                                        $ticket_stmt = $conn->prepare($ticket_sql);
+                                        $ticket_stmt->bind_param("i", $uid);
+                                        $ticket_stmt->execute();
+                                        $ticket_result = $ticket_stmt->get_result();
 
-                                                echo "<tr>";
-                                                echo "<td>" . htmlspecialchars($row["firstname"], ENT_QUOTES, 'UTF-8') . "</td>";
-                                                echo "<td>" . htmlspecialchars($row["lastname"], ENT_QUOTES, 'UTF-8') . "</td>";
-                                                echo "<td>" . htmlspecialchars($row["email"], ENT_QUOTES, 'UTF-8');
-                                                if ($row["confirmed"] == "No") {
-                                                    echo " <span class='text-danger bi bi-exclamation-triangle-fill' data-bs-toggle='tooltip' title='" . $translations["waitingconfirm"] . "'></span>";
+                                        if ($ticket_result->num_rows > 0) {
+                                            $ticket = $ticket_result->fetch_assoc();
+                                            $expiredate = $ticket["expiredate"];
+                                            $today = new DateTime();
+                                            $expire = new DateTime($expiredate);
+                                            $expire->modify('+1 day');
+                                            $originalExpire = new DateTime($expiredate);
+                                            $diff = $today->diff($expire)->days;
+
+                                            if ($expire > $today) {
+                                                if ($originalExpire->format("Y-m-d") === $today->format("Y-m-d")) {
+                                                    $diff = 1;
                                                 }
-                                                echo "</td>";
-
-                                                $userid = $row["userid"];
-                                                $ticket_sql = "SELECT expiredate FROM current_tickets WHERE userid = ? ORDER BY expiredate DESC LIMIT 1";
-                                                $ticket_stmt = $conn->prepare($ticket_sql);
-                                                $ticket_stmt->bind_param("i", $userid);
-                                                $ticket_stmt->execute();
-                                                $ticket_result = $ticket_stmt->get_result();
-
-                                                if ($ticket_result->num_rows > 0) {
-                                                    $ticket = $ticket_result->fetch_assoc();
-                                                    $expiredate = $ticket["expiredate"];
-
-                                                    $today = new DateTime();
-                                                    $expire = new DateTime($expiredate);
-
-                                                    $expire->modify('+1 day');
-
-                                                    $originalExpire = new DateTime($expiredate);
-
-                                                    $diff = $today->diff($expire)->days;
-
-                                                    if ($expire > $today) {
-                                                        if ($originalExpire->format("Y-m-d") === $today->format("Y-m-d")) {
-                                                            $diff = 1;
-                                                        }
-                                                        echo "<td class='text-success'>$diff " . $translations["day"] . "</td>";
-                                                    } else {
-                                                        echo "<td class='text-danger'>" . $translations["expired"] . " (" . $originalExpire->format("Y-m-d") . ")</td>";
-                                                    }
-                                                } else {
-                                                    echo "<td class='text-muted'>" . $translations["youdonthaveticket"] . "</td>";
-                                                }
-
-
-                                                echo '<td><a class="btn btn-primary" href="edit/?user=' . $row["userid"] . '"><i class="bi bi-box-arrow-in-right"></i> ' . $translations["profilesee"] . '</a></td>';
-                                                echo "</tr>";
+                                                echo '<span style="color: var(--accent-green); font-weight: 600;">' . $diff . ' ' . $translations["day"] . '</span>';
+                                            } else {
+                                                echo '<span style="color: var(--accent-red); font-weight: 600;">' . $translations["expired"] . ' (' . $originalExpire->format("Y-m-d") . ')</span>';
                                             }
                                         } else {
-                                            echo "<tr><td colspan='5'>No user data!</td></tr>";
+                                            echo '<span style="color: var(--text-muted);">' . $translations["youdonthaveticket"] . '</span>';
                                         }
+                                        $ticket_stmt->close();
                                         ?>
-                                    </tbody>
-                                </table>
-                            </div>
-
-
-                            <?php
-                            $sql = "SELECT COUNT(*) AS total FROM users";
-                            $conditions = array();
-                            $params = array();
-                            $types = "";
-                            if (!empty($search_name)) {
-                                $conditions[] = "(firstname LIKE ? OR lastname LIKE ?)";
-                                $like = "%$search_name%";
-                                $params[] = $like;
-                                $params[] = $like;
-                                $types .= "ss";
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-primary btn-sm" href="edit/?user=<?php echo $row["userid"]; ?>">
+                                            <i class="bi bi-eye"></i>
+                                            <?php echo $translations["profilesee"]; ?>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <?php
                             }
-                            if (!empty($search_email)) {
-                                $conditions[] = "email LIKE ?";
-                                $params[] = "%$search_email%";
-                                $types .= "s";
-                            }
-                            if (!empty($conditions)) {
-                                $sql .= " WHERE " . implode(" AND ", $conditions);
-                            }
-
-                            $stmt = $conn->prepare($sql);
-                            if (!empty($params)) {
-                                $stmt->bind_param($types, ...$params);
-                            }
-                            $stmt->execute();
-                            $result = $stmt->get_result();
-                            $row = $result->fetch_assoc();
-                            $total_pages = ceil($row["total"] / $per_page);
-
-                            if ($total_pages > 1) {
-                                echo "<ul class='pagination justify-content-center'>";
-                                for ($i = 1; $i <= $total_pages; $i++) {
-                                    echo "<li class='page-item'><a class='page-link' href='?page=$i";
-                                    if (!empty($search_name) || !empty($search_email)) {
-                                        echo "&search_name=" . urlencode($search_name) . "&search_email=" . urlencode($search_email);
-                                    }
-                                    echo "'>$i</a></li>";
-                                }
-                                echo "</ul>";
-                            }
-                            ?>
-                        </div>
-                    </div>
-                </div>
+                        } else {
+                            echo '<tr><td colspan="5"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-people"></i></div><h3>No members found</h3><p>Try adjusting your search criteria</p></div></td></tr>';
+                        }
+                        ?>
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
 
-    <!-- EXIT MODAL -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" style="margin-top: 100px;">
-            <div class="modal-content" style="border: none; box-shadow: 0 0 40px rgba(0,0,0,.2);">
-                <div class="modal-body text-center" style="padding: 40px;">
+        <?php
+        // Pagination
+        $sql = "SELECT COUNT(*) AS total FROM users";
+        $conditions = [];
+        $params = [];
+        $types = "";
+        if (!empty($search_name)) {
+            $conditions[] = "(firstname LIKE ? OR lastname LIKE ?)";
+            $like = "%$search_name%";
+            $params[] = $like;
+            $params[] = $like;
+            $types .= "ss";
+        }
+        if (!empty($search_email)) {
+            $conditions[] = "email LIKE ?";
+            $params[] = "%$search_email%";
+            $types .= "s";
+        }
+        if (!empty($conditions)) {
+            $sql .= " WHERE " . implode(" AND ", $conditions);
+        }
 
-                    <div style="margin-bottom: 25px;">
-                        <div style="width: 80px; height: 80px; margin: 0 auto;
-                                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                                border-radius: 50%;
-                                display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-box-arrow-right" style="color: #fff; font-size: 40px;"></i>
-                        </div>
-                    </div>
+        $stmt = $conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $total_pages = ceil($row["total"] / $per_page);
 
-                    <h4 style="font-weight: bold; margin-bottom: 15px;">
-                        <p><?php echo $translations["exit-modal"]; ?></p>
-                    </h4>
-
-                    <div class="text-center">
-                        <a type="button" class="btn btn-default" data-dismiss="modal"
-                            style="padding: 8px 25px; margin-right: 10px;">
-                            <i class="bi bi-x-circle" style="margin-right: 5px;"></i>
-                            <?php echo $translations["not-yet"]; ?>
-                        </a>
-
-                        <a href="../logout.php" type="button" class="btn btn-danger" style="padding: 8px 25px;">
-                            <i class="bi bi-check-circle" style="margin-right: 5px;"></i>
-                            <?php echo $translations["confirm"]; ?>
-                        </a>
-                    </div>
-                </div>
+        if ($total_pages > 1):
+        ?>
+        <div style="display: flex; justify-content: center; margin-top: 24px;">
+            <div style="display: flex; gap: 8px;">
+                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                <a href="?page=<?php echo $i; ?><?php if (!empty($search_name)) echo '&search_name=' . urlencode($search_name); ?><?php if (!empty($search_email)) echo '&search_email=' . urlencode($search_email); ?>"
+                    class="btn <?php echo $i === $page ? 'btn-primary' : 'btn-ghost'; ?> btn-sm">
+                    <?php echo $i; ?>
+                </a>
+                <?php endfor; ?>
             </div>
         </div>
+        <?php endif; ?>
     </div>
+</main>
 
-    <!-- SCRIPTS! -->
-    <script src="../../assets/js/date-time.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script src="../../assets/js/date-time.js"></script>
 </body>
-
 </html>
+
+<?php $conn->close(); ?>

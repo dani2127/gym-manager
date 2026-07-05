@@ -31,7 +31,7 @@ function get_db_connection()
     $conn = new mysqli($db_host, $db_username, $db_password, $db_name);
 
     if ($conn->connect_error) {
-        die("Kapcsolódási hiba: " . $conn->connect_error);
+        die("Connection failed: " . $conn->connect_error);
     }
 
     return $conn;
@@ -39,8 +39,8 @@ function get_db_connection()
 
 $env_data = read_env_file('../.env');
 
-$business_name = $env_data['BUSINESS_NAME'] ?? '';
-$lang_code = $env_data['LANG_CODE'] ?? '';
+$business_name = $env_data['BUSINESS_NAME'] ?? 'PowerFit Gym';
+$lang_code = $env_data['LANG_CODE'] ?? 'EN';
 $version = $env_data["APP_VERSION"] ?? '';
 
 $lang = $lang_code;
@@ -50,7 +50,7 @@ $langDir = __DIR__ . "/../assets/lang/";
 $langFile = $langDir . "$lang.json";
 
 if (!file_exists($langFile)) {
-    die("A nyelvi fájl nem található: $langFile");
+    die("Language file not found: $langFile");
 }
 
 $translations = json_decode(file_get_contents($langFile), true);
@@ -104,183 +104,327 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title><?php echo $translations["login"]; ?></title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../assets/css/login-register.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $translations["login"]; ?> - <?php echo $business_name; ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../assets/css/unified-theme.css">
     <link rel="shortcut icon" href="../assets/img/brand/favicon.png" type="image/x-icon">
     <style>
-        /* ====== MINIMÁL DESIGN + visszafogott háttér (mint a regisztrációnál) ====== */
-        html, body { background: #f4f6fb !important; }
-        body::before, body::after { display: none !important; }
-
-        #login {
-            position: relative !important;
-            display: block !important;
-            align-items: flex-start !important;
-            justify-content: flex-start !important;
-            height: auto !important;
-            min-height: 100vh;
-            padding: 48px 0 0 !important;
-            overflow: hidden;
-            background:
-                radial-gradient(circle, rgba(15, 23, 42, .05) 1px, transparent 1.6px) 0 0 / 26px 26px,
-                #f4f6fb !important;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        .auth-page {
+            background: var(--background);
         }
-        #login::before, #login::after { display: none !important; }
-        #login .container { margin-top: 0 !important; position: relative; z-index: 2; }
-        #login .row.pt-4 { padding-top: 0 !important; }
 
-        /* Halvány, lassan lélegző fényfoltok */
-        .lg-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-        .lg-blob { position: absolute; border-radius: 50%; filter: blur(90px); }
-        .lg-blob-1 { width: 380px; height: 380px; background: #0950dc; opacity: .10; top: -130px; left: -90px; animation: lgDrift 22s ease-in-out infinite; }
-        .lg-blob-2 { width: 340px; height: 340px; background: #6d28d9; opacity: .08; bottom: -120px; right: -90px; animation: lgDrift 26s ease-in-out infinite reverse; }
-        .lg-blob-3 { width: 260px; height: 260px; background: #22d3ee; opacity: .06; top: 40%; right: 8%; animation: lgDrift 30s ease-in-out infinite; }
+        .auth-page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .auth-card {
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-logo {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+
+        .auth-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--foreground);
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-subtitle {
+            color: #94A3B8;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #F8FAFC;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            font-size: 1rem;
+            background: #0F172A;
+            border: 1.5px solid #475569;
+            border-radius: 12px;
+            color: #F8FAFC;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #F97316;
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15);
+            background: #1E293B;
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: var(--radius-md);
+            color: var(--foreground);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.4);
+        }
+
+        .auth-links {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #334155;
+        }
+
+        .auth-links p {
+            font-size: 0.9rem;
+            color: #94A3B8;
+            margin: 0;
+        }
+
+        .auth-links a {
+            color: #F97316;
+            font-weight: 600;
+        }
+
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-copyright {
+            position: absolute;
+            bottom: 2rem;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .auth-copyright a {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .auth-copyright .heart {
+            color: #EF4444;
+        }
+
+        .back-home {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+            z-index: 10;
+        }
+
+        .back-home:hover {
+            color: var(--primary);
+        }
+
+        /* Floating blobs */
+        .lg-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .lg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+        }
+
+        .lg-blob-1 {
+            width: 380px;
+            height: 380px;
+            background: var(--primary);
+            opacity: 0.08;
+            top: -130px;
+            left: -90px;
+            animation: lgDrift 22s ease-in-out infinite;
+        }
+
+        .lg-blob-2 {
+            width: 340px;
+            height: 340px;
+            background: #8B5CF6;
+            opacity: 0.06;
+            bottom: -120px;
+            right: -90px;
+            animation: lgDrift 26s ease-in-out infinite reverse;
+        }
+
+        .lg-blob-3 {
+            width: 260px;
+            height: 260px;
+            background: var(--accent);
+            opacity: 0.05;
+            top: 40%;
+            right: 8%;
+            animation: lgDrift 30s ease-in-out infinite;
+        }
+
         @keyframes lgDrift {
             0%, 100% { transform: translate(0, 0) scale(1); }
             50% { transform: translate(26px, -22px) scale(1.06); }
         }
 
-        /* Letisztult kártya + beúszó animáció */
-        #login .reg-card,
-        #login .card {
-            border: 1px solid #e9eef6 !important;
-            border-radius: 18px !important;
-            background: #ffffff !important;
-            box-shadow: 0 8px 30px rgba(15, 23, 42, .07) !important;
-            opacity: 0;
-            transform: translateY(18px) scale(.99);
-            animation: lgCardIn .6s cubic-bezier(.2, .7, .2, 1) forwards;
+        /* Card animation */
+        .auth-card {
+            animation: cardIn 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
         }
-        @keyframes lgCardIn { to { opacity: 1; transform: none; } }
 
-        /* Fejléc */
-        #login .lg-head { text-align: center; margin-bottom: 1.4rem; }
-        #login .lg-logo { max-width: 150px; height: auto; margin-bottom: .9rem; }
-        #login .lg-title { font-weight: 800; color: #0f172a; font-size: 1.7rem; letter-spacing: -.3px; margin: 0; }
-        #login .lg-sub { color: #94a3b8; font-size: .92rem; margin-top: .3rem; margin-bottom: 0; }
-
-        /* Lépcsőzetes belépő-animáció a tartalomra */
-        #login .lg-anim { opacity: 0; transform: translateY(12px); animation: lgRise .55s cubic-bezier(.2, .7, .2, 1) forwards; }
-        #login .lg-d1 { animation-delay: .12s; }
-        #login .lg-d2 { animation-delay: .20s; }
-        #login .lg-d3 { animation-delay: .28s; }
-        #login .lg-d4 { animation-delay: .36s; }
-        #login .lg-d5 { animation-delay: .44s; }
-        @keyframes lgRise { to { opacity: 1; transform: none; } }
-
-        /* Mezők */
-        #login label { font-size: .85rem; font-weight: 600; color: #475569; margin-bottom: .3rem; }
-        #login .form-control {
-            border: 1.5px solid #e2e8f0;
-            border-radius: 13px;
-            padding: .7rem .9rem;
-            font-size: .98rem;
-            background: #f8fafc;
-            color: #0f172a;
-            height: auto;
-            box-shadow: none;
-            transition: border-color .15s, box-shadow .15s, background .15s;
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
         }
-        #login .form-control:focus {
-            border-color: #0950dc;
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(9, 80, 220, .12);
-            outline: none;
+
+        /* Staggered animation */
+        .auth-card .form-group:nth-child(1) { animation: fadeInUp 0.5s ease 0.1s both; }
+        .auth-card .form-group:nth-child(2) { animation: fadeInUp 0.5s ease 0.2s both; }
+        .auth-card .btn-primary { animation: fadeInUp 0.5s ease 0.3s both; }
+        .auth-links { animation: fadeInUp 0.5s ease 0.4s both; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        #login .form-group { margin-bottom: 1rem; }
 
-        /* Gomb */
-        #login .btn-primary {
-            width: 100%;
-            background: #0950dc !important;
-            border: none !important;
-            border-radius: 14px !important;
-            padding: .8rem 1rem !important;
-            font-weight: 700;
-            font-size: 1.02rem;
-            box-shadow: none !important;
-            transition: background .15s, transform .15s;
-        }
-        #login .btn-primary:hover { background: #0742b8 !important; transform: translateY(-2px); }
-        #login .btn-primary:active { transform: translateY(0); }
-
-        /* Linkek */
-        #login .lg-links { text-align: center; margin-top: 1rem; }
-        #login .lg-links small { color: #64748b; font-size: .9rem; display: block; }
-        #login .lg-links small + small { margin-top: .35rem; }
-        #login .lg-links a { color: #0950dc; font-weight: 700; text-decoration: none; }
-        #login .lg-links a:hover { text-decoration: underline; }
-
-        /* GYM One copyright legalul */
-        .lg-copyright {
-            position: relative; z-index: 2;
-            text-align: center; padding: 28px 16px 24px; margin-top: 36px;
-            color: #94a3b8; font-size: .85rem;
-        }
-        .lg-copyright a { color: #0950dc; font-weight: 700; text-decoration: none; }
-        .lg-copyright a:hover { text-decoration: underline; }
-        .lg-copyright .lg-heart { color: #ef4444; }
-
-        /* Mozgáscsökkentés igény esetén */
+        /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
-            #login .card, #login .lg-anim, .lg-blob { animation: none !important; opacity: 1 !important; transform: none !important; }
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div id="login">
-        <div class="lg-bg">
-            <span class="lg-blob lg-blob-1"></span>
-            <span class="lg-blob lg-blob-2"></span>
-            <span class="lg-blob lg-blob-3"></span>
-        </div>
-        <div class="container">
-            <div class="row justify-content-center pt-4">
-                <div class="col-lg-5 col-md-7">
-                    <div class="card reg-card">
-                        <div class="card-body">
-                            <div class="lg-head lg-anim lg-d1">
-                                <img class="lg-logo" src="../assets/img/brand/logo.png" title="<?php echo $business_name; ?>" alt="<?php echo $business_name; ?>">
-                                <h1 class="lg-title"><?php echo $translations["login"]; ?></h1>
-                                <p class="lg-sub"><?php echo htmlspecialchars($business_name); ?></p>
-                            </div>
-                            <?php if (!empty($login_error)) : ?>
-                                <div class="alert alert-danger lg-anim"><?php echo $login_error; ?></div>
-                            <?php endif; ?>
-                            <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-                                <div class="form-group lg-anim lg-d2">
-                                    <label for="email"><?php echo $translations["email"]; ?></label>
-                                    <input type="email" class="form-control" id="email" name="email" required>
-                                </div>
-                                <div class="form-group lg-anim lg-d3">
-                                    <label for="password"><?php echo $translations["password"]; ?></label>
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary lg-anim lg-d4"><?php echo $translations["next"]; ?></button>
-                            </form>
-                            <div class="lg-links lg-anim lg-d5">
-                                <small><?php echo $translations["youdonthaveaccount"]; ?> <span><a href="../register/"><?php echo $translations["registerbtn"]; ?></a></span></small>
-                                <small><?php echo $translations["adminaccountlogin"]; ?> <span><a href="../admin/"><?php echo $translations["login"]; ?></a></span></small>
-                            </div>
-                        </div>
-                    </div>
+    <a href="../" class="back-home">
+        <i class="bi bi-arrow-left"></i>
+        Back to Home
+    </a>
+
+    <div class="lg-bg">
+        <span class="lg-blob lg-blob-1"></span>
+        <span class="lg-blob lg-blob-2"></span>
+        <span class="lg-blob lg-blob-3"></span>
+    </div>
+
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="auth-header">
+                <img class="auth-logo" src="../assets/img/brand/logo.png" title="<?php echo $business_name; ?>" alt="<?php echo $business_name; ?>">
+                <h1 class="auth-title"><?php echo $translations["login"]; ?></h1>
+                <p class="auth-subtitle">Welcome back to <?php echo $business_name; ?></p>
+            </div>
+
+            <?php if (!empty($login_error)) : ?>
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <?php echo $login_error; ?>
                 </div>
+            <?php endif; ?>
+
+            <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        <i class="bi bi-envelope"></i> <?php echo $translations["email"]; ?>
+                    </label>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <i class="bi bi-lock"></i> <?php echo $translations["password"]; ?>
+                    </label>
+                    <input type="password" class="form-control" id="password" name="password" 
+                           placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <?php echo $translations["next"]; ?>
+                </button>
+            </form>
+
+            <div class="auth-links">
+                <p>
+                    <?php echo $translations["youdonthaveaccount"]; ?> 
+                    <a href="../register/"><?php echo $translations["registerbtn"]; ?></a>
+                </p>
+                <p style="margin-top: 0.5rem;">
+                    <a href="../admin/"><?php echo $translations["adminaccountlogin"]; ?></a>
+                </p>
             </div>
         </div>
-
-        <div class="lg-copyright">
-            &copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($business_name); ?> &middot;
-            <span><?php echo $translations["copyright"];?> <span class="lg-heart">&hearts;</span></span>
-            <a href="https://gymoneglobal.com/?lang=<?php echo $lang_code; ?>" target="_blank" rel="noopener noreferrer">GYM One</a>
-        </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <div class="auth-copyright">
+        &copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($business_name); ?> &middot;
+        <?php echo $translations["copyright"];?> <span class="heart">&hearts;</span>
+        <a href="https://gymoneglobal.com/?lang=<?php echo $lang_code; ?>" target="_blank" rel="noopener noreferrer">GYM One</a>
+    </div>
 </body>
 
 </html>

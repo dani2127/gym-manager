@@ -10,19 +10,19 @@ $userid = $_SESSION['adminuser'];
 
 function read_env_file($file_path)
 {
-    $env_file = file_get_contents($file_path);
-    $env_lines = explode("\n", $env_file);
+    if (!is_readable($file_path)) {
+        return [];
+    }
     $env_data = [];
-
-    foreach ($env_lines as $line) {
-        $line_parts = explode('=', $line);
-        if (count($line_parts) == 2) {
-            $key = trim($line_parts[0]);
-            $value = trim($line_parts[1]);
-            $env_data[$key] = $value;
+    foreach (preg_split("/\r\n|\n|\r/", (string) file_get_contents($file_path)) as $line) {
+        if (trim($line) === '' || strpos(ltrim($line), '#') === 0) {
+            continue;
+        }
+        $parts = explode('=', $line, 2);
+        if (count($parts) === 2) {
+            $env_data[trim($parts[0])] = trim($parts[1]);
         }
     }
-
     return $env_data;
 }
 
@@ -38,15 +38,12 @@ $lang_code = $env_data['LANG_CODE'] ?? '';
 $version = $env_data["APP_VERSION"] ?? '';
 $currency = $env_data["CURRENCY"] ?? '';
 
-
 $lang = $lang_code;
-
 $langDir = __DIR__ . "/../../assets/lang/";
-
 $langFile = $langDir . "$lang.json";
 
 if (!file_exists($langFile)) {
-    die("A nyelvi fájl nem található: $langFile");
+    die("Language file not found: $langFile");
 }
 
 $translations = json_decode(file_get_contents($langFile), true);
@@ -54,29 +51,22 @@ $translations = json_decode(file_get_contents($langFile), true);
 $conn = new mysqli($db_host, $db_username, $db_password, $db_name);
 
 if ($conn->connect_error) {
-    die("Kapcsolódási hiba: " . $conn->connect_error);
+    die("Connection error: " . $conn->connect_error);
 }
+$conn->set_charset('utf8mb4');
 
+// Registration chart data
 $months = [
-    "01" => $translations["Jan"],
-    "02" => $translations["Feb"],
-    "03" => $translations["Mar"],
-    "04" => $translations["Apr"],
-    "05" => $translations["May"],
-    "06" => $translations["Jun"],
-    "07" => $translations["Jul"],
-    "08" => $translations["Aug"],
-    "09" => $translations["Sep"],
-    "10" => $translations["Oct"],
-    "11" => $translations["Nov"],
-    "12" => $translations["Dec"]
+    "01" => $translations["Jan"], "02" => $translations["Feb"], "03" => $translations["Mar"],
+    "04" => $translations["Apr"], "05" => $translations["May"], "06" => $translations["Jun"],
+    "07" => $translations["Jul"], "08" => $translations["Aug"], "09" => $translations["Sep"],
+    "10" => $translations["Oct"], "11" => $translations["Nov"], "12" => $translations["Dec"]
 ];
 
 $current_month = (int) date('m');
 $current_year = (int) date('Y');
-
-$categories = array();
-$dataRegistrations = array();
+$categories = [];
+$dataRegistrations = [];
 
 for ($i = 11; $i >= 0; $i--) {
     $timestamp = mktime(0, 0, 0, $current_month - $i, 1, $current_year);
@@ -85,12 +75,9 @@ for ($i = 11; $i >= 0; $i--) {
     $dataRegistrations[$year_month] = 0;
 }
 
-$sqlRegistrations = "SELECT DATE_FORMAT(registration_date, '%Y-%m') as reg_month, 
-                            COUNT(*) as count 
-                     FROM users 
-                     WHERE registration_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-                     GROUP BY reg_month
-                     ORDER BY reg_month";
+$sqlRegistrations = "SELECT DATE_FORMAT(registration_date, '%Y-%m') as reg_month, COUNT(*) as count 
+                     FROM users WHERE registration_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+                     GROUP BY reg_month ORDER BY reg_month";
 $resultRegistrations = $conn->query($sqlRegistrations);
 
 if ($resultRegistrations->num_rows > 0) {
@@ -99,110 +86,82 @@ if ($resultRegistrations->num_rows > 0) {
     }
 }
 
-
+// User count
 $sqlUserCount = "SELECT COUNT(*) as count FROM users";
 $resultUserCount = $conn->query($sqlUserCount);
-
 $userCount = 0;
-
 if ($resultUserCount->num_rows > 0) {
     $row = $resultUserCount->fetch_assoc();
     $userCount = $row["count"];
 }
 
+// Check if boss
 $sql = "SELECT is_boss FROM workers WHERE userid = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $userid);
 $stmt->execute();
 $stmt->store_result();
-
 $is_boss = null;
-
 if ($stmt->num_rows > 0) {
     $stmt->bind_result($is_boss);
     $stmt->fetch();
 }
 $stmt->close();
 
-$file_path = 'https://api.gymoneglobal.com/latest/version.txt';
-
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $file_path);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-$latest_version = curl_exec($ch);
-curl_close($ch);
-
+// Version check
+$latest_version = @file_get_contents('https://api.gymoneglobal.com/latest/version.txt');
 $current_version = $version;
+$is_new_version_available = is_string($latest_version) && version_compare(trim($latest_version), $current_version) > 0;
 
-$is_new_version_available = version_compare($latest_version, $current_version) > 0;
+// Get admin name
+$sql = "SELECT lastname FROM workers WHERE userid = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param('i', $userid);
+$stmt->execute();
+$stmt->bind_result($username);
+$stmt->fetch();
+$stmt->close();
 
+// Average duration
 $sql = "SELECT AVG(duration) AS avg_duration FROM workout_stats WHERE duration IS NOT NULL";
-$result = mysqli_query($conn, $sql);
-
+$result = $conn->query($sql);
 $avgDuration = 0;
-if ($result && mysqli_num_rows($result) > 0) {
-    $row = mysqli_fetch_assoc($result);
+if ($result && $result->num_rows > 0) {
+    $row = $result->fetch_assoc();
     $avgDuration = round($row['avg_duration'], 0);
 }
 
-
+// Gender distribution
 $sql = "SELECT gender, COUNT(*) as count FROM users GROUP BY gender";
 $result = $conn->query($sql);
-
 $maleCount = 0;
 $femaleCount = 0;
-
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        if ($row["gender"] == "Male") {
-            $maleCount = $row["count"];
-        } elseif ($row["gender"] == "Female") {
-            $femaleCount = $row["count"];
-        }
+        if ($row["gender"] == "Male") $maleCount = $row["count"];
+        elseif ($row["gender"] == "Female") $femaleCount = $row["count"];
     }
 }
 
-$sql = "
-    SELECT 
-        gender, 
-        COUNT(*) AS free_lockers 
-    FROM lockers 
-    WHERE user_id IS NULL 
-    GROUP BY gender
-";
-
+// Free lockers
+$sql = "SELECT gender, COUNT(*) as free_lockers FROM lockers WHERE user_id IS NULL GROUP BY gender";
 $result = $conn->query($sql);
-
-$free_lockers = [
-    'Male' => 0,
-    'Female' => 0,
-];
-
+$free_lockers = ['Male' => 0, 'Female' => 0];
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $free_lockers[$row['gender']] = $row['free_lockers'];
     }
 }
 
-$sql = "
-    SELECT 
-        `date`,
-        COALESCE(SUM(bank_card), 0) AS bank_card,
-        COALESCE(SUM(cash), 0) AS cash
-    FROM 
-        `revenu_stats`
-    WHERE 
-        `date` >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-    GROUP BY 
-        `date`
-    ORDER BY 
-        `date` ASC;
-";
+// Revenue data
+$sql = "SELECT `date`, COALESCE(SUM(bank_card), 0) AS bank_card, COALESCE(SUM(cash), 0) AS cash 
+        FROM `revenu_stats` WHERE `date` >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY `date` ORDER BY `date` ASC";
 $result = $conn->query($sql);
 
 $dates = [];
 $bankCardData = [];
 $cashData = [];
+$formattedDates = [];
 
 for ($i = 6; $i >= 0; $i--) {
     $date = date('Y-m-d', strtotime("-$i days"));
@@ -224,529 +183,211 @@ foreach ($dates as $date => $values) {
 
 $conn->close();
 
-
+$page_title = $translations["statspage"];
+include __DIR__ . '/../includes/head.php';
 ?>
 
+<?php include __DIR__ . '/../includes/sidebar.php'; ?>
 
+<main class="admin-main">
+    <?php include __DIR__ . '/../includes/topbar.php'; ?>
 
+    <div class="admin-content">
+        <?php if ($is_boss == 1 && $is_new_version_available): ?>
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <?php echo $translations["newupdate-text"]; ?>
+        </div>
+        <?php endif; ?>
 
-<!DOCTYPE html>
-<html lang="<?php echo $lang_code; ?>">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card animate-in" style="--card-accent: var(--accent-orange);">
+                <div class="stat-card-header">
+                    <div class="stat-card-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?php echo $userCount; ?></div>
+                <div class="stat-card-label"><?php echo $translations["users"]; ?></div>
+            </div>
 
-<head>
-    <meta charset="UTF-8">
-    <title><?php echo $translations["dashboard"]; ?></title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="../../assets/css/dashboard.css">
-    <link rel="shortcut icon" href="https://gymoneglobal.com/assets/img/logo.png" type="image/x-icon">
-</head>
-<!-- ApexCharts -->
+            <div class="stat-card animate-in" style="--card-accent: var(--accent-blue);">
+                <div class="stat-card-header">
+                    <div class="stat-card-icon blue">
+                        <i class="bi bi-gender-male"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?php echo $maleCount; ?></div>
+                <div class="stat-card-label">Male Members</div>
+            </div>
+
+            <div class="stat-card animate-in" style="--card-accent: var(--accent-purple);">
+                <div class="stat-card-header">
+                    <div class="stat-card-icon purple">
+                        <i class="bi bi-gender-female"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?php echo $femaleCount; ?></div>
+                <div class="stat-card-label">Female Members</div>
+            </div>
+
+            <div class="stat-card animate-in" style="--card-accent: var(--accent-green);">
+                <div class="stat-card-header">
+                    <div class="stat-card-icon green">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?php echo $avgDuration; ?>m</div>
+                <div class="stat-card-label">Avg. Workout</div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="content-grid">
+            <!-- Registration Chart -->
+            <div class="card animate-in">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-header-icon">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <div>
+                            <div class="card-title"><?php echo $translations["new-users"]; ?></div>
+                            <div class="card-subtitle">Last 12 months</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="registrationChart" class="chart-container"></div>
+                </div>
+            </div>
+
+            <!-- Revenue Chart -->
+            <div class="card animate-in">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-header-icon" style="background: rgba(34, 197, 94, 0.1); color: var(--accent-green);">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">Revenue</div>
+                            <div class="card-subtitle">Last 7 days</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="revenueChart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Row -->
+        <div class="content-grid">
+            <!-- Gender Distribution -->
+            <div class="card animate-in">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-header-icon" style="background: rgba(168, 85, 247, 0.1); color: var(--accent-purple);">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">Gender Distribution</div>
+                            <div class="card-subtitle">Member breakdown</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="genderChart" class="chart-container" style="min-height: 250px;"></div>
+                </div>
+            </div>
+
+            <!-- Lockers Status -->
+            <div class="card animate-in">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-header-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--accent-blue);">
+                            <i class="bi bi-lock"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">Locker Status</div>
+                            <div class="card-subtitle">Available lockers</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                        <div style="text-align: center; padding: 24px; background: rgba(59, 130, 246, 0.05); border-radius: 12px;">
+                            <div style="font-size: 48px; font-weight: 800; color: var(--accent-blue);"><?php echo $free_lockers['Male']; ?></div>
+                            <div style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;">
+                                <i class="bi bi-gender-male"></i> Male Lockers
+                            </div>
+                        </div>
+                        <div style="text-align: center; padding: 24px; background: rgba(168, 85, 247, 0.05); border-radius: 12px;">
+                            <div style="font-size: 48px; font-weight: 800; color: var(--accent-purple);"><?php echo $free_lockers['Female']; ?></div>
+                            <div style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;">
+                                <i class="bi bi-gender-female"></i> Female Lockers
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="../../assets/js/date-time.js"></script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Registration Chart
+    let regData = Object.values(<?php echo json_encode($dataRegistrations); ?>);
+    var regOptions = {
+        chart: { type: 'area', height: 280, fontFamily: 'Plus Jakarta Sans, sans-serif', toolbar: { show: false }, zoom: { enabled: false }, background: 'transparent' },
+        colors: ['#F97316'],
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 100] } },
+        stroke: { curve: 'smooth', width: 2 },
+        series: [{ name: 'Registrations', data: regData }],
+        xaxis: { categories: <?php echo json_encode($categories); ?>, labels: { style: { colors: '#6B7280', fontSize: '11px' } }, axisBorder: { show: false }, axisTicks: { show: false } },
+        yaxis: { labels: { style: { colors: '#6B7280', fontSize: '11px' } } },
+        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
+        dataLabels: { enabled: false },
+        tooltip: { theme: 'dark' }
+    };
+    new ApexCharts(document.querySelector("#registrationChart"), regOptions).render();
 
-<body>
-    <nav class="navbar navbar-inverse visible-xs">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#"><img src="../../assets/img/logo.png" width="50px" alt="Logo"></a>
-            </div>
-            <div class="collapse navbar-collapse" id="myNavbar">
-                <ul class="nav navbar-nav">
-                    <li><a href="../dashboard"><i class="bi bi-speedometer"></i>
-                            <?php echo $translations["mainpage"]; ?></a></li>
-                    <li><a href="../users"><i class="bi bi-people"></i> <?php echo $translations["users"]; ?></a></li>
-                    <li class="active"><a href="#"><i class="bi bi-bar-chart"></i>
-                            <?php echo $translations["statspage"]; ?></a></li>
-                    <li><a href="../boss/sell"><i class="bi bi-shop"></i> <?php echo $translations["sellpage"]; ?></a>
-                    </li>
-                    <li><a href="../invoices"><i class="bi bi-receipt"></i>
-                            <?php echo $translations["invoicepage"]; ?></a></li>
-                    <?php if ($is_boss === 1) { ?>
-                        <li class="dropdown">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="bi bi-gear"></i>
-                                <?php echo $translations["settings"]; ?> <span class="caret"></span></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="../boss/mainsettings"><?php echo $translations["businesspage"]; ?></a></li>
-                                <li><a href="../boss/workers"><?php echo $translations["workers"]; ?></a></li>
-                                <li><a href="../boss/packages"><?php echo $translations["packagepage"]; ?></a></li>
-                                <li><a href="../boss/hours"><?php echo $translations["openhourspage"]; ?></a></li>
-                                <li><a href="../boss/smtp"><?php echo $translations["mailpage"]; ?></a></li>
-                                <li><a href="../boss/chroom"><?php echo $translations["chroompage"]; ?></a></li>
-                                <li><a href="../boss/rule"><?php echo $translations["rulepage"]; ?></a></li>
-                            </ul>
-                        </li>
-                    <?php } ?>
-                    <li><a href="../shop/tickets"><i class="bi bi-ticket"></i>
-                            <?php echo $translations["ticketspage"]; ?></a></li>
-                    <li><a href="../trainers/timetable"><i class="bi bi-calendar-event"></i>
-                            <?php echo $translations["timetable"]; ?></a></li>
-                    <li><a href="../trainers/personal"><i class="bi bi-award"></i>
-                            <?php echo $translations["trainers"]; ?></a></li>
-                    <?php if ($is_boss === 1) { ?>
-                        <li><a href="../updater"><i class="bi bi-cloud-download"></i>
-                                <?php echo $translations["updatepage"]; ?>
-                                <?php if ($is_new_version_available): ?>
-                                    <span class="badge badge-warning"><i class="bi bi-exclamation-circle"></i></span>
-                                <?php endif; ?>
-                            </a></li>
-                    <?php } ?>
-                    <li><a href="../log"><i class="bi bi-clock-history"></i> <?php echo $translations["logpage"]; ?></a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    // Revenue Chart
+    var revOptions = {
+        chart: { type: 'bar', height: 280, fontFamily: 'Plus Jakarta Sans, sans-serif', toolbar: { show: false }, background: 'transparent' },
+        colors: ['#22C55E', '#3B82F6'],
+        series: [
+            { name: 'Cash', data: <?php echo json_encode($cashData); ?> },
+            { name: 'Card', data: <?php echo json_encode($bankCardData); ?> }
+        ],
+        xaxis: { categories: <?php echo json_encode($formattedDates); ?>, labels: { style: { colors: '#6B7280', fontSize: '11px' } } },
+        yaxis: { labels: { style: { colors: '#6B7280', fontSize: '11px' } } },
+        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
+        plotOptions: { bar: { borderRadius: 6, columnWidth: '60%' } },
+        dataLabels: { enabled: false },
+        tooltip: { theme: 'dark' },
+        legend: { position: 'top', labels: { colors: '#9CA3AF' } }
+    };
+    new ApexCharts(document.querySelector("#revenueChart"), revOptions).render();
 
-    <div class="container-fluid">
-        <div class="row content">
-            <div class="col-sm-2 sidenav hidden-xs text-center">
-                <h2><img src="../../assets/img/logo.png" width="105px" alt="Logo"></h2>
-                <p class="lead mb-4 fs-4"><?php echo $business_name ?> - <?php echo $version; ?></p>
-                <ul class="nav nav-pills nav-stacked">
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="../dashboard/">
-                            <i class="bi bi-speedometer"></i> <?php echo $translations["mainpage"]; ?>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="../users">
-                            <i class="bi bi-people"></i> <?php echo $translations["users"]; ?>
-                        </a>
-                    </li>
-                    <li class="sidebar-item active">
-                        <a class="sidebar-link" href="#">
-                            <i class="bi bi-bar-chart"></i> <?php echo $translations["statspage"]; ?>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="../boss/sell">
-                            <i class="bi bi-shop"></i> <?php echo $translations["sellpage"]; ?>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="../invoices/" class="sidebar-link">
-                            <i class="bi bi-receipt"></i> <?php echo $translations["invoicepage"]; ?>
-                        </a>
-                    </li>
-                    <?php
-                    if ($is_boss === 1) {
-                        ?>
-                        <li class="sidebar-header">
-                            <?php echo $translations["settings"]; ?>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/mainsettings">
-                                <i class="bi bi-gear"></i>
-                                <span><?php echo $translations["businesspage"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/workers">
-                                <i class="bi bi-people"></i>
-                                <span><?php echo $translations["workers"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/packages">
-                                <i class="bi bi-box-seam"></i>
-                                <span><?php echo $translations["packagepage"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/hours">
-                                <i class="bi bi-clock"></i>
-                                <span><?php echo $translations["openhourspage"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/smtp">
-                                <i class="bi bi-envelope-at"></i>
-                                <span><?php echo $translations["mailpage"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/chroom">
-                                <i class="bi bi-duffle"></i>
-                                <span><?php echo $translations["chroompage"]; ?></span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link" href="../boss/rule">
-                                <i class="bi bi-file-ruled"></i>
-                                <span><?php echo $translations["rulepage"]; ?></span>
-                            </a>
-                        </li>
-                        <?php
-                    }
-                    ?>
-                    <li class="sidebar-header">
-                        <?php echo $translations["shopcategory"]; ?>
-
-                    </li>
-                    <li class="sidebar-item">
-                        <!-- <a class="sidebar-ling" href="../shop/gateway">
-                            <i class="bi bi-shield-lock"></i>
-                            <span><?php echo $translations["gatewaypage"]; ?></span>
-                        </a> -->
-                        <a class="sidebar-ling" href="../shop/tickets">
-                            <i class="bi bi-ticket"></i>
-                            <span><?php echo $translations["ticketspage"]; ?></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-header">
-                        <?php echo $translations["trainersclass"]; ?>
-                    </li>
-                    <li><a class="sidebar-link" href="../trainers/timetable">
-                            <i class="bi bi-calendar-event"></i>
-                            <span><?php echo $translations["timetable"]; ?></span>
-                        </a></li>
-                    <li><a class="sidebar-link" href="../trainers/personal">
-                            <i class="bi bi-award"></i>
-                            <span><?php echo $translations["trainers"]; ?></span>
-                        </a></li>
-                    <li class="sidebar-header"><?php echo $translations["other-header"]; ?></li>
-                    <?php
-                    if ($is_boss === 1) {
-                        ?>
-                        <li class="sidebar-item">
-                            <a class="sidebar-ling" href="../updater">
-                                <i class="bi bi-cloud-download"></i>
-                                <span><?php echo $translations["updatepage"]; ?></span>
-                                <?php if ($is_new_version_available): ?>
-                                    <span class="sidebar-badge badge">
-                                        <i class="bi bi-exclamation-circle"></i>
-                                    </span>
-                                <?php endif; ?>
-                            </a>
-                        </li>
-                        <?php
-                    }
-                    ?>
-                    <li class="sidebar-item">
-                        <a class="sidebar-ling" href="../log">
-                            <i class="bi bi-clock-history"></i>
-                            <span><?php echo $translations["logpage"]; ?></span>
-                        </a>
-                    </li>
-                </ul><br>
-            </div>
-            <br>
-            <div class="col-sm-10">
-                <div class="d-none topnav d-sm-inline-block">
-                    <a href="https://gymoneglobal.com/discord" class="btn btn-primary mx-1" target="_blank"
-                        rel="noopener noreferrer">
-                        <i class="bi bi-question-circle"></i>
-                        <?php echo $translations["support"]; ?>
-                    </a>
-
-                    <a href="https://gymoneglobal.com/docs" class="btn btn-danger" target="_blank"
-                        rel="noopener noreferrer">
-                        <i class="bi bi-journals"></i>
-                        <?php echo $translations["docs"]; ?>
-                    </a>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#logoutModal">
-                        <?php echo $translations["logout"]; ?>
-                    </button>
-                    <h5 id="clock" style="display: inline-block; margin-bottom: 0;"></h5>
-                </div>
-                <?php
-
-                if ($is_boss == 1 && $is_new_version_available) {
-                    ?>
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <div class="alert alert-danger">
-                                <?php echo $translations["newupdate-text"]; ?>
-                            </div>
-                        </div>
-                    </div>
-                    <?php
-                }
-                ?>
-                <div class="row">
-                    <div class="col-sm-12">
-                        <?php
-                        if (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] !== 'on') {
-                            echo '<div id="notHttpsAlert" class="alert alert-warning shadow-sm" role="alert">';
-                            echo '<i class="bi bi-exclamation-triangle"></i> ' . $translations['notusehttps'];
-                            echo '</div>';
-                        }
-                        ?>
-                        <?php
-                        $ruleContent = file_get_contents('../boss/rule/rule.html');
-
-                        if (empty($ruleContent)) {
-                            echo '<div class="alert alert-danger">';
-                            echo '<i class="bi bi-exclamation-triangle"></i> ' . $translations['gymrulenotset'];
-                            echo '</div>';
-                        }
-                        ?>
-
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-sm-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <p class="lead"><?php echo $translations["new-users"]; ?></p>
-                            </div>
-                            <div class="card-body">
-                                <div class="text-center" id="userschart"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="card">
-                            <div class="card-header">
-                                <p class="lead"><?php echo $translations["genderstats"]; ?></p>
-                            </div>
-                            <div class="card-body">
-                                <div class="text-center" id="malefamalechart"></div>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-header">
-                                <p class="lead"><?php echo $translations["averagetraintime"]; ?></p>
-                            </div>
-                            <div class="card-body text-center">
-                                <h1 class="lead"><?= $avgDuration; ?> <?= $translations["minutes"]; ?></h1>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="card-header">
-                                    <p class="lead"><?php echo $translations["avilablelockers"]; ?></p>
-                                </div>
-                                <div class="card-body text-center">
-                                    <p class="lead">
-                                        <?php
-                                        if ($free_lockers['Male'] > 3) {
-                                            echo '<span class="badge bg-label-success">' . $translations["boy"] . ": " . $free_lockers['Male'] . '</span>';
-                                        } elseif ($free_lockers['Male'] > 0) {
-                                            echo '<span class="badge bg-label-warning">' . $translations["boy"] . ": " . $free_lockers['Male'] . '</span>';
-                                        } else {
-                                            echo '<span class="badge bg-label-danger">' . $translations["boylockernotavilable"] . '</span>';
-                                        }
-                                        ?>
-                                    </p>
-
-                                    <p class="lead">
-                                        <?php
-                                        if ($free_lockers['Female'] > 3) {
-                                            echo '<span class="badge bg-label-success">' . $translations["girl"] . ": " . $free_lockers['Female'] . '</span>';
-                                        } elseif ($free_lockers['Female'] > 0) {
-                                            echo '<span class="badge bg-label-warning">' . $translations["girl"] . ": " . $free_lockers['Female'] . '</span>';
-                                        } else {
-                                            echo '<span class="badge bg-label-danger">' . $translations["girllockernotavilable"] . '</span>';
-                                        }
-                                        ?>
-                                    </p>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col text-center">
-                        <h2 class="lead"><?php echo $translations["moneystats"]; ?></h2>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="text-center" id="moneyincomechart"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- EXIT MODAL -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" style="margin-top: 100px;">
-            <div class="modal-content" style="border: none; box-shadow: 0 0 40px rgba(0,0,0,.2);">
-                <div class="modal-body text-center" style="padding: 40px;">
-
-                    <div style="margin-bottom: 25px;">
-                        <div style="width: 80px; height: 80px; margin: 0 auto;
-                                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                                border-radius: 50%;
-                                display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-box-arrow-right" style="color: #fff; font-size: 40px;"></i>
-                        </div>
-                    </div>
-
-                    <h4 style="font-weight: bold; margin-bottom: 15px;">
-                        <p><?php echo $translations["exit-modal"]; ?></p>
-                    </h4>
-
-                    <div class="text-center">
-                        <a type="button" class="btn btn-default" data-dismiss="modal"
-                            style="padding: 8px 25px; margin-right: 10px;">
-                            <i class="bi bi-x-circle" style="margin-right: 5px;"></i>
-                            <?php echo $translations["not-yet"]; ?>
-                        </a>
-
-                        <a href="../logout.php" type="button" class="btn btn-danger" style="padding: 8px 25px;">
-                            <i class="bi bi-check-circle" style="margin-right: 5px;"></i>
-                            <?php echo $translations["confirm"]; ?>
-                        </a>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SCRIPTS! -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            let seriesData = Object.values(<?php echo json_encode($dataRegistrations); ?>);
-
-            var options = {
-                chart: {
-                    type: 'area',
-                    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif',
-                    toolbar: {
-                        show: false
-                    },
-                    zoom: {
-                        enabled: false
-                    }
-                },
-                colors: ['#59F8E4'],
-                series: [{
-                    name: '<?php echo $translations["reg-number"]; ?>',
-                    data: seriesData
-                }],
-                xaxis: {
-                    categories: <?php echo json_encode($categories); ?>,
-                },
-                yaxis: {
-                    tickAmount: Math.max(...seriesData),
-                    min: 0,
-                    labels: {
-                        formatter: function (value) {
-                            return Math.floor(value);
-                        }
-                    }
-                },
-            };
-
-            var chart = new ApexCharts(document.querySelector("#userschart"), options);
-            chart.render();
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var options = {
-                series: [<?php echo $maleCount; ?>, <?php echo $femaleCount; ?>],
-                chart: {
-                    type: 'donut',
-                    width: '100%',
-                    height: 'auto',
-                    toolbar: {
-                        show: false
-                    }
-                },
-                colors: ['#1E90FF', '#FF69B4'],
-                labels: ['<?php echo $translations["boy"]; ?>', '<?php echo $translations["girl"]; ?>'],
-                dataLabels: {
-                    enabled: true,
-                    formatter: function (val, opts) {
-                        return val.toFixed(2) + '%';
-                    }
-                },
-                tooltip: {
-                    y: {
-                        formatter: function (val, opts) {
-                            var total = opts.globals.series.reduce((a, b) => a + b, 0);
-                            var percent = (val / total) * 100;
-                            return percent.toFixed(2) + '%';
-                        }
-                    }
-                },
-                legend: {
-                    show: true,
-                    position: 'bottom'
-                },
-                responsive: [{
-                    breakpoint: 480,
-                    options: {
-                        chart: {
-                            width: '100%'
-                        },
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }],
-            };
-
-            var chart = new ApexCharts(document.querySelector("#malefamalechart"), options);
-            chart.render();
-        });
-    </script>
-    <script>
-        var options = {
-            chart: {
-                type: 'area',
-                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif',
-
-                toolbar: {
-                    show: false
-                },
-                zoom: {
-                    enabled: false
-                }
-            },
-            colors: ['#59F8E4', '#FB7B18'],
-
-            series: [{
-                name: '<?php echo $translations["card"]; ?>',
-                data: <?php echo json_encode($bankCardData); ?>
-            }, {
-                name: '<?php echo $translations["cash"]; ?>',
-                data: <?php echo json_encode($cashData); ?>
-            }],
-            xaxis: {
-                categories: <?php echo json_encode($formattedDates); ?>
-            },
-            stroke: {
-                curve: 'smooth'
-            },
-            yaxis: {
-                title: {
-                    text: '<?php echo $translations["incomemoney"]; ?> (<?php echo $currency; ?>)'
-                }
-            },
-            legend: {
-                position: 'bottom'
-            }
-        };
-
-        var chart = new ApexCharts(document.querySelector("#moneyincomechart"), options);
-        chart.render();
-    </script>
-    <script src="../../assets/js/date-time.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-        crossorigin="anonymous"></script>
+    // Gender Chart
+    var genderOptions = {
+        chart: { type: 'donut', height: 250, fontFamily: 'Plus Jakarta Sans, sans-serif', background: 'transparent' },
+        colors: ['#3B82F6', '#A855F7'],
+        series: [<?php echo $maleCount; ?>, <?php echo $femaleCount; ?>],
+        labels: ['Male', 'Female'],
+        plotOptions: { pie: { donut: { size: '70%' } } },
+        legend: { position: 'bottom', labels: { colors: '#9CA3AF' } },
+        dataLabels: { enabled: false },
+        tooltip: { theme: 'dark' }
+    };
+    new ApexCharts(document.querySelector("#genderChart"), genderOptions).render();
+});
+</script>
 </body>
-
 </html>
