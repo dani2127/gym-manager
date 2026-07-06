@@ -334,62 +334,129 @@ $initials = strtoupper(mb_substr((string) $lastname, 0, 1) . mb_substr((string) 
 <html lang="<?php echo $lang_code; ?>">
 
 <head>
-  <meta charset="UTF-8">
-  <title><?php echo $business_name; ?> - <?php echo $translations["profilepage"]; ?></title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="../../assets/css/dashboard.css">
-  <link rel="shortcut icon" href="../../assets/img/brand/favicon.png" type="image/x-icon">
-  <style>
-    /* ====== Modern profil (scoped: .dsh) ====== */
-    .dsh { --d-accent: #0950dc; --d-accent2: #2f73f0; --d-ink: #0f172a; --d-muted: #64748b; --d-line: rgba(15, 23, 42, .08); }
-    .dsh * { box-sizing: border-box; }
+    <meta charset="UTF-8">
+    <title><?php echo $business_name; ?> - <?php echo $translations["profilepage"]; ?></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../../assets/css/unified-theme.css">
+    <link rel="shortcut icon" href="../../assets/img/brand/favicon.png" type="image/x-icon">
+    <style>
+        /* ====== Layout (replaces Bootstrap 3 grid) ====== */
+        .container-fluid { width: 100%; padding: 0 15px; }
+        .row { display: flex; flex-wrap: wrap; margin: 0 -15px; }
+        .row > [class*="col-"] { padding: 0 15px; }
+        .col-sm-2 { flex: 0 0 16.666%; max-width: 16.666%; }
+        .col-sm-3 { flex: 0 0 25%; max-width: 25%; }
+        .col-sm-4 { flex: 0 0 33.333%; max-width: 33.333%; }
+        .col-sm-5 { flex: 0 0 41.666%; max-width: 41.666%; }
+        .col-sm-9 { flex: 0 0 75%; max-width: 75%; }
+        .col-sm-10 { flex: 0 0 83.333%; max-width: 83.333%; }
+        @media (max-width: 575px) {
+            .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-9, .col-sm-10 { flex: 0 0 100%; max-width: 100%; }
+        }
 
-    .dsh-welcome {
-      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-      background: linear-gradient(135deg, #0950dc, #2f73f0); color: #fff; border-radius: 20px;
-      padding: 22px 26px; margin-bottom: 22px; box-shadow: 0 16px 40px rgba(9, 80, 220, .28);
-    }
-    .dsh-logout {
-      display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, .16);
-      color: #fff; border: 1px solid rgba(255, 255, 255, .35); border-radius: 12px;
-      padding: 9px 18px; font-weight: 700; cursor: pointer; transition: .15s; text-decoration: none;
-    }
-    .dsh-logout:hover { background: rgba(255, 255, 255, .26); color: #fff; }
+        /* ====== Navbar (mobile) ====== */
+        .navbar { min-height: 50px; margin-bottom: 20px; border: 1px solid transparent; position: relative; }
+        .navbar-inverse { background-color: #222; border-color: #080808; }
+        .navbar-inverse .navbar-brand { color: #9d9d9d; display: inline-block; padding: 15px; font-size: 18px; line-height: 20px; height: 50px; }
+        .navbar-inverse .navbar-toggle { border-color: #333; float: right; padding: 9px 10px; margin-top: 8px; margin-right: 15px; background: transparent; border: 1px solid transparent; cursor: pointer; }
+        .navbar-inverse .navbar-toggle .icon-bar { display: block; width: 22px; height: 2px; background-color: #fff; border-radius: 1px; }
+        .navbar-inverse .navbar-collapse { border-color: #101010; }
+        .navbar-brand { float: left; text-decoration: none; }
+        .navbar-brand img { height: 40px; }
+        .collapse { display: none; }
+        .collapse.in { display: block; }
+        .navbar-nav { list-style: none; padding: 0; margin: 0; }
+        .navbar-nav > li > a { color: #f5f7fb; padding: 15px; text-decoration: none; display: block; }
+        .navbar-nav > li > a:hover { background-color: transparent; }
+        .navbar-nav > .active > a { color: #f1f1f1; background-color: #337ab7; }
+        .visible-xs { display: none !important; }
+        @media (max-width: 767px) { .visible-xs { display: block !important; } }
 
-    .dsh-welcome-hi { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; opacity: .85; }
-    .dsh-welcome-name { font-size: 24px; font-weight: 800; margin-top: 2px; }
+        /* ====== Nav pills stacked ====== */
+        .nav { padding-left: 0; margin-bottom: 0; list-style: none; }
+        .nav-pills > li > a { border-radius: 4px; padding: 10px 15px; }
+        .nav-stacked > li { float: none; }
+        .nav-stacked > li + li { margin-top: 2px; margin-left: 0; }
 
-    .dsh-card { background: #fff; border: 1px solid var(--d-line); border-radius: 18px; box-shadow: 0 10px 28px rgba(15, 23, 42, .06); overflow: hidden; margin-bottom: 16px; }
-    .dsh-card-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--d-line); }
-    .dsh-card-head i { color: var(--d-accent); font-size: 18px; }
-    .dsh-card-head h4 { margin: 0; font-size: 16px; font-weight: 800; color: var(--d-ink); }
-    .dsh-card-body { padding: 18px; }
-    .dsh-card.dsh-danger { border-color: #fecaca; }
-    .dsh-card.dsh-danger .dsh-card-head { border-bottom-color: #fecaca; }
-    .dsh-card.dsh-danger .dsh-card-head i { color: #dc2626; }
+        /* ====== Buttons ====== */
+        .btn-default { color: #333; background-color: #fff; border-color: #ccc; }
+        .btn-default:hover { color: #333; background-color: #e6e6e6; border-color: #adadad; }
 
-    .dsh label, .dsh .form-label { font-size: 13px; font-weight: 600; color: var(--d-muted); margin-bottom: .35rem; display: block; }
-    .dsh .form-control { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; font-size: 14px; background: #f8fafc; color: var(--d-ink); height: auto; box-shadow: none; transition: border-color .15s, box-shadow .15s, background .15s; }
-    .dsh .form-control:focus { border-color: var(--d-accent); background: #fff; box-shadow: 0 0 0 4px rgba(9, 80, 220, .12); outline: none; }
-    .dsh .form-group { margin-bottom: 14px; }
-    .dsh .form-text { color: var(--d-muted); }
+        /* ====== Utilities ====== */
+        .lead { font-size: 21px; font-weight: 200; line-height: 1.4; }
+        .text-center { text-align: center; }
+        .mb-4 { margin-bottom: 1.5rem !important; }
+        .fs-4 { font-size: 1.5rem !important; }
 
-    .dsh .btn { border-radius: 12px; padding: 10px 18px; font-weight: 700; font-size: 14px; border: none; display: inline-flex; align-items: center; gap: 7px; transition: background .15s, transform .15s; }
-    .dsh .btn-primary { background: var(--d-accent); color: #fff; }
-    .dsh .btn-primary:hover, .dsh .btn-primary:focus { background: #0742b8; color: #fff; transform: translateY(-1px); }
-    .dsh .btn-danger { background: #dc2626; color: #fff; }
-    .dsh .btn-danger:hover, .dsh .btn-danger:focus { background: #b91c1c; color: #fff; transform: translateY(-1px); }
-    .dsh .btn-block, .dsh .w-100 { width: 100%; justify-content: center; }
+        /* ====== Modals ====== */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal.in { display: block; }
+        .modal-dialog { position: relative; width: auto; margin: 30px auto; max-width: 500px; }
+        .modal-content { background: #fff; border: 1px solid rgba(0,0,0,.2); border-radius: 6px; box-shadow: 0 5px 15px rgba(0,0,0,.5); }
+        .modal-header { padding: 15px; border-bottom: 1px solid #e5e5e5; display: flex; align-items: center; justify-content: space-between; }
+        .modal-body { padding: 15px; position: relative; }
+        .modal-footer { padding: 15px; border-top: 1px solid #e5e5e5; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        .modal-title { margin: 0; font-weight: 500; }
+        .modal-header .close { background: none; border: none; font-size: 24px; cursor: pointer; color: #000; opacity: .5; }
 
-    .dsh-profilepic { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 12px; }
-    .dsh-profilepic img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 8px 24px rgba(15, 23, 42, .15); }
-    .dsh-profilepic .dsh-pp-empty { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f1f5fb; color: #9bb2e0; font-size: 40px; border: 2px dashed #c3d4f3; }
+        /* ====== Alerts ====== */
+        .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; }
+        .alert-success { color: #3c763d; background-color: #dff0d8; border-color: #d6e9c6; }
+        .alert-danger { color: #a94442; background-color: #f2dede; border-color: #ebccd1; }
+        .alert-warning { color: #8a6d3b; background-color: #fcf8e3; border-color: #faebcc; }
 
-    .dsh-col { display: flex; flex-direction: column; }
-    .dsh-equal { display: flex; flex-direction: column; height: 100%; }
-  </style>    <link rel="stylesheet" href="{../../}assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css"></head>
+        /* ====== Modern profil (scoped: .dsh) ====== */
+        .dsh { --d-accent: #0950dc; --d-accent2: #2f73f0; --d-ink: #0f172a; --d-muted: #64748b; --d-line: rgba(15, 23, 42, .08); }
+        .dsh * { box-sizing: border-box; }
+
+        .dsh-welcome {
+            display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+            background: linear-gradient(135deg, #0950dc, #2f73f0); color: #fff; border-radius: 20px;
+            padding: 22px 26px; margin-bottom: 22px; box-shadow: 0 16px 40px rgba(9, 80, 220, .28);
+        }
+        .dsh-logout {
+            display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, .16);
+            color: #fff; border: 1px solid rgba(255, 255, 255, .35); border-radius: 12px;
+            padding: 9px 18px; font-weight: 700; cursor: pointer; transition: .15s; text-decoration: none;
+        }
+        .dsh-logout:hover { background: rgba(255, 255, 255, .26); color: #fff; }
+
+        .dsh-welcome-hi { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; opacity: .85; }
+        .dsh-welcome-name { font-size: 24px; font-weight: 800; margin-top: 2px; }
+
+        .dsh-card { background: #fff; border: 1px solid var(--d-line); border-radius: 18px; box-shadow: 0 10px 28px rgba(15, 23, 42, .06); overflow: hidden; margin-bottom: 16px; }
+        .dsh-card-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--d-line); }
+        .dsh-card-head i { color: var(--d-accent); font-size: 18px; }
+        .dsh-card-head h4 { margin: 0; font-size: 16px; font-weight: 800; color: var(--d-ink); }
+        .dsh-card-body { padding: 18px; }
+        .dsh-card.dsh-danger { border-color: #fecaca; }
+        .dsh-card.dsh-danger .dsh-card-head { border-bottom-color: #fecaca; }
+        .dsh-card.dsh-danger .dsh-card-head i { color: #dc2626; }
+
+        .dsh label, .dsh .form-label { font-size: 13px; font-weight: 600; color: var(--d-muted); margin-bottom: .35rem; display: block; }
+        .dsh .form-control { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; font-size: 14px; background: #f8fafc; color: var(--d-ink); height: auto; box-shadow: none; transition: border-color .15s, box-shadow .15s, background .15s; }
+        .dsh .form-control:focus { border-color: var(--d-accent); background: #fff; box-shadow: 0 0 0 4px rgba(9, 80, 220, .12); outline: none; }
+        .dsh .form-group { margin-bottom: 14px; }
+        .dsh .form-text { color: var(--d-muted); }
+
+        .dsh .btn { border-radius: 12px; padding: 10px 18px; font-weight: 700; font-size: 14px; border: none; display: inline-flex; align-items: center; gap: 7px; transition: background .15s, transform .15s; }
+        .dsh .btn-primary { background: var(--d-accent); color: #fff; }
+        .dsh .btn-primary:hover, .dsh .btn-primary:focus { background: #0742b8; color: #fff; transform: translateY(-1px); }
+        .dsh .btn-danger { background: #dc2626; color: #fff; }
+        .dsh .btn-danger:hover, .dsh .btn-danger:focus { background: #b91c1c; color: #fff; transform: translateY(-1px); }
+        .dsh .btn-block, .dsh .w-100 { width: 100%; justify-content: center; }
+
+        .dsh-profilepic { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .dsh-profilepic img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 8px 24px rgba(15, 23, 42, .15); }
+        .dsh-profilepic .dsh-pp-empty { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f1f5fb; color: #9bb2e0; font-size: 40px; border: 2px dashed #c3d4f3; }
+
+        .dsh-col { display: flex; flex-direction: column; }
+        .dsh-equal { display: flex; flex-direction: column; height: 100%; }
+    </style>
+</head>
 
 <body>
   <nav class="navbar navbar-inverse visible-xs">
@@ -431,13 +498,18 @@ $initials = strtoupper(mb_substr((string) $lastname, 0, 1) . mb_substr((string) 
             </a>
           </li>
           <li class="sidebar-item active">
-            <a class="sidebar-link" href="">
+            <a class="sidebar-link" href="#">
               <i class="bi bi-person-badge"></i> <?php echo $translations["profilepage"]; ?>
             </a>
           </li>
           <li class="sidebar-item">
             <a class="sidebar-link" href="../invoices/">
               <i class="bi bi-receipt"></i> <?php echo $translations["invoicepage"]; ?>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="#" data-toggle="modal" data-target="#logoutModal">
+              <i class="bi bi-box-arrow-right"></i> <?php echo $translations["logout"]; ?>
             </a>
           </li>
         </ul><br>
@@ -628,7 +700,17 @@ $initials = strtoupper(mb_substr((string) $lastname, 0, 1) . mb_substr((string) 
     </div>
 
     <!-- SCRIPTS! -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            var toggle = e.target.closest('[data-toggle="collapse"]');
+            if (toggle) { e.preventDefault(); var t = document.querySelector(toggle.getAttribute('data-target')); if (t) t.classList.toggle('in'); }
+            var mt = e.target.closest('[data-toggle="modal"]');
+            if (mt) { e.preventDefault(); var m = document.querySelector(mt.getAttribute('data-target')); if (m) { m.classList.add('in'); document.body.style.overflow = 'hidden'; } }
+            var d = e.target.closest('[data-dismiss="modal"]');
+            if (d) { e.preventDefault(); var p = d.closest('.modal'); if (p) { p.classList.remove('in'); document.body.style.overflow = ''; } }
+            if (e.target.classList.contains('modal')) { e.target.classList.remove('in'); document.body.style.overflow = ''; }
+        });
+    </script>
     <script>
       // Profilkép élő előnézet kiválasztáskor
       (function () {

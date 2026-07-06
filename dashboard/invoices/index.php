@@ -79,7 +79,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <title><?php echo $business_name; ?> - <?php echo $translations["invoicepage"]; ?></title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
@@ -142,7 +142,8 @@ $conn->close();
         .dsh-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 48px 16px; color: var(--d-muted); }
         .dsh-empty i { font-size: 38px; opacity: .5; }
     </style>
-    <link rel="stylesheet" href="{../../}assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css">    <link rel="stylesheet" href="../assets/css/unified-theme.css"></head>
+    <link rel="stylesheet" href="../../assets/css/unified-theme.css">
+</head>
 
 <body>
     <nav class="navbar navbar-inverse visible-xs">
@@ -153,7 +154,7 @@ $conn->close();
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#"><img src="../../assets/img/logo.png" width="70px" alt="Logo"></a>
+                <a class="navbar-brand" href="../"><img width="70px" src="../../assets/img/logo.png" alt="Logo"></a>
             </div>
             <div class="collapse navbar-collapse" id="myNavbar">
                 <ul class="nav navbar-nav">
@@ -193,6 +194,11 @@ $conn->close();
                     <li class="sidebar-item active">
                         <a class="sidebar-link" href="">
                             <i class="bi bi-receipt"></i> <?php echo $translations["invoicepage"]; ?>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="../logout.php">
+                            <i class="bi bi-box-arrow-right"></i> <?php echo $translations["logout"]; ?>
                         </a>
                     </li>
                 </ul><br>
@@ -309,8 +315,6 @@ $conn->close();
             </div>
         </div>
 
-        <!-- SCRIPTS! -->
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 </body>
 
 </html>

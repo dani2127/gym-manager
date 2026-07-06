@@ -36,7 +36,7 @@
                     <button type="button" class="btn btn-ghost" data-dismiss="modal" style="margin-right: 12px;">
                         <?php echo $translations["not-yet"]; ?>
                     </button>
-                    <a href="../logout.php" class="btn btn-danger">
+                    <a href="<?php echo $_base ?? '/GYM-One'; ?>/admin/logout.php" class="btn btn-danger">
                         <i class="bi bi-check-circle"></i>
                         <?php echo $translations["confirm"]; ?>
                     </a>

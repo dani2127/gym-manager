@@ -192,6 +192,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       die("Connection failed: " . $conn->connect_error);
     }
 
+    $check = $conn->prepare("SELECT userid FROM users WHERE email = ?");
+    $check->bind_param("s", $email);
+    $check->execute();
+    $check->store_result();
+    if ($check->num_rows > 0) {
+      $alerts_html .= '<div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> This email is already registered. Please use a different email or log in.</div>';
+      $check->close();
+    } else {
+
     $stmt = $conn->prepare("INSERT INTO users (userid, firstname, lastname, email, password, gender, birthdate, city, street, house_number, registration_date, confirmed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     if ($stmt === false) {
@@ -284,6 +293,7 @@ EOD;
     }
 
     $stmt->close();
+    } // end else (email not duplicate)
     $conn->close();
   }
 }
