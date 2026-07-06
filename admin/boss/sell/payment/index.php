@@ -535,12 +535,16 @@ EOD;
         $recipientEmail = $email;
         $subject = $translations["payemailsubject"];
 
-        $message = (new Swift_Message($subject))
-            ->setFrom(["{$smtp_username}" => "{$business_name}"])
-            ->setTo([$recipientEmail])
-            ->setBody($emailHtml, 'text/html');
+        try {
+            $message = (new Swift_Message($subject))
+                ->setFrom(["{$smtp_username}" => "{$business_name}"])
+                ->setTo([$recipientEmail])
+                ->setBody($emailHtml, 'text/html');
 
-        $mailer->send($message);
+            $mailer->send($message);
+        } catch (Exception $e) {
+            error_log("Payment email failed: " . $e->getMessage());
+        }
 
         header("Location: ../../../dashboard");
     } else {
