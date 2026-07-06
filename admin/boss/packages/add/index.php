@@ -118,13 +118,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include __DIR__ . '/../../../includes/head.php'; ?>
 
 <body>
+    <?php include __DIR__ . '/../../../includes/sidebar.php'; ?>
+<main class="admin-main">
     <?php include __DIR__ . '/../../../includes/topbar.php'; ?>
-
-    <div class="container-fluid">
-        <div class="row content">
-            <?php include __DIR__ . '/../../../includes/sidebar.php'; ?>
-            <br>
-            <div class="col-sm-10">
+    <div class="admin-content">
                 <h1 class="text-center mb-4"><?php echo $translations["addpackage"]; ?></h1>
 
                 <form method="POST">
@@ -151,9 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <button type="submit" class="btn btn-primary"><i class="bi bi-box-arrow-down"></i> <?php echo $translations["add"]; ?></button>
                     <a href="../" class="btn btn-secondary"><i class="bi bi-box-arrow-left"></i> <?php echo $translations["not-yet"]; ?></a>
                 </form>
-            </div>
-        </div>
     </div>
+</main>
 
     <?php
     $conn->close();

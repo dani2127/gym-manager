@@ -214,11 +214,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </nav>
 
-    <div class="container-fluid">
-        <div class="row content">
 <?php include __DIR__ . '/../../../includes/sidebar.php'; ?>
-            <br>
-            <div class="col-sm-10">
+<main class="admin-main">
+    <?php include __DIR__ . '/../../../includes/topbar.php'; ?>
+    <div class="admin-content">
                 <h1 class="text-center mb-4"><?php echo $translations["updatepackage"]; ?></h1>
 
                 <?php if ($product): ?>
@@ -261,10 +260,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </form>
                 <?php endif; ?>
-            </div>
-        </div>
     </div>
-    </div>
+</main>
 
 
     

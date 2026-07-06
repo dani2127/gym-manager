@@ -170,12 +170,10 @@ $initial_content = file_get_contents('rule.html');
         </div>
     </nav>
 
-    <div class="container-fluid">
-        <div class="row content">
-            <?php include __DIR__ . '/../../includes/sidebar.php'; ?>
-            <br>
-            <div class="col-sm-10">
-                <?php include __DIR__ . '/../../includes/topbar.php'; ?>
+<?php include __DIR__ . '/../../includes/sidebar.php'; ?>
+<main class="admin-main">
+    <?php include __DIR__ . '/../../includes/topbar.php'; ?>
+    <div class="admin-content">
                 <div class="row text-center">
                     <div class="col-sm-12">
                         <h4>
@@ -203,9 +201,9 @@ $initial_content = file_get_contents('rule.html');
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
+</main>
 
     <?php
     $conn->close();

@@ -97,7 +97,7 @@ if (isset($_POST['add_ticket'])) {
     if ($stmt->execute()) {
         $alerts_html .= "<div class='alert alert-success'><i class='bi bi-check-circle-fill'></i> " . $translations['success-add'] . "</div>";
     } else {
-        $alerts_html .= "<div class='alert alert-danger'><i class="bi bi-x-circle-fill"></i> " . $translations['error-add'] . "</div>";
+        $alerts_html .= "<div class='alert alert-danger'><i class='bi bi-x-circle-fill'></i> " . $translations['error-add'] . "</div>";
     }
     $stmt->close();
 }
@@ -126,10 +126,9 @@ $page_title = $translations["ticketspage"];
 include __DIR__ . '/../../../admin/includes/head.php';
 ?>
 
-<?php include __DIR__ . '/../../../admin/includes/sidebar.php'; ?>
-
+<?php include __DIR__ . '/../../includes/sidebar.php'; ?>
 <main class="admin-main">
-    <?php include __DIR__ . '/../../../admin/includes/topbar.php'; ?>
+    <?php include __DIR__ . '/../../includes/topbar.php'; ?>
 
     <div class="admin-content">
         <?php echo $alerts_html; ?>

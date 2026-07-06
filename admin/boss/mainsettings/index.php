@@ -184,17 +184,13 @@ $conn->close();
 <?php $page_title = $translations["businesspage"] ?? 'Main Settings'; ?>
 <?php include __DIR__ . '/../../includes/head.php'; ?>
 
-    <div class="container-fluid">
-        <div class="row content">
-            <?php include __DIR__ . '/../../includes/sidebar.php'; ?>
-            <br>
-            <div class="col-sm-10">
-                <?php include __DIR__ . '/../../includes/topbar.php'; ?>
-                <div class="row">
-                    <div class="col-sm-12">
-                        <?php echo $alerts_html; ?>
-                        <div class="card shadow">
-                            <div class="card-body">
+<?php include __DIR__ . '/../../includes/sidebar.php'; ?>
+<main class="admin-main">
+    <?php include __DIR__ . '/../../includes/topbar.php'; ?>
+    <div class="admin-content">
+        <?php echo $alerts_html; ?>
+        <div class="card">
+            <div class="card-body">
 
                                 <?php
                                 if ($is_boss == 1) {
@@ -405,14 +401,12 @@ $conn->close();
                         ?>
 
 
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
+</main>
 
-    <!-- SCRIPTS! -->
-    <script src="../../../assets/js/date-time.js"></script>
+<!-- SCRIPTS! -->
+<script src="../../../assets/js/date-time.js"></script>
 </body>
 
 </html>

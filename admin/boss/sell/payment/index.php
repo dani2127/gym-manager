@@ -634,11 +634,10 @@ $is_new_version_available = version_compare($latest_version, $current_version) >
         </div>
     </nav>
 
-    <div class="container-fluid">
-        <div class="row content">
-            <?php include __DIR__ . '/../../../includes/sidebar.php'; ?>
-            <div class="col-sm-10">
-                <?php include __DIR__ . '/../../../includes/topbar.php'; ?>
+<?php include __DIR__ . '/../../../includes/sidebar.php'; ?>
+<main class="admin-main">
+    <?php include __DIR__ . '/../../../includes/topbar.php'; ?>
+    <div class="admin-content">
                 <?php
                 $pc_ini = function ($a, $b) {
                     $i = mb_strtoupper(mb_substr(trim((string) $a), 0, 1, 'UTF-8') . mb_substr(trim((string) $b), 0, 1, 'UTF-8'), 'UTF-8');
@@ -717,8 +716,7 @@ $is_new_version_available = version_compare($latest_version, $current_version) >
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+</main>
 
 
     <!-- Payment Modal -->

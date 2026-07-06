@@ -163,13 +163,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
 
 
 <body>
+<?php include __DIR__ . '/../../../includes/sidebar.php'; ?>
+<main class="admin-main">
     <?php include __DIR__ . '/../../../includes/topbar.php'; ?>
-
-    <div class="container-fluid">
-        <div class="row content">
-            <?php include __DIR__ . '/../../../includes/sidebar.php'; ?>
-            <br>
-            <div class="col-sm-10">
+    <div class="admin-content">
                 <div class="card">
                     <div class="card-header">
                         <h1 class="text-center mb-4"><?php echo $translations["werhousecorrection"]; ?></h1>
@@ -238,10 +235,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
                         <?php endwhile; ?>
                     </tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-    </div>
+ </div>
+</main>
 
     <?php
     $conn->close();

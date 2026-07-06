@@ -609,11 +609,10 @@ $is_new_version_available = version_compare($latest_version, $current_version) >
 <?php include __DIR__ . '/../../../../includes/head.php'; ?>
 
 
-    <div class="container-fluid">
-        <div class="row content">
-            <?php include __DIR__ . '/../../../../includes/sidebar.php'; ?>
-            <div class="col-sm-10">
-                <?php include __DIR__ . '/../../../../includes/topbar.php'; ?>
+<?php include __DIR__ . '/../../../../includes/sidebar.php'; ?>
+<main class="admin-main">
+    <?php include __DIR__ . '/../../../../includes/topbar.php'; ?>
+    <div class="admin-content">
                 <?php
                 $pc_ini = function ($a, $b) {
                     $i = mb_strtoupper(mb_substr(trim((string) $a), 0, 1, 'UTF-8') . mb_substr(trim((string) $b), 0, 1, 'UTF-8'), 'UTF-8');
@@ -708,11 +707,7 @@ $is_new_version_available = version_compare($latest_version, $current_version) >
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
     </div>
-
-    <!-- Payment Modal -->
     <div class="modal fade pc-modal" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -758,6 +753,7 @@ $is_new_version_available = version_compare($latest_version, $current_version) >
     <?php
     $conn->close();
     ?>
+</main>
     <!-- SCRIPTS! -->
     <script src="../../../../assets/js/date-time.js"></script>
 </body>

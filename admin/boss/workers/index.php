@@ -131,10 +131,9 @@ $page_title = $translations["workers"];
 include __DIR__ . '/../../../admin/includes/head.php';
 ?>
 
-<?php include __DIR__ . '/../../../admin/includes/sidebar.php'; ?>
-
+<?php include __DIR__ . '/../../includes/sidebar.php'; ?>
 <main class="admin-main">
-    <?php include __DIR__ . '/../../../admin/includes/topbar.php'; ?>
+    <?php include __DIR__ . '/../../includes/topbar.php'; ?>
 
     <div class="admin-content">
         <?php echo $alerts_html; ?>

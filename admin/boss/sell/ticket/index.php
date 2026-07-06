@@ -134,10 +134,10 @@ $is_new_version_available = is_string($latest_version)
 <?php include __DIR__ . '/../../../includes/head.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-    <?php include __DIR__ . '/../../../includes/sidebar.php'; ?>
-
-            <div class="col-sm-10">
-                <?php include __DIR__ . '/../../../includes/topbar.php'; ?>
+<?php include __DIR__ . '/../../../includes/sidebar.php'; ?>
+<main class="admin-main">
+    <?php include __DIR__ . '/../../../includes/topbar.php'; ?>
+    <div class="admin-content">
 
                 <!-- ===================== MODERN JEGYELADÁS ===================== -->
                 <div class="tk">
@@ -328,13 +328,11 @@ $is_new_version_available = is_string($latest_version)
                         <?php endif; ?>
                     </section>
 
-                </div>
-                <!-- =================== /MODERN JEGYELADÁS ==================== -->
-
-            </div>
         </div>
+        <!-- =================== /MODERN JEGYELADÁS ==================== -->
 
     </div>
+</main>
 
     <!-- ===================== STÍLUS (tk, kék GYM One akcent) ===================== -->
     <style>

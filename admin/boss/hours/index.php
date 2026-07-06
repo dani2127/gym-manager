@@ -329,12 +329,10 @@ $conn->close();
         </div>
     </nav>
 
-    <div class="container-fluid">
-        <div class="row content">
 <?php include __DIR__ . '/../../includes/sidebar.php'; ?>
-            <br>
-            <div class="col-sm-10">
-<?php include __DIR__ . '/../../includes/topbar.php'; ?>
+<main class="admin-main">
+    <?php include __DIR__ . '/../../includes/topbar.php'; ?>
+    <div class="admin-content">
                 <div class="row">
                     <div class="col-sm-12">
 
@@ -501,9 +499,9 @@ $conn->close();
                     }
                 </script>
 
-            </div>
         </div>
     </div>
+</main>
 
 
     <!-- SCRIPTS! -->
