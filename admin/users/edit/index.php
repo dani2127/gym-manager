@@ -293,7 +293,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['userid'])) {
 
 
 
-<?php $page_title = $translations["editprofile"] ?? 'Edit User'; ?>
+<?php $page_title = $translations["edituser"]; ?>
 <?php include __DIR__ . '/../../includes/head.php'; ?>
 
   <nav class="navbar navbar-inverse visible-xs">
@@ -442,9 +442,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['userid'])) {
                   <form method="post">
                     <div class="input-group">
                       <input type="text" class="form-control text-danger" id="emailVerifiedInput"
-                        value="<?php echo (isset($verify) && $verify == 'Yes') ? $translations['yes'] : $translations['no']; ?>" disabled>
+                        value="<?php echo ($verify == "Yes") ? $translations["yes"] : $translations["no"]; ?>" disabled>
                       <span class="input-group-btn">
-                        <button class="btn btn-success" type="submit" <?php if (isset($verify) && $verify == 'Yes') {
+                        <button class="btn btn-success" type="submit" <?php if ($verify == "Yes") {
                           echo "disabled";
                         } ?>>
                           <?php echo $translations["forceregconf"]; ?>
