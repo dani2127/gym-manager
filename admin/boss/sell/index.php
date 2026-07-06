@@ -411,7 +411,7 @@ include __DIR__ . '/../../../admin/includes/head.php';
         const $start = document.getElementById('sp-start');
 
         function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-        function initials(fn, ln) { return ((String(fn || '').trim()[0] || '') + (String(ln || '').trim()[0] || '')).toUpperCase() || '?'); }
+        function initials(fn, ln) { return ((String(fn || '').trim()[0] || '') + (String(ln || '').trim()[0] || '')).toUpperCase() || '?'; }
         function profileSrc(id) { return PROFILE_BASE + encodeURIComponent(id) + '.png'; }
 
         function setVerified(v) {
@@ -562,7 +562,7 @@ include __DIR__ . '/../../../admin/includes/head.php';
             }
         }
 
-        $(function () { startScanning(); });
+        document.addEventListener('DOMContentLoaded', function () { startScanning(); });
     })();
 </script>
 </body>
