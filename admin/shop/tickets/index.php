@@ -112,7 +112,7 @@ if (isset($_GET['delete'])) {
     if ($stmt_delete->execute()) {
         $alerts_html .= "<div class='alert alert-success'><i class='bi bi-check-circle-fill'></i> " . $translations['success-delete'] . "</div>";
     } else {
-        $alerts_html .= "<div class='alert alert-danger'><i class="bi bi-x-circle-fill"></i> " . $translations['error-delete'] . "</div>";
+        $alerts_html .= "<div class='alert alert-danger'><i class='bi bi-x-circle-fill'></i> " . $translations['error-delete'] . "</div>";
     }
     $stmt_delete->close();
     header("Refresh:1");
