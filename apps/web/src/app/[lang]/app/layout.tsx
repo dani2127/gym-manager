@@ -1,3 +1,4 @@
+import { Logo } from "@/components/brand/logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { MemberTabs } from "@/components/member-tabs";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
@@ -10,7 +11,7 @@ export default async function MemberLayout({ children, params }: LayoutProps<"/[
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-1 flex-col bg-background">
       <header className="flex items-center justify-between px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-3">
-        <span className="font-semibold">{dict.meta.title}</span>
+        <Logo name={dict.meta.title} />
         <LanguageSwitcher locale={locale} label={dict.common.language} />
       </header>
       <main className="flex-1 px-5 pb-6">{children}</main>

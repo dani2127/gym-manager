@@ -13,7 +13,7 @@ export default async function LoginPage({ params }: PageProps<"/[lang]/login">) 
 
   return (
     <>
-      <h1 className="mb-5 text-xl font-semibold">{dict.auth.loginTitle}</h1>
+      <h1 className="font-bib mb-6 text-5xl uppercase">{dict.auth.loginTitle}</h1>
       <LoginForm />
     </>
   );

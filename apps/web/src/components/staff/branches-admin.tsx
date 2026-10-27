@@ -61,7 +61,7 @@ function BranchCard({ branch, onChanged }: { branch: Branch; onChanged: () => vo
       actions={
         <div className="flex items-center gap-2">
           <span
-            className={`rounded-full px-2 py-0.5 text-xs ${branch.status === "active" ? "bg-brand-soft text-brand" : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}
+            className={`rounded-full px-2 py-0.5 text-xs ${branch.status === "active" ? "bg-brand-soft text-brand" : "bg-surface-2 text-graphite"}`}
           >
             {branch.status === "active" ? t.active : t.inactive}
           </span>
@@ -227,7 +227,7 @@ function OpeningHoursForm({ branchId, initial }: { branchId: string; initial: Op
               onChange={(e) => update(day.weekday, { closes_at: e.target.value })}
               aria-invalid={dayError ? true : undefined}
             />
-            {dayError && <p className="col-span-4 text-xs text-red-600">{dayError}</p>}
+            {dayError && <p className="col-span-4 text-xs text-critical">{dayError}</p>}
           </div>
         );
       })}

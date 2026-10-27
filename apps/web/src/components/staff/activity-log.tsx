@@ -30,7 +30,7 @@ export function ActivityLog() {
       ) : data.data.length === 0 ? (
         <p className="text-sm text-muted">{t.empty}</p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-border bg-surface">
+        <div className="overflow-x-auto rounded-[6px] border border-border bg-surface">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-border text-xs text-muted">
               <tr>

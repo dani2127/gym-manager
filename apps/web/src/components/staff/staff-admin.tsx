@@ -39,7 +39,7 @@ export function StaffAdmin() {
         {!data ? (
           <p className="text-sm text-muted">{dict.common.loading}</p>
         ) : (
-          <ul className="divide-y divide-border rounded-2xl border border-border bg-surface">
+          <ul className="divide-y divide-border rounded-[6px] border border-border bg-surface">
             {data.data.map((person) => (
               <StaffRow key={person.id} person={person} onChanged={() => mutate()} />
             ))}
@@ -87,7 +87,7 @@ function StaffRow({ person, onChanged }: { person: StaffMember; onChanged: () =>
           <p className="font-medium">
             {person.name}
             {person.status === "disabled" && (
-              <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700 dark:bg-red-950 dark:text-red-300">
+              <span className="ml-2 rounded-full bg-critical-soft px-2 py-0.5 text-xs font-semibold text-critical">
                 {t.disabledBadge}
               </span>
             )}
@@ -223,7 +223,7 @@ function EditAssignmentsForm({ person, onSaved }: { person: StaffMember; onSaved
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4 rounded-xl bg-background p-4">
+    <form onSubmit={submit} className="space-y-4 rounded-[6px] bg-background p-4">
       {general && <Alert tone="error">{general}</Alert>}
       <AssignmentRows value={assignments} onChange={setAssignments} error={error} />
       <Button type="submit" busy={busy}>
@@ -252,7 +252,7 @@ function AssignmentRows({
   return (
     <fieldset className="space-y-2">
       <legend className="text-sm font-medium">{t.assignments}</legend>
-      {error?.field("assignments") && <p className="text-xs text-red-600">{error.field("assignments")}</p>}
+      {error?.field("assignments") && <p className="text-xs text-critical">{error.field("assignments")}</p>}
       {value.map((assignment, index) => {
         const rowError = error?.field(`assignments.${index}.branch`) ?? error?.field(`assignments.${index}.role`);
         return (
@@ -282,7 +282,7 @@ function AssignmentRows({
             >
               {dict.common.remove}
             </Button>
-            {rowError && <p className="col-span-3 text-xs text-red-600">{rowError}</p>}
+            {rowError && <p className="col-span-3 text-xs text-critical">{rowError}</p>}
           </div>
         );
       })}

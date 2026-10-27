@@ -1,44 +1,175 @@
 @import "tailwindcss";
 
+/* Track & Bib: stadium concrete, tartan track, white lane lines, asphalt, infield. */
 :root {
-  --background: #f8faf9;
+  --ground: #e9eae7;
   --surface: #ffffff;
-  --foreground: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --brand: #047857;
-  --brand-foreground: #ffffff;
-  --brand-soft: #ecfdf5;
+  --surface-2: #f4f4f1;
+  --ink: #141514;
+  --graphite: #565a56;
+  --line: #d6d7d2;
+  --line-strong: #b9bbb5;
+
+  --track: #c2412d;
+  --track-deep: #9c3320;
+  --track-soft: #f6e3de;
+  --lane: #ffffff;
+
+  --asphalt: #161816;
+  --asphalt-2: #222522;
+  --asphalt-ink: #ecedea;
+  --asphalt-muted: #9ea29d;
+
+  --infield: #2e6b3c;
+  --infield-soft: #e2eee4;
+  --amber: #8a5a12;
+  --amber-soft: #f8ecd6;
+  --critical: #b42318;
+  --critical-soft: #fbe4e1;
+
+  --focus: #1f5fbf;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0b1210;
-    --surface: #111b18;
-    --foreground: #e2e8f0;
-    --muted: #94a3b8;
-    --border: #1f2d29;
-    --brand: #10b981;
-    --brand-foreground: #052e22;
-    --brand-soft: #0f2a22;
+    --ground: #121312;
+    --surface: #1b1d1b;
+    --surface-2: #171917;
+    --ink: #ecedea;
+    --graphite: #a3a7a2;
+    --line: #2c2f2c;
+    --line-strong: #3d413d;
+    --track: #e0563f;
+    --track-deep: #e86f5a;
+    --track-soft: #3a1f1a;
+    --asphalt: #0d0e0d;
+    --asphalt-2: #1a1c1a;
+    --infield: #5fae70;
+    --infield-soft: #1d3324;
+    --amber: #e0a94a;
+    --amber-soft: #352a15;
+    --critical: #f0705f;
+    --critical-soft: #3b1c18;
+    --focus: #7aa7ff;
+    color-scheme: dark;
   }
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --color-ground: var(--ground);
   --color-surface: var(--surface);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --color-brand: var(--brand);
-  --color-brand-foreground: var(--brand-foreground);
-  --color-brand-soft: var(--brand-soft);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-graphite: var(--graphite);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-track: var(--track);
+  --color-track-deep: var(--track-deep);
+  --color-track-soft: var(--track-soft);
+  --color-lane: var(--lane);
+  --color-asphalt: var(--asphalt);
+  --color-asphalt-2: var(--asphalt-2);
+  --color-asphalt-ink: var(--asphalt-ink);
+  --color-asphalt-muted: var(--asphalt-muted);
+  --color-infield: var(--infield);
+  --color-infield-soft: var(--infield-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-critical: var(--critical);
+  --color-critical-soft: var(--critical-soft);
+  --color-focus: var(--focus);
+
+  /* Legacy aliases still used by the member PWA and shared components. */
+  --color-background: var(--ground);
+  --color-foreground: var(--ink);
+  --color-muted: var(--graphite);
+  --color-border: var(--line);
+  --color-brand: var(--track);
+  --color-brand-foreground: var(--lane);
+  --color-brand-soft: var(--track-soft);
+
   /* Ethiopic glyphs fall through to Noto Sans Ethiopic. */
-  --font-sans: var(--font-geist), var(--font-ethiopic), system-ui, sans-serif;
+  --font-sans: var(--font-archivo), var(--font-ethiopic), system-ui, sans-serif;
+  --radius-track: 6px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--ground);
+  color: var(--ink);
   font-family: var(--font-sans);
+  font-variation-settings: "wdth" 100;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Condensed athletic voice: headlines and bib numerals only, never UI labels. */
+.font-bib {
+  font-variation-settings: "wdth" 72;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 0.92;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--track);
+  color: var(--lane);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+* {
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+a {
+  text-underline-offset: 0.2em;
+}
+
+/* Tartan track field with white lane lines: the world's one material. */
+.track-field {
+  background-color: var(--track);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--lane-h, 56px) - 2px),
+    rgb(255 255 255 / 0.75) calc(var(--lane-h, 56px) - 2px),
+    rgb(255 255 255 / 0.75) var(--lane-h, 56px)
+  );
+}
+
+/* A track band with lane lines only at its edges, for bands that carry text. */
+.track-band {
+  background-color: var(--track);
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.75),
+    inset 0 -2px 0 rgb(255 255 255 / 0.75);
+}
+
+/* Lane occupancy runs to its value once on load; static under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .lane-fill {
+    animation: lane-fill 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .lane-runner {
+    animation: lane-runner 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes lane-fill {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+@keyframes lane-runner {
+  from {
+    inset-inline-start: 0;
+  }
 }

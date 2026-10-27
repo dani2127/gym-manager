@@ -1,16 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Noto_Sans_Ethiopic } from "next/font/google";
+import { Archivo, Noto_Sans_Ethiopic } from "next/font/google";
 import { notFound } from "next/navigation";
 
 import { hasLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import "../globals.css";
 
-const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
+// One variable family: condensed + heavy for bib numerals and headlines, normal width for UI.
+const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], axes: ["wdth"] });
 
 const ethiopic = Noto_Sans_Ethiopic({
   variable: "--font-ethiopic",
   subsets: ["ethiopic"],
+  axes: ["wdth"],
 });
 
 export function generateStaticParams() {
@@ -31,7 +33,7 @@ export async function generateMetadata({
 }
 
 export const viewport: Viewport = {
-  themeColor: "#047857",
+  themeColor: "#c2412d",
 };
 
 export default async function RootLayout({
@@ -44,7 +46,7 @@ export default async function RootLayout({
   return (
     <html
       lang={lang}
-      className={`${geist.variable} ${ethiopic.variable} h-full antialiased`}
+      className={`${archivo.variable} ${ethiopic.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

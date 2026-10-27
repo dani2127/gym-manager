@@ -67,13 +67,13 @@ export function NotificationPreference({
     preference.whatsappNumber !== "" && !ETHIOPIAN_MOBILE.test(preference.whatsappNumber);
 
   return (
-    <section className="rounded-2xl border border-border bg-surface p-5">
+    <section className="rounded-[6px] border border-border bg-surface p-5">
       <h2 className="text-base font-semibold">{t.title}</h2>
       <p className="mt-1 text-sm text-muted">{t.description}</p>
 
       <fieldset className="mt-4">
         <legend className="text-sm font-medium">{t.channelLabel}</legend>
-        <div className="mt-2 grid grid-cols-2 gap-1 rounded-xl bg-background p-1">
+        <div className="mt-2 grid grid-cols-2 gap-1 rounded-[6px] bg-background p-1">
           {(["telegram", "whatsapp"] as const).map((channel) => (
             <label
               key={channel}
@@ -106,7 +106,7 @@ export function NotificationPreference({
               {t.telegramConnect}
             </a>
           ) : (
-            <p className="mt-3 text-amber-600">{t.telegramUnavailable}</p>
+            <p className="mt-3 text-amber">{t.telegramUnavailable}</p>
           )}
         </div>
       ) : (
@@ -131,7 +131,7 @@ export function NotificationPreference({
               className="w-full bg-surface px-3 py-2 outline-none"
             />
           </div>
-          <p id="whatsapp-help" className={`mt-2 ${numberInvalid ? "text-red-600" : "text-muted"}`}>
+          <p id="whatsapp-help" className={`mt-2 ${numberInvalid ? "text-critical" : "text-muted"}`}>
             {numberInvalid ? t.whatsappInvalid : t.whatsappHelp}
           </p>
         </div>

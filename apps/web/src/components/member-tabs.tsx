@@ -22,7 +22,7 @@ export function MemberTabs({ labels }: { labels: { home: string; settings: strin
           key={tab.href}
           href={tab.href}
           aria-current={current === tab.href ? "page" : undefined}
-          className="py-3 text-center text-sm font-medium text-muted aria-[current=page]:text-brand"
+          className="py-3.5 text-center text-sm font-semibold text-graphite aria-[current=page]:text-track-deep aria-[current=page]:shadow-[inset_0_2px_0_var(--track)]"
         >
           {tab.label}
         </Link>

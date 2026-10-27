@@ -22,7 +22,8 @@
     "notAllowed": "You do not have access to this page.",
     "enabled": "On",
     "disabled": "Off",
-    "remove": "Remove"
+    "remove": "Remove",
+    "menu": "Menu"
   },
   "public": {
     "nav": {
@@ -50,7 +51,8 @@
     "greeting": "Welcome back",
     "cardTitle": "Membership card",
     "cardBody": "Your QR check-in card and membership status will appear here.",
-    "installHint": "Tip: add this app to your home screen from your browser menu."
+    "installHint": "Tip: add this app to your home screen from your browser menu.",
+    "sampleNote": "Sample pass. Your own bib appears here once member sign-in opens."
   },
   "settings": {
     "title": "Settings",
@@ -215,9 +217,85 @@
     "today": "Today",
     "openToday": "Open {opens}–{closes}",
     "closedToday": "Closed today",
-    "comingUp": "QR check-in and live member pop-ups arrive in Milestone 4."
+    "comingUp": "QR check-in and live member pop-ups arrive in Milestone 4.",
+    "scanTitle": "Check-in station",
+    "scanBody": "Scan a member's bib or search by name. Their photo, plan and days left will pop up here."
   },
   "adminPage": {
-    "intro": "Manage branches, staff and settings for {organization}."
+    "intro": "Manage branches, staff and settings for {organization}.",
+    "lanesTitle": "Today across your branches",
+    "lanesHint": "Opening hours on one clock, Addis Ababa time. The line is now.",
+    "openUntil": "Open · closes {time}",
+    "opensAt": "Opens {time}",
+    "closedNow": "Closed for today",
+    "closedDay": "Closed today",
+    "inactive": "Inactive",
+    "setupTitle": "Get set up",
+    "setupTelegram": "Link your Telegram so you can reset your own password",
+    "setupHours": "Check each branch's opening hours",
+    "setupStaff": "Add your managers, receptionists and trainers",
+    "setupTax": "Decide whether invoices charge VAT",
+    "done": "Done",
+    "teamTitle": "Your team",
+    "teamEmpty": "Only you so far.",
+    "branchesCount": "{count} branches"
+  },
+  "landing": {
+    "navFeatures": "How it works",
+    "navMember": "Member app",
+    "navSignIn": "Staff sign in",
+    "navStart": "Start your gym",
+    "headline1": "Every branch.",
+    "headline2": "One track.",
+    "lede": "Memberships in birr, QR check-in at the door, Telebirr approvals and Telegram reminders. One system for every branch you run.",
+    "gymNameLabel": "Your gym's name",
+    "gymNamePlaceholder": "e.g. Lion Fitness",
+    "startCta": "Start your gym",
+    "startNote": "Set up your first branch in a few minutes.",
+    "bibCaption": "Sample member pass. Members show it at the door.",
+    "bibPlan": "Monthly",
+    "bibValid": "valid to 30 Nov",
+    "lanesLabel": "People inside right now, by branch",
+    "lanesCaption": "Sample data. Your branches appear here once members check in.",
+    "inside": "inside",
+    "momentsTitle": "From the door to the books",
+    "doorTitle": "At the door",
+    "doorBody": "A member shows their bib. The desk sees their photo, plan and days left the moment it scans, and lets them in with one tap.",
+    "doorAllowed": "Allowed",
+    "doorDaysLeft": "23 days left",
+    "doorLetIn": "Let in",
+    "payTitle": "Telebirr and bank transfers",
+    "payBody": "Members upload the receipt. Staff approve it in one tap, and a reused FT number is refused automatically.",
+    "payPending": "Waiting for approval",
+    "payApprove": "Approve",
+    "payDuplicate": "FT number already used",
+    "tgTitle": "Reminders in Telegram",
+    "tgBody": "Renewal reminders, payment approvals and one-time codes arrive where your members already are, in Amharic or English.",
+    "tgMessage": "Selam Hana! Your monthly membership at Bole ends in 3 days. Renew in the app or at the desk.",
+    "localTitle": "Built for Addis, not adapted to it",
+    "localBirr": "Prices in birr, with 15% VAT on or off per gym",
+    "localLang": "Amharic and English, switchable on every screen",
+    "localPhone": "Phone-number sign-in, no email needed",
+    "localBranches": "Owners see every branch; staff see only their own",
+    "closeTitle": "Put your gym on the track.",
+    "closeBody": "Start with one branch. Add the next when you open it.",
+    "footerNote": "Gym management for Ethiopia."
+  },
+  "register": {
+    "title": "Start your gym",
+    "intro": "Create your gym, its first branch and your owner account.",
+    "gymName": "Gym name",
+    "gymId": "Gym ID",
+    "gymIdHint": "Lowercase letters, numbers and dashes. Staff type this when they sign in.",
+    "branchName": "First branch",
+    "branchPlaceholder": "e.g. Bole",
+    "yourName": "Your full name",
+    "phone": "Your phone number",
+    "password": "Password",
+    "passwordHint": "At least 8 characters.",
+    "confirmPassword": "Confirm password",
+    "submit": "Create my gym",
+    "submitting": "Creating…",
+    "haveAccount": "Already set up? Sign in"
   }
 }

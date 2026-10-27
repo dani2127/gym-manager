@@ -18,7 +18,7 @@ class BranchController extends Controller
     {
         $this->authorize('viewAny', Branch::class);
 
-        return BranchResource::collection($request->user()->accessibleBranches()->orderBy('name')->get());
+        return BranchResource::collection($request->user()->accessibleBranches()->with('openingHours')->orderBy('name')->get());
     }
 
     public function store(Request $request): BranchResource

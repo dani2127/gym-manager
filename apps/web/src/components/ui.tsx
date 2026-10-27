@@ -4,9 +4,9 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAt
 import { useId } from "react";
 
 const BUTTON_STYLES = {
-  primary: "bg-brand text-brand-foreground hover:opacity-90",
-  secondary: "border border-border bg-surface hover:border-brand",
-  danger: "border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950",
+  primary: "bg-track text-lane hover:bg-track-deep",
+  secondary: "border border-line-strong bg-surface text-ink hover:border-ink",
+  danger: "border border-critical/40 bg-surface text-critical hover:bg-critical-soft",
 } as const;
 
 export function Button({
@@ -21,7 +21,7 @@ export function Button({
       {...props}
       disabled={props.disabled || busy}
       aria-busy={busy || undefined}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${BUTTON_STYLES[variant]} ${className}`}
+      className={`inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-[6px] px-4 py-2 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-55 ${BUTTON_STYLES[variant]} ${className}`}
     >
       {children}
     </button>
@@ -45,12 +45,12 @@ export function Field({
 
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="block text-sm font-medium">
+      <label htmlFor={id} className="block text-sm font-semibold">
         {label}
       </label>
       {children({ id, "aria-invalid": error ? true : undefined, "aria-describedby": describedBy })}
       {(error || hint) && (
-        <p id={describedBy} className={`text-xs ${error ? "text-red-600 dark:text-red-400" : "text-muted"}`}>
+        <p id={describedBy} className={`text-xs ${error ? "font-medium text-critical" : "text-graphite"}`}>
           {error ?? hint}
         </p>
       )}
@@ -58,7 +58,8 @@ export function Field({
   );
 }
 
-const CONTROL = "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-brand aria-invalid:border-red-500";
+const CONTROL =
+  "h-10 w-full rounded-[6px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none transition-colors placeholder:text-graphite/70 focus:border-ink disabled:bg-surface-2 disabled:text-graphite aria-invalid:border-critical";
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${CONTROL} ${props.className ?? ""}`} />;
@@ -87,7 +88,7 @@ export function Toggle({
     <div className="flex items-start justify-between gap-4 py-3">
       <label htmlFor={id} className="text-sm">
         <span className="font-medium">{label}</span>
-        {description && <span className="mt-1 block text-xs text-muted">{description}</span>}
+        {description && <span className="mt-1 block text-xs leading-relaxed text-graphite">{description}</span>}
       </label>
       <input
         id={id}
@@ -96,7 +97,7 @@ export function Toggle({
         checked={checked}
         disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
-        className="peer relative h-6 w-11 shrink-0 cursor-pointer appearance-none rounded-full bg-slate-300 transition before:absolute before:top-0.5 before:left-0.5 before:h-5 before:w-5 before:rounded-full before:bg-white before:transition checked:bg-brand checked:before:translate-x-5 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-700"
+        className="relative h-6 w-11 shrink-0 cursor-pointer appearance-none rounded-full bg-line-strong transition-colors duration-150 before:absolute before:top-0.5 before:left-0.5 before:h-5 before:w-5 before:rounded-full before:bg-white before:shadow-sm before:transition-transform before:duration-150 checked:bg-infield checked:before:translate-x-5 disabled:cursor-not-allowed disabled:opacity-50"
       />
     </div>
   );
@@ -104,7 +105,7 @@ export function Toggle({
 
 export function Card({ title, actions, children }: { title?: string; actions?: ReactNode; children: ReactNode }) {
   return (
-    <section className="rounded-2xl border border-border bg-surface p-5">
+    <section className="rounded-[6px] border border-line bg-surface p-5">
       {(title || actions) && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           {title && <h2 className="text-base font-semibold">{title}</h2>}
@@ -118,13 +119,13 @@ export function Card({ title, actions, children }: { title?: string; actions?: R
 
 export function Alert({ tone = "info", children }: { tone?: "info" | "error" | "success"; children: ReactNode }) {
   const styles = {
-    info: "border-border bg-brand-soft text-foreground",
-    error: "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300",
-    success: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300",
+    info: "border-line bg-surface-2 text-ink",
+    error: "border-critical/30 bg-critical-soft text-critical",
+    success: "border-infield/30 bg-infield-soft text-infield",
   }[tone];
 
   return (
-    <div role={tone === "error" ? "alert" : "status"} className={`rounded-lg border px-4 py-3 text-sm ${styles}`}>
+    <div role={tone === "error" ? "alert" : "status"} className={`rounded-[6px] border px-4 py-3 text-sm ${styles}`}>
       {children}
     </div>
   );
@@ -134,8 +135,8 @@ export function PageHeader({ title, description, actions }: { title: string; des
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-semibold">{title}</h1>
-        {description && <p className="mt-1 text-sm text-muted">{description}</p>}
+        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        {description && <p className="mt-1 text-sm text-graphite">{description}</p>}
       </div>
       {actions}
     </div>

@@ -1,9 +1,11 @@
 "use client";
 
+import { ScanLine } from "lucide-react";
 import useSWR from "swr";
 
+import { BranchDayLanes } from "@/components/staff/branch-day-lanes";
 import { Alert, Card, PageHeader } from "@/components/ui";
-import { format, useDictionary } from "@/i18n/dictionary-context";
+import { useDictionary } from "@/i18n/dictionary-context";
 import { swrFetcher } from "@/lib/api";
 import { workspaces } from "@/lib/roles";
 import { useSession } from "@/lib/session";
@@ -13,43 +15,27 @@ export function DeskHome() {
   const { dict } = useDictionary();
   const { me, branch } = useSession();
   const t = dict.deskPage;
+  const { data } = useSWR<{ data: Branch }>(branch ? `/branches/${branch.id}` : null, swrFetcher);
 
   if (!workspaces(me).desk) return <Alert tone="error">{dict.common.notAllowed}</Alert>;
 
   return (
     <>
       <PageHeader title={dict.staff.desk.title} description={branch?.name} />
-      <div className="grid gap-4 md:grid-cols-2">
-        {branch && <TodayCard branchId={branch.id} />}
-        <Card>
-          <p className="text-sm text-muted">{t.comingUp}</p>
+      <div className="space-y-6">
+        <section className="grid place-items-center rounded-[6px] border-2 border-dashed border-line-strong bg-surface px-6 py-14 text-center">
+          <span className="grid h-14 w-14 place-items-center rounded-full bg-track-soft text-track-deep">
+            <ScanLine aria-hidden className="h-7 w-7" />
+          </span>
+          <h2 className="mt-4 text-xl font-bold">{t.scanTitle}</h2>
+          <p className="mt-2 max-w-md text-graphite">{t.scanBody}</p>
+          <p className="mt-4 text-sm font-medium text-graphite">{t.comingUp}</p>
+        </section>
+
+        <Card title={t.today}>
+          {!data ? <div className="h-14 animate-pulse rounded-[6px] bg-surface-2" /> : <BranchDayLanes branches={[data.data]} />}
         </Card>
       </div>
     </>
   );
-}
-
-function TodayCard({ branchId }: { branchId: string }) {
-  const { dict } = useDictionary();
-  const { data } = useSWR<{ data: Branch }>(`/branches/${branchId}`, swrFetcher);
-  const today = data?.data.opening_hours?.find((h) => h.weekday === weekdayInAddis());
-  const t = dict.deskPage;
-
-  return (
-    <Card title={t.today}>
-      {!today ? (
-        <p className="text-sm text-muted">{dict.common.loading}</p>
-      ) : today.is_closed ? (
-        <p className="text-lg font-medium">{t.closedToday}</p>
-      ) : (
-        <p className="text-lg font-medium">{format(t.openToday, { opens: today.opens_at ?? "", closes: today.closes_at ?? "" })}</p>
-      )}
-    </Card>
-  );
-}
-
-/** 0 = Sunday … 6 = Saturday in the gym's timezone, whatever the device's clock zone. */
-function weekdayInAddis(): number {
-  const name = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: "Africa/Addis_Ababa" }).format(new Date());
-  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(name);
 }
