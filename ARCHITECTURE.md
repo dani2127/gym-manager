@@ -339,11 +339,26 @@ row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
 
 ---
 
-## 7. Open decisions
+## 7. Decisions log
 
-1. Cross-branch access: per plan (home branch / all / selected). *Proposed, awaiting confirmation.*
-2. Member login: phone + password, or phone + SMS OTP (provider: AfroMessage, GeezSMS, …)?
-3. Tax: prices quoted VAT-inclusive or exclusive? Applicable TOT rate? Is Ministry of Revenue fiscal-printer integration required? (Confirm with an accountant.)
+| Date | Decision |
+|---|---|
+| 2026-10-27 | **Login**: phone + password for members and staff. One-time codes (phone verification, password reset) are delivered through the **Telegram bot**; members without a linked Telegram reset at the front desk (SMS OTP can be added later). |
+| 2026-10-27 | **Cross-branch access**: decided **per plan** — home branch only, all branches, or selected branches (`plans.access_scope` + `plan_branch`). |
+| 2026-10-27 | **VAT pricing**: **configurable per organization** — `tax.prices_inclusive` setting (inclusive by default), overridable per branch. |
+
+Supporting table for Telegram OTP (added to §4B):
+```
+otp_codes   id · user_id FK · purpose(phone_verify|password_reset) · channel(telegram)
+            · code_hash · attempts · expires_at · consumed_at NULL · created_at
+            IDX(user_id, purpose, expires_at)   (5-minute expiry, max 5 attempts, rate-limited)
+```
+
+## 8. Open decisions
+
+1. ~~Cross-branch access~~ → decided (see log).
+2. ~~Member login~~ → decided (see log).
+3. Tax: ~~inclusive vs exclusive~~ decided (configurable). Still open: applicable TOT rate, and whether Ministry of Revenue fiscal-printer integration is required. (Confirm with an accountant.)
 4. Keep the legacy prepaid wallet balance?
 5. Show Ethiopian-calendar dates alongside Gregorian?
 6. **Licensing**: the legacy code is under the GYM One License (`legacy/LICENSE`), which restricts rebranding and sublicensing. Decide a license for the new code, and keep ported logic clean-room or attributed.
