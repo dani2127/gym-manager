@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "title": "Gym Platform",
+    "description": "Memberships, check-in, classes and trainers for multi-branch gyms."
+  },
+  "common": {
+    "language": "Language",
+    "comingSoon": "Coming in a later milestone",
+    "apiStatus": "API",
+    "apiOnline": "online",
+    "apiOffline": "offline",
+    "apiChecking": "checking…"
+  },
+  "public": {
+    "nav": {
+      "home": "Home",
+      "member": "Member app",
+      "staff": "Staff login"
+    },
+    "heroTitle": "Your gym, every branch, one platform.",
+    "heroBody": "Prepaid memberships in ETB, QR check-in, class booking and trainer schedules — built for gyms in Ethiopia.",
+    "ctaMember": "Open the member app",
+    "ctaStaff": "Front desk",
+    "sectionsTitle": "Workspaces",
+    "sections": {
+      "app": "Member app (installable on your phone)",
+      "desk": "Front desk: check-in and sales",
+      "admin": "Owner and manager administration",
+      "trainer": "Trainer portal"
+    }
+  },
+  "member": {
+    "tabs": {
+      "home": "Home",
+      "settings": "Settings"
+    },
+    "greeting": "Welcome back",
+    "cardTitle": "Membership card",
+    "cardBody": "Your QR check-in card and membership status will appear here.",
+    "installHint": "Tip: add this app to your home screen from your browser menu."
+  },
+  "settings": {
+    "title": "Settings",
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choose where we send renewal reminders, payment approvals and class updates.",
+      "channelLabel": "Preferred channel",
+      "telegram": "Telegram",
+      "whatsapp": "WhatsApp",
+      "telegramHelp": "Open our Telegram bot and press Start to link your account.",
+      "telegramConnect": "Open Telegram bot",
+      "telegramUnavailable": "The gym has not set up its Telegram bot yet.",
+      "whatsappHelp": "We will message this WhatsApp number.",
+      "whatsappNumber": "WhatsApp number",
+      "whatsappInvalid": "Enter a 9-digit Ethiopian mobile number, e.g. 911 234 567.",
+      "savedLocally": "Saved on this device. It will sync to your account once sign-in is available."
+    }
+  },
+  "staff": {
+    "desk": {
+      "title": "Front desk",
+      "body": "Check-in by QR or search, live member pop-ups, desk sales and payment approvals."
+    },
+    "admin": {
+      "title": "Administration",
+      "body": "Branches, staff, plans and pricing, VAT settings, reports."
+    },
+    "trainer": {
+      "title": "Trainer portal",
+      "body": "Your classes, personal-training clients and attendance."
+    }
+  }
+}

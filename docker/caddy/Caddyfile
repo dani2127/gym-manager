@@ -1,0 +1,30 @@
+# Edge proxy: terminates TLS (automatic Let's Encrypt certificates) and routes
+# each host to its container. With APP_DOMAIN=localhost Caddy issues local
+# development certificates instead.
+#
+#   {APP_DOMAIN}       -> web     (public site, /app PWA, /desk, /admin, /trainer)
+#   api.{APP_DOMAIN}   -> api     (Laravel REST API, /api/v1)
+#   ws.{APP_DOMAIN}    -> reverb  (WebSockets for the live check-in desk)
+#
+# Reverb gets its own host because its WebSocket path (/app/{key}) would
+# otherwise collide with the member PWA at /app.
+{
+	email {$ACME_EMAIL}
+}
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:3000
+}
+
+api.{$APP_DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 12MB
+	}
+	reverse_proxy api:8000
+}
+
+ws.{$APP_DOMAIN} {
+	reverse_proxy reverb:8080
+}

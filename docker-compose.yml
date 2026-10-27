@@ -1,0 +1,133 @@
+# Single-VPS production stack. Copy .env.example to .env, fill it in, then:
+#   docker compose up -d --build
+# See README.md for first-run steps.
+
+x-api: &api
+  build:
+    context: ./apps/api
+  image: gym-api:latest
+  env_file: .env
+  restart: unless-stopped
+  depends_on:
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  volumes:
+    - api-storage:/app/storage/app
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - web
+      - api
+      - reverb
+
+  # Laravel HTTP API (FrankenPHP). Runs migrations on start.
+  api:
+    <<: *api
+    environment:
+      CONTAINER_ROLE: app
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8000/up"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Background jobs: SMS / Telegram / WhatsApp, PDFs, Chapa webhooks.
+  queue:
+    <<: *api
+    environment:
+      CONTAINER_ROLE: queue
+    command: ["php", "artisan", "queue:work", "redis", "--sleep=1", "--tries=3", "--max-time=3600"]
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # Cron replacement: expiries, unfreezes, class generation, reminders.
+  scheduler:
+    <<: *api
+    environment:
+      CONTAINER_ROLE: scheduler
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # Laravel Reverb: real-time check-in pop-ups on the front desk.
+  reverb:
+    <<: *api
+    environment:
+      CONTAINER_ROLE: reverb
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    depends_on:
+      api:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+      args:
+        NEXT_PUBLIC_API_URL: https://api.${APP_DOMAIN}
+        NEXT_PUBLIC_REVERB_APP_KEY: ${REVERB_APP_KEY}
+        NEXT_PUBLIC_REVERB_HOST: ws.${APP_DOMAIN}
+        NEXT_PUBLIC_REVERB_PORT: "443"
+        NEXT_PUBLIC_REVERB_SCHEME: https
+        NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+    image: gym-web:latest
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      TZ: UTC
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+volumes:
+  mysql-data:
+  redis-data:
+  api-storage:
+  caddy-data:
+  caddy-config:

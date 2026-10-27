@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8faf9;
+  --surface: #ffffff;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --brand: #047857;
+  --brand-foreground: #ffffff;
+  --brand-soft: #ecfdf5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b1210;
+    --surface: #111b18;
+    --foreground: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #1f2d29;
+    --brand: #10b981;
+    --brand-foreground: #052e22;
+    --brand-soft: #0f2a22;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  /* Ethiopic glyphs fall through to Noto Sans Ethiopic. */
+  --font-sans: var(--font-geist), var(--font-ethiopic), system-ui, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
