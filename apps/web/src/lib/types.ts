@@ -110,3 +110,140 @@ export type Paginated<T> = {
   data: T[];
   meta: { current_page: number; last_page: number; total: number; per_page: number };
 };
+
+export type Translations = { en: string; am: string | null };
+
+export type PlanType = "time" | "visits" | "time_visits";
+export type AccessScope = "home_branch" | "all_branches" | "selected";
+
+export type Plan = {
+  id: string;
+  name: string;
+  name_translations: Translations;
+  description: string | null;
+  description_translations: Translations | null;
+  type: PlanType;
+  duration_days: number | null;
+  visit_count: number | null;
+  price_cents: number;
+  access_scope: AccessScope;
+  branches?: { id: string; name: string }[];
+  freeze_allowed: boolean;
+  max_freeze_days: number | null;
+  max_freezes: number | null;
+  class_credits: number | null;
+  is_active: boolean;
+  sort: number;
+};
+
+export type FeeKind = "registration" | "card_replacement" | "other";
+
+export type Fee = {
+  id: string;
+  name: string;
+  name_translations: Translations;
+  kind: FeeKind;
+  amount_cents: number;
+  is_active: boolean;
+};
+
+export type DiscountKind = "student" | "couple" | "family" | "corporate" | "promo";
+
+export type DiscountRule = {
+  id: string;
+  name: string;
+  name_translations: Translations;
+  kind: DiscountKind;
+  value_type: "percent" | "fixed";
+  value: number;
+  min_group_size: number | null;
+  requires_proof: boolean;
+  promo_code: string | null;
+  plan: { id: string; name: string } | null;
+  valid_from: string | null;
+  valid_until: string | null;
+  is_active: boolean;
+};
+
+export type QuoteDiscount = {
+  id: string;
+  name: string;
+  kind: DiscountKind;
+  value_type: "percent" | "fixed";
+  value: number;
+  amount_cents: number;
+  requires_proof: boolean;
+  automatic: boolean;
+};
+
+export type TaxInfo = { enabled: boolean; name: "VAT" | "TOT"; rate: number; inclusive: boolean };
+
+export type Quote = {
+  lines: { kind: "plan" | "fee"; id: string; description: string; unit_price_cents: number; discount_cents: number; tax_cents: number; total_cents: number }[];
+  subtotal_cents: number;
+  discount_cents: number;
+  tax_cents: number;
+  net_cents: number;
+  total_cents: number;
+  tax: TaxInfo;
+  discount: QuoteDiscount | null;
+  starts_on: string | null;
+  ends_on: string | null;
+  suggested_start: string;
+  suggested_fees: string[];
+  available_discounts: QuoteDiscount[];
+};
+
+export type PaymentMethod = "cash" | "pos_card" | "bank_transfer" | "telebirr" | "chapa";
+export type InvoiceStatus = "issued" | "partially_paid" | "paid" | "void";
+export type MembershipState = "upcoming" | "current" | "expired" | "pending_payment" | "frozen" | "cancelled" | "active";
+
+export type Membership = {
+  id: string;
+  plan: { id: string; name: string; type: PlanType; access_scope: AccessScope };
+  status: "pending_payment" | "active" | "frozen" | "expired" | "cancelled";
+  state: MembershipState;
+  starts_on: string;
+  ends_on: string | null;
+  days_left: number | null;
+  visits_total: number | null;
+  visits_remaining: number | null;
+  branch?: { id: string; name: string };
+  invoice?: { id: string; number: string; status: InvoiceStatus; balance_cents: number } | null;
+  created_at: string;
+};
+
+export type Invoice = {
+  id: string;
+  number: string;
+  status: InvoiceStatus;
+  subtotal_cents: number;
+  discount_cents: number;
+  tax_cents: number;
+  net_cents: number;
+  total_cents: number;
+  paid_cents: number;
+  balance_cents: number;
+  tax_name: "VAT" | "TOT" | null;
+  tax_rate: number;
+  tax_inclusive: boolean;
+  currency: string;
+  issued_at: string;
+  branch?: { id: string; name: string };
+  member?: { id: string; full_name: string; member_no: string } | null;
+  created_by?: string | null;
+  items?: { description: string; kind: string | null; qty: number; unit_price_cents: number; discount_cents: number; discount: { kind: DiscountKind; name: string } | null; tax_cents: number; total_cents: number }[];
+  payments?: { id: string; method: PaymentMethod; amount_cents: number; status: string; reference: string | null; received_by: string | null; created_at: string }[];
+  memberships?: Membership[];
+  void_reason: string | null;
+  voided_at: string | null;
+};
+
+export type Takings = {
+  date: string;
+  total_cents: number;
+  by_method: { method: PaymentMethod; amount_cents: number; count: number }[];
+  refunded_cents: number;
+  invoices_count: number;
+  unpaid_cents: number;
+};

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import useSWR from "swr";
 
+import { MemberInvoicesCard, MembershipsCard } from "@/components/billing/member-billing";
 import { MemberAvatar, StatusBadge } from "@/components/members/member-avatar";
 import { MemberForm } from "@/components/members/member-form";
 import { useDebounced } from "@/components/members/use-debounced";
@@ -96,9 +97,8 @@ export function MemberProfile({ id }: { id: string }) {
               {!canEdit && <p className="mt-4 text-xs text-graphite">{t.readOnly}</p>}
             </Card>
 
-            <Card title={t.membershipsTitle}>
-              <p className="text-sm text-graphite">{t.membershipsSoon}</p>
-            </Card>
+            <MembershipsCard member={member} />
+            <MemberInvoicesCard member={member} />
           </div>
 
           <div className="space-y-6">

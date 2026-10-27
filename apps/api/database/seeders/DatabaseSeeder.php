@@ -138,7 +138,7 @@ class DatabaseSeeder extends Seeder
         $now = now();
         foreach (collect($sales)->sortByDesc(3)->values() as $i => [$index, $salePlan, $saleDiscount, $daysAgo, $method, $amount]) {
             // Numbers follow time, as they would at a real desk.
-            Carbon::setTestNow($daysAgo ? $now->copy()->subDays($daysAgo)->setTime(8, 10 * $i) : $now->copy()->subMinutes(40 - 10 * $i));
+            Carbon::setTestNow($daysAgo ? $now->copy()->subDays($daysAgo)->setTime(8, 10 * $i) : $now->copy()->subMinutes(10 * (count($sales) - $i)));
             $member = $members[$index];
             $quote = $pricing->quote($bole, $salePlan, $pricing->suggestedFees($member), $saleDiscount, $organization->today());
             $ledger->sell($quote, $bole, $member, $reception, ['method' => $method, 'amount_cents' => $amount ?? $quote->totalCents()]);

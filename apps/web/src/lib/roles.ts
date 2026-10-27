@@ -40,3 +40,23 @@ export function canDeleteMemberAt(me: Me, branchId: string | undefined): boolean
 export function registrableBranches(me: Me) {
   return me.branches.filter((b) => canRegisterAt(me, b.id));
 }
+
+/** Mirrors User::handlesMoneyAt: selling and taking payments. */
+export function handlesMoneyAt(me: Me, branchId: string | undefined): boolean {
+  if (me.user.account_type === "owner") return true;
+  const role = me.branches.find((b) => b.id === branchId)?.role;
+  return role === "manager" || role === "receptionist";
+}
+
+export function handlesMoney(me: Me): boolean {
+  return me.user.account_type === "owner" || me.branches.some((b) => b.role === "manager" || b.role === "receptionist");
+}
+
+/** Voiding an invoice: owners and the branch's managers. */
+export function managesBranch(me: Me, branchId: string | undefined): boolean {
+  return me.user.account_type === "owner" || me.branches.some((b) => b.id === branchId && b.role === "manager");
+}
+
+export function isOwner(me: Me): boolean {
+  return me.user.account_type === "owner";
+}

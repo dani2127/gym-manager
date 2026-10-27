@@ -4,12 +4,13 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import useSWR from "swr";
 
+import { TakingsStrip } from "@/components/billing/takings";
 import { MemberQuickFind } from "@/components/members/member-quick-find";
 import { BranchDayLanes } from "@/components/staff/branch-day-lanes";
 import { Alert, Card, PageHeader } from "@/components/ui";
 import { useDictionary } from "@/i18n/dictionary-context";
 import { swrFetcher } from "@/lib/api";
-import { canRegisterMembers, workspaces } from "@/lib/roles";
+import { canRegisterMembers, handlesMoneyAt, workspaces } from "@/lib/roles";
 import { useSession } from "@/lib/session";
 import type { Branch } from "@/lib/types";
 
@@ -39,6 +40,19 @@ export function DeskHome() {
           <MemberQuickFind />
           <p className="mt-3 text-xs text-graphite">{t.comingUp}</p>
         </Card>
+
+        {handlesMoneyAt(me, branch?.id) && branch && (
+          <Card
+            title={dict.billing.desk.takings}
+            actions={
+              <Link href="/invoices" className="text-sm font-semibold text-track-deep hover:underline">
+                {dict.billing.desk.seeInvoices}
+              </Link>
+            }
+          >
+            <TakingsStrip branchId={branch.id} />
+          </Card>
+        )}
 
         <Card title={t.today}>
           {!data ? <div className="h-14 animate-pulse rounded-[6px] bg-surface-2" /> : <BranchDayLanes branches={[data.data]} />}

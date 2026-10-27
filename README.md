@@ -44,6 +44,11 @@ password `password` and one of:
 | 0911 000 003 | Receptionist (Bole) |
 | 0911 000 004 | Trainer (Bole, Piassa) |
 
+The demo also has five plans, a registration fee, student/couple/family
+discounts, the promo code `BOLE500`, 15% VAT included in prices, and a few
+weeks of sales at Bole. Run `php artisan schedule:work` locally (or the
+scheduler container) so `memberships:expire` runs each night.
+
 Telegram (linking and password-reset codes) needs a bot from @BotFather:
 set the `TELEGRAM_*` variables, then run `php artisan telegram:set-webhook`
 once the API is reachable over HTTPS.

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BadgeDollarSign,
   Building2,
   Contact,
   Dumbbell,
@@ -8,6 +9,7 @@ import {
   LayoutGrid,
   LogOut,
   Menu,
+  ReceiptText,
   ScanLine,
   Settings2,
   UserRound,
@@ -59,6 +61,7 @@ function useNav() {
   const work: NavItem[] = [
     ...(access.desk ? [{ href: "/desk", label: dict.nav.desk, icon: ScanLine }] : []),
     { href: "/members", label: dict.nav.members, icon: Contact },
+    ...(access.desk ? [{ href: "/invoices", label: dict.nav.invoices, icon: ReceiptText }] : []),
     ...(access.trainer ? [{ href: "/trainer", label: dict.nav.trainer, icon: Dumbbell }] : []),
   ];
 
@@ -66,6 +69,7 @@ function useNav() {
     ? [
         { href: "/admin", label: dict.staff.admin.title, icon: LayoutGrid, exact: true },
         { href: "/admin/branches", label: dict.nav.branches, icon: Building2 },
+        { href: "/admin/pricing", label: dict.nav.pricing, icon: BadgeDollarSign },
         ...(me.abilities.manage_staff ? [{ href: "/admin/staff", label: dict.nav.staff, icon: Users }] : []),
         { href: "/admin/settings", label: dict.nav.settings, icon: Settings2 },
         ...(me.abilities.view_audit_log ? [{ href: "/admin/activity", label: dict.nav.audit, icon: History }] : []),

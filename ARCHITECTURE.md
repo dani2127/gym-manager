@@ -194,8 +194,14 @@ fees           id · organization_id FK · name JSON · kind(registration|card_r
 discount_rules id · organization_id FK · name JSON · kind(student|couple|family|corporate|promo)
                · value_type(percent|fixed) · value · min_group_size NULL · requires_proof · promo_code NULL
                · plan_id FK NULL · valid_from · valid_until · is_active      UQ(organization_id, promo_code)
-tax_rates      id · organization_id FK · name(VAT|TOT) · rate DECIMAL(5,2) · is_active
+tax_rates      (not built: the rate lives in settings `tax.rate`, per organization or branch)
 ```
+
+**As built in M3.**
+- Plans store `name` as `{"en", "am"}`; Amharic falls back to English. Prices are integer santim. Only owners change the catalog (audited); every staff member can read plans and fees. Archiving a plan soft-deletes it; members keep their snapshot.
+- A sale gets **at most one discount**, on the plan line only. Couple/family/company discounts are offered from the member's group (respecting `min_group_size`); student discounts need the desk to tick "ID checked" (`discount_proof_checked`); promo codes are stored upper-case and unique per gym. Rules can be limited to one plan and a date window.
+- The registration fee is suggested for a member's first membership (any non-cancelled one counts) and the desk can untick it.
+- Tax per line: inclusive → `tax = net × r / (100 + r)`, exclusive → `tax = net × r / 100`, rounded half-up to the santim. The tax name, rate and inclusive flag are snapshotted on the invoice.
 
 ### E. Memberships
 ```
@@ -203,6 +209,7 @@ memberships         id · ulid · organization_id FK · branch_id FK(sold at) ·
                     · plan_snapshot JSON · starts_on · ends_on NULL · visits_total NULL · visits_remaining NULL
                     · status(pending_payment|active|frozen|expired|cancelled) · invoice_id FK NULL · sold_by FK NULL
                     IDX(member_id, status, ends_on) · IDX(organization_id, branch_id, status, ends_on)
+                    (state shown to staff: upcoming | current | expired, derived from dates and visits)
 membership_freezes  id · membership_id FK · starts_on · ends_on · days · reason
                     · status(requested|approved|rejected|active|completed) · requested_by · approved_by
 ```
@@ -226,8 +233,19 @@ payments             id · ulid · organization_id FK · branch_id FK · invoice
                      IDX(organization_id, branch_id, status, created_at)
 gateway_transactions id · payment_id FK · provider(chapa) · tx_ref UQ · checkout_url · status
                      · request JSON · webhook_payload JSON · verified_at
-refunds              id · payment_id FK · amount_cents · reason · refunded_by · created_at
+refunds              id · payment_id FK · amount_cents · reason · refunded_by · created_at   (not built yet; see below)
 ```
+
+**As built in M3.**
+- Desk flow: `POST /branches/{branch}/sales/quote` prices a sale without saving anything (the live preview); `POST /branches/{branch}/sales` issues the invoice, creates the membership as `pending_payment`, and records an optional cash or POS payment. Selling needs the owner or a manager/receptionist of that branch; any member can buy at any branch.
+- Invoice numbers are `{BRANCH CODE}-{YEAR}-{000001}`, gap-free per branch and year (row-locked `invoice_sequences`, rolled back with a failed sale). Invoice status: `issued → partially_paid → paid`, or `void`. There are no drafts.
+- A membership goes live when its invoice is **fully paid**. Paid late, it starts that day (the member never loses days they could not use). A renewal sold early starts the day after the current membership ends.
+- A banned member cannot buy; buying a plan reactivates an inactive member.
+- Payments cannot exceed the balance; a POS slip number can be used once per gym (`UQ(organization_id, method, reference)`).
+- **Void** (owners and branch managers, reason required): payments become `refunded`, memberships `cancelled`, the number stays used. Partial refunds (the `refunds` table) are left for M12 reporting.
+- Receipts: `GET /invoices/{id}/receipt?format=a5|thermal` renders a bilingual PDF with mPDF (bundled Abyssinica SIL font for Ethiopic).
+- `GET /branches/{branch}/takings?date=` totals completed payments by method for the day in Addis time, plus amounts still owed and refunded.
+- `memberships:expire` runs nightly at 00:05 Addis time and marks memberships past `ends_on` or out of visits as expired.
 
 ### G. Check-in & lockers
 ```
@@ -339,7 +357,7 @@ row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
 | **M0** | Foundation: monorepo, Laravel API, Next.js sections, en/am i18n, Docker stack, env templates, CI | API + web build and run; CI green | ✅ Done |
 | **M1** | Tenancy, auth & roles: organizations, branches, users, `branch_user`, policies, branch switcher, audit log, Telegram linking + OTP password reset | Owner creates 2 branches; staff see only their branch | ✅ Done |
 | **M2** | Members: CRUD, photos, member numbers, groups, search | Desk registers and finds members quickly | ✅ Done |
-| **M3** | Plans, fees, discounts, tax engine, invoices, cash/POS payments, Amharic PDF receipts, activation | Desk sale yields a correct invoice with VAT on/off | |
+| **M3** | Plans, fees, discounts, tax engine, invoices, cash/POS payments, Amharic PDF receipts, activation | Desk sale yields a correct invoice with VAT on/off | ✅ Done |
 | **M4** | Check-in & live desk: rotating QR, scan endpoint, Reverb pop-up, lockers toggle, occupancy, kiosk mode | Scan shows the desk pop-up in under 1 s | |
 | **M5** | Member PWA v1: login, QR card, status, invoices, install prompt, offline QR, **notification preference saved via API** | Installs on Android/iOS; QR works offline | |
 | **M6** | Manual Telebirr / bank verification queue | Upload → approve → active; duplicate FT blocked | |
@@ -391,7 +409,7 @@ otp_codes   id · user_id FK · purpose(phone_verify|password_reset) · channel(
 
 1. ~~Cross-branch access~~ → decided (see log).
 2. ~~Member login~~ → decided (see log).
-3. Tax: ~~inclusive vs exclusive~~ decided (configurable). Still open: applicable TOT rate, and whether Ministry of Revenue fiscal-printer integration is required. (Confirm with an accountant.)
+3. Tax: ~~inclusive vs exclusive~~ decided (configurable). Still open: applicable TOT rate, and whether Ministry of Revenue fiscal-printer integration is required. The M3 PDF is a payment receipt; whether it may serve as the tax invoice, or a registered cash register must also print one, needs an accountant's answer before launch.
 4. Keep the legacy prepaid wallet balance?
 5. Show Ethiopian-calendar dates alongside Gregorian?
 6. **Licensing**: the legacy code is under the GYM One License (`legacy/LICENSE`), which restricts rebranding and sublicensing. Decide a license for the new code, and keep ported logic clean-room or attributed.
