@@ -1,4 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
+
+import deskPhoto from "@/assets/images/signin-gym-floor.jpg";
 
 import { Logo } from "@/components/brand/logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -12,16 +15,21 @@ export default async function AuthLayout({ children, params }: LayoutProps<"/[la
   return (
     <DictionaryProvider locale={locale} dict={dict}>
       <div className="grid min-h-full flex-1 lg:grid-cols-[1fr_minmax(0,34rem)]">
-        <aside
-          className="track-field relative hidden flex-col justify-between p-10 text-lane lg:flex"
-          style={{ ["--lane-h" as string]: "88px" }}
-          aria-hidden
-        >
-          <Link href="/" tabIndex={-1}>
-            <Logo name={dict.meta.title} tone="lane" />
+        <aside className="relative hidden flex-col justify-between overflow-hidden lg:flex">
+          <Image
+            src={deskPhoto}
+            alt={dict.auth.photoAlt}
+            fill
+            sizes="(min-width: 1024px) 60vw, 0px"
+            placeholder="blur"
+            loading="eager"
+            className="object-cover object-[center_60%]"
+          />
+          <Link href="/" tabIndex={-1} className="relative m-10 self-start rounded-[6px] bg-white/85 px-3 py-2 backdrop-blur-sm">
+            <Logo name={dict.meta.title} />
           </Link>
-          {/* The headline breaks the lanes: a solid block of track, so no line runs through the type. */}
-          <p className={`font-bib -mx-10 max-w-xl bg-track px-10 py-8 uppercase ${locale === "am" ? "text-5xl leading-tight" : "text-7xl"}`}>
+          {/* The headline sits in its own lane of track at the foot of the photo. */}
+          <p aria-hidden className={`track-band font-bib relative px-10 py-8 uppercase text-lane ${locale === "am" ? "text-5xl leading-tight" : "text-7xl"}`}>
             {dict.landing.headline1}
             <br />
             {dict.landing.headline2}

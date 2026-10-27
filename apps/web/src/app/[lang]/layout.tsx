@@ -27,8 +27,16 @@ export async function generateMetadata({
 
   const dict = await getDictionary(lang);
   return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
     title: { default: dict.meta.title, template: `%s · ${dict.meta.title}` },
     description: dict.meta.description,
+    openGraph: {
+      type: "website",
+      locale: lang === "am" ? "am_ET" : "en_US",
+      siteName: dict.meta.title,
+      images: [{ url: "/images/og.jpg", width: 1200, height: 630, alt: dict.landing.ogAlt }],
+    },
+    twitter: { card: "summary_large_image" },
   };
 }
 

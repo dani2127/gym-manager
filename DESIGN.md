@@ -57,4 +57,9 @@ One moment: lane fills and runners move to their value once on load (`.lane-fill
 
 ## Imagery
 
-No stock photography yet; the network policy blocked photo sites. Planned slots: a dawn-run photo band on the public site and a gym-floor image on sign-in. Real photos of member gyms beat stock.
+Photographs live in `apps/web/src/assets/images/` (statically imported with `next/image`, blur placeholders, AVIF/WebP) and the share image in `apps/web/public/images/og.jpg`. Provenance and prompts: `docs/design/IMAGES.md`.
+
+- Documentary, natural light, slightly warm and desaturated; Ethiopian people in real gym and running clothes; one tartan-red accent per frame.
+- Every image has bilingual alt text from the dictionaries.
+- Text over a photo sits on calm areas only, with a scrim taken from the ground colour (light) or black (dark), never over faces.
+- No logos, text or brand marks inside photos; remove them before shipping.

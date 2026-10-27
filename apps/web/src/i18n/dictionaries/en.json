@@ -52,7 +52,8 @@
     "cardTitle": "Membership card",
     "cardBody": "Your QR check-in card and membership status will appear here.",
     "installHint": "Tip: add this app to your home screen from your browser menu.",
-    "sampleNote": "Sample pass. Your own bib appears here once member sign-in opens."
+    "sampleNote": "Sample pass. Your own bib appears here once member sign-in opens.",
+    "photoAlt": "A member holding a phone at the gym entrance turnstile"
   },
   "settings": {
     "title": "Settings",
@@ -102,7 +103,8 @@
     "confirmPassword": "Confirm new password",
     "resetPassword": "Reset password",
     "resetDone": "Your password has been reset.",
-    "backToLogin": "Back to sign in"
+    "backToLogin": "Back to sign in",
+    "photoAlt": "A receptionist at a gym front desk holding a tablet"
   },
   "nav": {
     "desk": "Front desk",
@@ -279,7 +281,11 @@
     "localBranches": "Owners see every branch; staff see only their own",
     "closeTitle": "Put your gym on the track.",
     "closeBody": "Start with one branch. Add the next when you open it.",
-    "footerNote": "Gym management for Ethiopia."
+    "footerNote": "Gym management for Ethiopia.",
+    "dawnTitle": "Your members start at dawn. So does your front desk.",
+    "dawnAlt": "Four runners on a eucalyptus-lined dirt road on Entoto hill at sunrise",
+    "trainingAlt": "A trainer coaching a member through a kettlebell swing in an Addis Ababa gym",
+    "ogAlt": "Three runners on a red running track, seen from above"
   },
   "register": {
     "title": "Start your gym",

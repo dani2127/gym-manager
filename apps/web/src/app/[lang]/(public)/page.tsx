@@ -1,5 +1,9 @@
 import { Check, CircleCheck, Clock } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+
+import dawnRun from "@/assets/images/dawn-run.jpg";
+import gymTraining from "@/assets/images/addis-gym-training.jpg";
 
 import { Bib } from "@/components/brand/bib";
 import { TrackLanes } from "@/components/brand/lanes";
@@ -52,6 +56,26 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
             { name: "Sarbet", value: 9, max: 40, detail: `9 ${t.inside}` },
           ]}
         />
+      </section>
+
+      {/* Dawn on Entoto: the hour this product is built for. */}
+      <section className="relative">
+        <div className="relative h-[clamp(260px,42vw,640px)] overflow-hidden">
+          <Image
+            src={dawnRun}
+            alt={t.dawnAlt}
+            fill
+            sizes="100vw"
+            placeholder="blur"
+            className="object-cover object-[70%_center]"
+          />
+          {/* Mist-coloured scrim keeps the headline readable over the trees. */}
+          <div aria-hidden className="absolute inset-y-0 left-0 hidden w-1/2 bg-gradient-to-r from-[#e9eae7]/85 via-[#e9eae7]/45 to-transparent lg:block" />
+          <div className="absolute inset-0 mx-auto hidden max-w-7xl items-center px-8 lg:flex">
+            <p className="font-bib max-w-md text-6xl uppercase text-[#141514]">{t.dawnTitle}</p>
+          </div>
+        </div>
+        <p className="font-bib mx-auto max-w-7xl px-4 pt-8 text-4xl uppercase sm:px-8 lg:hidden">{t.dawnTitle}</p>
       </section>
 
       {/* Three moments, each shown as the product doing the job. */}
@@ -125,16 +149,28 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
 
       {/* Local truths, set as a results board rather than icon cards. */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-8">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-          <h2 className={`font-bib uppercase ${am ? "text-4xl leading-tight" : "text-5xl sm:text-6xl"}`}>{t.localTitle}</h2>
-          <ul className="border-t-2 border-ink">
-            {[t.localBirr, t.localLang, t.localPhone, t.localBranches].map((item) => (
-              <li key={item} className="grid grid-cols-[2.5rem_1fr] items-start gap-4 border-b border-line py-5">
-                <span className="mt-3 h-1 w-8 rounded-full bg-track" aria-hidden />
-                <span className="text-lg">{item}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+          <div className="relative aspect-[3/2] overflow-hidden rounded-[6px]">
+            <Image
+              src={gymTraining}
+              alt={t.trainingAlt}
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              placeholder="blur"
+              className="object-cover"
+            />
+          </div>
+          <div>
+            <h2 className={`font-bib mb-8 uppercase ${am ? "text-4xl leading-tight" : "text-5xl sm:text-6xl"}`}>{t.localTitle}</h2>
+            <ul className="border-t-2 border-ink">
+              {[t.localBirr, t.localLang, t.localPhone, t.localBranches].map((item) => (
+                <li key={item} className="grid grid-cols-[2.5rem_1fr] items-start gap-4 border-b border-line py-5">
+                  <span className="mt-3 h-1 w-8 rounded-full bg-track" aria-hidden />
+                  <span className="text-lg">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 

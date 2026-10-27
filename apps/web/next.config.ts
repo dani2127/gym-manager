@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Self-contained server bundle for the Docker image (see Dockerfile).
   output: "standalone",
+  images: {
+    formats: ["image/avif", "image/webp"],
+    qualities: [75],
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

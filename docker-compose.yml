@@ -89,6 +89,7 @@ services:
         NEXT_PUBLIC_REVERB_SCHEME: https
         NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
         NEXT_PUBLIC_ORGANIZATION: ${DEFAULT_ORGANIZATION:-}
+        NEXT_PUBLIC_SITE_URL: https://${APP_DOMAIN}
     image: gym-web:latest
     restart: unless-stopped
     environment:

@@ -1,3 +1,6 @@
+import Image from "next/image";
+
+import entrance from "@/assets/images/member-welcome.jpg";
 import { Bib } from "@/components/brand/bib";
 import { loadLocale } from "@/i18n/dictionaries";
 
@@ -7,7 +10,19 @@ export default async function MemberHomePage({ params }: PageProps<"/[lang]/app"
 
   return (
     <div className="space-y-6">
-      <h1 className="font-bib text-4xl uppercase">{t.greeting}</h1>
+      <div className="relative -mx-5 aspect-[4/3] overflow-hidden">
+        <Image
+          src={entrance}
+          alt={t.photoAlt}
+          fill
+          sizes="(min-width: 448px) 448px, 100vw"
+          placeholder="blur"
+          loading="eager"
+          className="object-cover object-[50%_58%]"
+        />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
+        <h1 className="font-bib absolute bottom-4 left-5 text-4xl uppercase text-white">{t.greeting}</h1>
+      </div>
       <Bib
         gym="Lion Fitness"
         branch="Bole"
