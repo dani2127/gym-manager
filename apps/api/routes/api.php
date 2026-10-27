@@ -9,6 +9,13 @@ use App\Http\Controllers\Api\V1\Admin\StaffController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RegisterOrganizationController;
+use App\Http\Controllers\Api\V1\Billing\InvoiceController;
+use App\Http\Controllers\Api\V1\Billing\MembershipController;
+use App\Http\Controllers\Api\V1\Billing\SaleController;
+use App\Http\Controllers\Api\V1\Billing\TakingsController;
+use App\Http\Controllers\Api\V1\Catalog\DiscountRuleController;
+use App\Http\Controllers\Api\V1\Catalog\FeeController;
+use App\Http\Controllers\Api\V1\Catalog\PlanController;
 use App\Http\Controllers\Api\V1\Me\PhoneVerificationController;
 use App\Http\Controllers\Api\V1\Me\ProfileController;
 use App\Http\Controllers\Api\V1\Me\TelegramController;
@@ -71,6 +78,22 @@ Route::prefix('v1')->group(function () {
             Route::post('/member-groups', [MemberGroupController::class, 'store']);
             Route::patch('/member-groups/{memberGroup}', [MemberGroupController::class, 'update']);
             Route::delete('/member-groups/{memberGroup}', [MemberGroupController::class, 'destroy']);
+            Route::get('/members/{member}/memberships', [MembershipController::class, 'index']);
+
+            // Catalog: everyone reads plans and fees; owners change them.
+            Route::apiResource('plans', PlanController::class)->except('show');
+            Route::apiResource('fees', FeeController::class)->except(['show', 'destroy']);
+            Route::apiResource('discount-rules', DiscountRuleController::class)->except(['show', 'destroy']);
+
+            // Desk sales and invoices.
+            Route::post('/branches/{branch}/sales/quote', [SaleController::class, 'quote']);
+            Route::post('/branches/{branch}/sales', [SaleController::class, 'store']);
+            Route::get('/branches/{branch}/takings', TakingsController::class);
+            Route::get('/invoices', [InvoiceController::class, 'index']);
+            Route::get('/invoices/{invoice}', [InvoiceController::class, 'show']);
+            Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'pay']);
+            Route::post('/invoices/{invoice}/void', [InvoiceController::class, 'void']);
+            Route::get('/invoices/{invoice}/receipt', [InvoiceController::class, 'receipt']);
         });
     });
 });

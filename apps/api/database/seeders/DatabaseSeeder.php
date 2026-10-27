@@ -2,14 +2,23 @@
 
 namespace Database\Seeders;
 
+use App\Billing\Ledger;
+use App\Billing\Pricing;
 use App\Enums\AccountType;
 use App\Enums\BranchRole;
 use App\Models\Branch;
+use App\Models\DiscountRule;
+use App\Models\Fee;
 use App\Models\Member;
 use App\Models\MemberGroup;
 use App\Models\Organization;
+use App\Models\Plan;
 use App\Models\User;
+use App\Support\Settings\SettingsRepository;
+use App\Support\Tenancy\Tenant;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 
 /**
  * Demo data for local development. Sign in with organization "demo-gym",
@@ -20,6 +29,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $organization = Organization::create(['name' => 'Demo Gym', 'slug' => 'demo-gym']);
+        app(Tenant::class)->set($organization);
 
         $bole = Branch::create(['organization_id' => $organization->id, 'name' => 'Bole', 'code' => 'BOLE', 'city' => 'Addis Ababa']);
         $piassa = Branch::create(['organization_id' => $organization->id, 'name' => 'Piassa', 'code' => 'PIASSA', 'city' => 'Addis Ababa']);
@@ -45,11 +55,15 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        $this->seedMembers($organization, [$bole, $piassa]);
+        $members = $this->seedMembers($organization, [$bole, $piassa]);
+        $this->seedCatalogAndSales($organization, $bole, $members, User::where('phone', '+251911000003')->first());
     }
 
-    /** @param  list<Branch>  $branches */
-    private function seedMembers(Organization $organization, array $branches): void
+    /**
+     * @param  list<Branch>  $branches
+     * @return list<Member>
+     */
+    private function seedMembers(Organization $organization, array $branches): array
     {
         $people = [
             ['Hana', 'Tesfaye', 'female'], ['Dawit', 'Bekele', 'male'], ['Meron', 'Alemu', 'female'], ['Yonas', 'Haile', 'male'],
@@ -79,5 +93,58 @@ class DatabaseSeeder extends Seeder
 
         $family = MemberGroup::create(['organization_id' => $organization->id, 'type' => 'family', 'name' => 'Tesfaye family', 'primary_member_id' => $members[12]->id]);
         $family->members()->sync([$members[12]->id, $members[13]->id, $members[14]->id]);
+
+        return $members;
+    }
+
+    /** Plans, fees and discounts at Addis prices, plus a few sales so screens have history. */
+    /** @param  list<Member>  $members */
+    private function seedCatalogAndSales(Organization $organization, Branch $bole, array $members, User $reception): void
+    {
+        $plan = fn (array $attributes) => Plan::create(['organization_id' => $organization->id, ...$attributes]);
+
+        $monthly = $plan(['name' => ['en' => 'Monthly', 'am' => 'ወርሃዊ'], 'type' => 'time', 'duration_days' => 30, 'price_cents' => 250000, 'freeze_allowed' => true, 'max_freeze_days' => 7, 'max_freezes' => 1, 'sort' => 1]);
+        $quarter = $plan(['name' => ['en' => '3 months', 'am' => 'የ3 ወር'], 'type' => 'time', 'duration_days' => 90, 'price_cents' => 650000, 'freeze_allowed' => true, 'max_freeze_days' => 14, 'max_freezes' => 2, 'sort' => 2]);
+        $plan(['name' => ['en' => 'Annual, all branches', 'am' => 'ዓመታዊ፣ ሁሉም ቅርንጫፎች'], 'type' => 'time', 'duration_days' => 365, 'price_cents' => 2200000, 'access_scope' => 'all_branches', 'freeze_allowed' => true, 'max_freeze_days' => 30, 'max_freezes' => 3, 'sort' => 3]);
+        $tenVisits = $plan(['name' => ['en' => '10-visit pass', 'am' => 'የ10 ጉብኝት'], 'type' => 'time_visits', 'duration_days' => 60, 'visit_count' => 10, 'price_cents' => 150000, 'sort' => 4]);
+        $dayPass = $plan(['name' => ['en' => 'Day pass', 'am' => 'የአንድ ቀን'], 'type' => 'time_visits', 'duration_days' => 1, 'visit_count' => 1, 'price_cents' => 30000, 'sort' => 5]);
+
+        $registration = Fee::create(['organization_id' => $organization->id, 'name' => ['en' => 'Registration', 'am' => 'ምዝገባ'], 'kind' => 'registration', 'amount_cents' => 50000]);
+        Fee::create(['organization_id' => $organization->id, 'name' => ['en' => 'Card replacement', 'am' => 'ካርድ መተኪያ'], 'kind' => 'card_replacement', 'amount_cents' => 10000]);
+
+        $discount = fn (array $attributes) => DiscountRule::create(['organization_id' => $organization->id, ...$attributes]);
+        $student = $discount(['name' => ['en' => 'Student', 'am' => 'ተማሪ'], 'kind' => 'student', 'value_type' => 'percent', 'value' => 15, 'requires_proof' => true]);
+        $couple = $discount(['name' => ['en' => 'Couple', 'am' => 'ጥንዶች'], 'kind' => 'couple', 'value_type' => 'percent', 'value' => 10]);
+        $discount(['name' => ['en' => 'Family of 3+', 'am' => 'ቤተሰብ (3+)'], 'kind' => 'family', 'value_type' => 'percent', 'value' => 15, 'min_group_size' => 3]);
+        $discount(['name' => ['en' => 'Opening offer', 'am' => 'የመክፈቻ ቅናሽ'], 'kind' => 'promo', 'value_type' => 'fixed', 'value' => 50000, 'promo_code' => 'BOLE500', 'valid_until' => now()->addMonths(2)->toDateString()]);
+
+        // Demo gym charges 15% VAT, included in its prices.
+        app(SettingsRepository::class)->put($organization, ['tax.enabled' => true, 'tax.name' => 'VAT', 'tax.rate' => 15, 'tax.prices_inclusive' => true]);
+
+        // Sales spread over recent weeks, rung up as the desk would: member,
+        // plan, discount, days ago, payment method, amount paid (null = all).
+        $ledger = app(Ledger::class);
+        $pricing = app(Pricing::class);
+        $sales = [
+            [0, $monthly, $couple, 26, 'cash', null],
+            [1, $monthly, $couple, 26, 'pos_card', null],
+            [2, $quarter, null, 40, 'cash', null],
+            [3, $tenVisits, $student, 5, 'cash', null],
+            [5, $quarter, null, 3, 'pos_card', null],
+            [6, $monthly, null, 45, 'cash', null],
+            [9, $dayPass, null, 0, 'cash', null],
+            [4, $monthly, null, 0, 'cash', 150000],
+        ];
+        $now = now();
+        foreach (collect($sales)->sortByDesc(3)->values() as $i => [$index, $salePlan, $saleDiscount, $daysAgo, $method, $amount]) {
+            // Numbers follow time, as they would at a real desk.
+            Carbon::setTestNow($daysAgo ? $now->copy()->subDays($daysAgo)->setTime(8, 10 * $i) : $now->copy()->subMinutes(40 - 10 * $i));
+            $member = $members[$index];
+            $quote = $pricing->quote($bole, $salePlan, $pricing->suggestedFees($member), $saleDiscount, $organization->today());
+            $ledger->sell($quote, $bole, $member, $reception, ['method' => $method, 'amount_cents' => $amount ?? $quote->totalCents()]);
+            Carbon::setTestNow();
+        }
+
+        Artisan::call('memberships:expire');
     }
 }

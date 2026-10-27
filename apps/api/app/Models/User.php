@@ -111,6 +111,29 @@ class User extends Authenticatable implements HasLocalePreference
             && ($this->isOwner() || $this->roleIn($branch) === BranchRole::Manager);
     }
 
+    /** Selling, taking payments and seeing invoices: owners, managers and receptionists. */
+    public function handlesMoneyAt(Branch $branch): bool
+    {
+        return $branch->organization_id === $this->organization_id
+            && ($this->isOwner() || in_array($this->roleIn($branch), [BranchRole::Manager, BranchRole::Receptionist], true));
+    }
+
+    /**
+     * Branches whose invoices and takings this user may see.
+     *
+     * @return Builder<Branch>
+     */
+    public function moneyBranches(): Builder
+    {
+        $query = Branch::query()->where('organization_id', $this->organization_id);
+
+        return $this->isOwner()
+            ? $query
+            : $query->whereIn('id', $this->branches()
+                ->wherePivotIn('role', [BranchRole::Manager->value, BranchRole::Receptionist->value])
+                ->select('branches.id'));
+    }
+
     public function telegramChatId(): ?string
     {
         return $this->notificationPreferences()
