@@ -12,6 +12,9 @@ use App\Http\Controllers\Api\V1\Auth\RegisterOrganizationController;
 use App\Http\Controllers\Api\V1\Me\PhoneVerificationController;
 use App\Http\Controllers\Api\V1\Me\ProfileController;
 use App\Http\Controllers\Api\V1\Me\TelegramController;
+use App\Http\Controllers\Api\V1\Members\MemberController;
+use App\Http\Controllers\Api\V1\Members\MemberGroupController;
+use App\Http\Controllers\Api\V1\Members\MemberPhotoController;
 use App\Http\Controllers\Api\V1\MetaController;
 use App\Http\Controllers\Api\V1\Webhooks\TelegramWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +63,14 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('staff', StaffController::class)->except('destroy');
 
             Route::get('/audit-logs', [AuditLogController::class, 'index']);
+
+            Route::apiResource('members', MemberController::class);
+            Route::get('/members/{member}/photo', [MemberPhotoController::class, 'show']);
+            Route::post('/members/{member}/photo', [MemberPhotoController::class, 'store']);
+            Route::delete('/members/{member}/photo', [MemberPhotoController::class, 'destroy']);
+            Route::post('/member-groups', [MemberGroupController::class, 'store']);
+            Route::patch('/member-groups/{memberGroup}', [MemberGroupController::class, 'update']);
+            Route::delete('/member-groups/{memberGroup}', [MemberGroupController::class, 'destroy']);
         });
     });
 });

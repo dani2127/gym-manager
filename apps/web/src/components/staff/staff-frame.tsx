@@ -2,6 +2,7 @@
 
 import {
   Building2,
+  Contact,
   Dumbbell,
   History,
   LayoutGrid,
@@ -57,6 +58,7 @@ function useNav() {
 
   const work: NavItem[] = [
     ...(access.desk ? [{ href: "/desk", label: dict.nav.desk, icon: ScanLine }] : []),
+    { href: "/members", label: dict.nav.members, icon: Contact },
     ...(access.trainer ? [{ href: "/trainer", label: dict.nav.trainer, icon: Dumbbell }] : []),
   ];
 

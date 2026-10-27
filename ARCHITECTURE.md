@@ -165,13 +165,23 @@ jobs) filters by organization explicitly.
 ### C. Members
 ```
 members        id · ulid · organization_id FK · home_branch_id FK · user_id FK NULL UQ · member_no
-               · first_name · last_name · gender · date_of_birth · phone · email NULL · photo_path
+               · first_name · last_name · gender NULL · date_of_birth NULL · phone NULL · email NULL · photo_path NULL
                · emergency_name · emergency_phone · status(active|inactive|banned) · qr_secret(encrypted)
-               · joined_at · notes · deleted_at
-               UQ(organization_id, member_no) · IDX(organization_id, phone) · FULLTEXT(first_name, last_name)
-member_groups         id · organization_id FK · type(couple|family|corporate) · name · primary_member_id FK
-member_group_members  group_id FK · member_id FK         PK(group_id, member_id)
+               · joined_at · notes · created_by FK NULL · timestamps · deleted_at
+               UQ(organization_id, member_no) · IDX(organization_id, phone) · IDX(organization_id, first_name)
+               · IDX(organization_id, last_name) · IDX(organization_id, home_branch_id, status)
+member_groups         id · ulid · organization_id FK · type(couple|family|corporate) · name · primary_member_id FK NULL
+member_group_members  member_group_id FK · member_id FK UQ        PK(member_group_id, member_id)
+organizations.next_member_no   per-gym counter, row-locked when a member is registered
 ```
+
+**As built in M2.**
+- Member numbers are sequential per gym (`0001`, shown on the bib) and never reused, even after a delete.
+- Phone is not unique: families share phones. A repeated number is a warning the desk confirms (`phone_duplicate`), re-checked only when the number changes.
+- A member belongs to at most one group, so group discounts in M3 stay unambiguous. Sizes: couple 2, family 2–12, company 2–500.
+- Any staff member can find and view members from every branch (the desk serves visitors from other branches). Registering and editing needs the owner or a manager/receptionist of the member's home branch; deleting (soft) is owners and managers.
+- Photos are centre-cropped to 512px JPEG (camera metadata stripped), kept on the private disk and served only through the authorized `/members/{id}/photo` endpoint.
+- Search: each word prefixes the first or father's name; digits match the member number exactly or, with five or more significant digits, the phone number.
 
 ### D. Catalog, pricing & tax
 ```
@@ -328,7 +338,7 @@ row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
 |---|---|---|---|
 | **M0** | Foundation: monorepo, Laravel API, Next.js sections, en/am i18n, Docker stack, env templates, CI | API + web build and run; CI green | ✅ Done |
 | **M1** | Tenancy, auth & roles: organizations, branches, users, `branch_user`, policies, branch switcher, audit log, Telegram linking + OTP password reset | Owner creates 2 branches; staff see only their branch | ✅ Done |
-| **M2** | Members: CRUD, photos, member numbers, groups, search | Desk registers and finds members quickly | |
+| **M2** | Members: CRUD, photos, member numbers, groups, search | Desk registers and finds members quickly | ✅ Done |
 | **M3** | Plans, fees, discounts, tax engine, invoices, cash/POS payments, Amharic PDF receipts, activation | Desk sale yields a correct invoice with VAT on/off | |
 | **M4** | Check-in & live desk: rotating QR, scan endpoint, Reverb pop-up, lockers toggle, occupancy, kiosk mode | Scan shows the desk pop-up in under 1 s | |
 | **M5** | Member PWA v1: login, QR card, status, invoices, install prompt, offline QR, **notification preference saved via API** | Installs on Android/iOS; QR works offline | |

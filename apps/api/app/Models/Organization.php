@@ -34,6 +34,16 @@ class Organization extends Model
         return $this->hasMany(Branch::class);
     }
 
+    /** Reserves the next member number; call inside a transaction. */
+    public function takeMemberNumber(): int
+    {
+        $locked = static::query()->whereKey($this->id)->lockForUpdate()->firstOrFail();
+        $number = $locked->next_member_no;
+        $locked->increment('next_member_no');
+
+        return $number;
+    }
+
     /** @return HasMany<User, $this> */
     public function users(): HasMany
     {

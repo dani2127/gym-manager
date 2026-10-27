@@ -20,3 +20,23 @@ export function homeFor(me: Me): string {
   if (access.trainer) return "/trainer";
   return "/account";
 }
+
+/** Mirrors MemberPolicy: owners, or managers and receptionists of the branch. */
+export function canRegisterAt(me: Me, branchId: string | undefined): boolean {
+  if (me.user.account_type === "owner") return true;
+  const role = me.branches.find((b) => b.id === branchId)?.role;
+  return role === "manager" || role === "receptionist";
+}
+
+export function canRegisterMembers(me: Me): boolean {
+  return me.user.account_type === "owner" || me.branches.some((b) => b.role === "manager" || b.role === "receptionist");
+}
+
+export function canDeleteMemberAt(me: Me, branchId: string | undefined): boolean {
+  return me.user.account_type === "owner" || me.branches.some((b) => b.id === branchId && b.role === "manager");
+}
+
+/** Branches where the user may register members (the home-branch choices). */
+export function registrableBranches(me: Me) {
+  return me.branches.filter((b) => canRegisterAt(me, b.id));
+}

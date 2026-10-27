@@ -74,3 +74,39 @@ export type AuditEntry = {
   user: { id: string; name: string } | null;
   branch: { id: string; name: string } | null;
 };
+
+export type MemberStatus = "active" | "inactive" | "banned";
+
+export type MemberGroup = {
+  id: string;
+  type: "couple" | "family" | "corporate";
+  name: string;
+  primary_member_id: string | null;
+  members: { id: string; full_name: string; member_no: string }[];
+};
+
+export type Member = {
+  id: string;
+  member_no: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  gender: "male" | "female" | null;
+  date_of_birth: string | null;
+  phone: string | null;
+  email: string | null;
+  status: MemberStatus;
+  joined_at: string;
+  home_branch?: { id: string; name: string };
+  photo_url: string | null;
+  emergency_name: string | null;
+  emergency_phone: string | null;
+  notes: string | null;
+  group?: MemberGroup | null;
+  created_at: string;
+};
+
+export type Paginated<T> = {
+  data: T[];
+  meta: { current_page: number; last_page: number; total: number; per_page: number };
+};
