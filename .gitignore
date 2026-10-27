@@ -7,3 +7,6 @@
 Thumbs.db
 .idea/
 .vscode/
+
+# Launch videos (/brag)
+brag-output*/
