@@ -2,23 +2,38 @@
 
 namespace App\Providers;
 
+use App\Support\Tenancy\Tenant;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        //
+        $this->app->scoped(Tenant::class);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
+        // Sending a code costs a Telegram message, so it is tightly limited.
+        RateLimiter::for('otp', fn (Request $request) => [
+            Limit::perMinutes(10, 3)->by('otp-send:'.$this->otpSubject($request)),
+            Limit::perHour(20)->by('otp-send-ip:'.$request->ip()),
+        ]);
+
+        // Checking codes: each code also locks itself after 5 wrong guesses.
+        RateLimiter::for('otp-verify', fn (Request $request) => [
+            Limit::perMinutes(10, 10)->by('otp-verify:'.$this->otpSubject($request)),
+            Limit::perHour(30)->by('otp-verify-ip:'.$request->ip()),
+        ]);
+
+        RateLimiter::for('registration', fn (Request $request) => Limit::perHour(5)->by($request->ip()));
+    }
+
+    private function otpSubject(Request $request): string
+    {
+        return $request->user()?->id ?? mb_strtolower((string) $request->input('organization')).'|'.$request->input('phone');
     }
 }

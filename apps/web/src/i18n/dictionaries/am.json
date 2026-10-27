@@ -9,7 +9,20 @@
     "apiStatus": "API",
     "apiOnline": "በመስመር ላይ",
     "apiOffline": "ከመስመር ውጭ",
-    "apiChecking": "በመፈተሽ ላይ…"
+    "apiChecking": "በመፈተሽ ላይ…",
+    "save": "አስቀምጥ",
+    "saving": "በማስቀመጥ ላይ…",
+    "saved": "ተቀምጧል",
+    "cancel": "ሰርዝ",
+    "add": "ጨምር",
+    "edit": "አስተካክል",
+    "loading": "በመጫን ላይ…",
+    "error": "የሆነ ችግር ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።",
+    "signOut": "ውጣ",
+    "notAllowed": "ይህን ገጽ የማየት ፈቃድ የለዎትም።",
+    "enabled": "በርቷል",
+    "disabled": "ጠፍቷል",
+    "remove": "አስወግድ"
   },
   "public": {
     "nav": {
@@ -69,5 +82,142 @@
       "title": "የአሰልጣኞች ፖርታል",
       "body": "ክፍሎችዎ፣ የግል ስልጠና ደንበኞችዎ እና መገኘት።"
     }
+  },
+  "auth": {
+    "loginTitle": "የሰራተኞች መግቢያ",
+    "organization": "የጂም መለያ",
+    "organizationHint": "ጂምዎ የተመዘገበበት አጭር ስም፣ ለምሳሌ lion-fitness",
+    "phone": "ስልክ ቁጥር",
+    "password": "የይለፍ ቃል",
+    "signIn": "ግባ",
+    "signingIn": "በመግባት ላይ…",
+    "forgot": "የይለፍ ቃል ረስተዋል?",
+    "forgotTitle": "የይለፍ ቃልዎን ይቀይሩ",
+    "forgotIntro": "ከመገለጫዎ ጋር ወደተገናኘው የቴሌግራም መለያ ባለ 6 አሃዝ ኮድ እንልካለን።",
+    "sendCode": "ኮድ ላክ",
+    "code": "ባለ 6 አሃዝ ኮድ",
+    "newPassword": "አዲስ የይለፍ ቃል",
+    "confirmPassword": "አዲሱን የይለፍ ቃል ያረጋግጡ",
+    "resetPassword": "የይለፍ ቃል ቀይር",
+    "resetDone": "የይለፍ ቃልዎ ተቀይሯል።",
+    "backToLogin": "ወደ መግቢያ ተመለስ"
+  },
+  "nav": {
+    "desk": "የፊት ዴስክ",
+    "trainer": "አሰልጣኝ",
+    "admin": "አስተዳደር",
+    "account": "የእኔ መለያ",
+    "branch": "ቅርንጫፍ",
+    "branches": "ቅርንጫፎች",
+    "staff": "ሰራተኞች",
+    "settings": "ቅንብሮች",
+    "audit": "የእንቅስቃሴ መዝገብ"
+  },
+  "branches": {
+    "title": "ቅርንጫፎች",
+    "add": "ቅርንጫፍ ጨምር",
+    "name": "ስም",
+    "code": "ኮድ",
+    "codeHint": "በትልልቅ ፊደላት፣ ለምሳሌ BOLE",
+    "city": "ከተማ",
+    "phone": "ስልክ",
+    "address": "አድራሻ",
+    "capacity": "የመያዝ አቅም",
+    "status": "ሁኔታ",
+    "active": "ንቁ",
+    "inactive": "ንቁ ያልሆነ",
+    "hours": "የስራ ሰዓታት",
+    "closed": "ዝግ",
+    "saveHours": "ሰዓታትን አስቀምጥ",
+    "details": "ዝርዝሮች",
+    "weekdays": [
+      "እሁድ",
+      "ሰኞ",
+      "ማክሰኞ",
+      "ረቡዕ",
+      "ሐሙስ",
+      "ዓርብ",
+      "ቅዳሜ"
+    ]
+  },
+  "staffPage": {
+    "title": "ሰራተኞች",
+    "add": "ሰራተኛ ጨምር",
+    "name": "ሙሉ ስም",
+    "phone": "ስልክ",
+    "email": "ኢሜይል (አማራጭ)",
+    "password": "የመጀመሪያ የይለፍ ቃል",
+    "passwordHint": "ቢያንስ 8 ቁምፊዎች። በግል ያጋሩ፤ በኋላ መቀየር ይችላሉ።",
+    "assignments": "የቅርንጫፍ ሚናዎች",
+    "addAssignment": "ሌላ ቅርንጫፍ ጨምር",
+    "branch": "ቅርንጫፍ",
+    "role": "ሚና",
+    "roles": {
+      "owner": "ባለቤት",
+      "manager": "ሥራ አስኪያጅ",
+      "receptionist": "እንግዳ ተቀባይ",
+      "trainer": "አሰልጣኝ"
+    },
+    "disable": "አግድ",
+    "enable": "አንቃ",
+    "disabledBadge": "ታግዷል",
+    "allBranches": "ሁሉም ቅርንጫፎች"
+  },
+  "settingsPage": {
+    "title": "ቅንብሮች",
+    "tax": "ግብር",
+    "taxEnabled": "በደረሰኞች ላይ ግብር አስከፍል",
+    "taxName": "የግብር አይነት",
+    "taxRate": "መጠን (%)",
+    "pricesInclusive": "ዋጋዎች ግብርን ያካትታሉ",
+    "pricesInclusiveHelp": "ሲበራ፡ የተዘረዘረው ዋጋ አባላት የሚከፍሉት ሲሆን ግብሩ በውስጡ ይታያል። ሲጠፋ፡ ግብሩ በክፍያ ጊዜ ይጨመራል።",
+    "features": "ባህሪያት",
+    "freeze": "አባልነትን ማቆም ፍቀድ",
+    "lockers": "በመግቢያ ጊዜ ሎከር መድብ",
+    "chapa": "በቻፓ የመስመር ላይ ክፍያ",
+    "ownerOnly": "እነዚህን ቅንብሮች መቀየር የሚችለው ባለቤቱ ብቻ ነው።"
+  },
+  "audit": {
+    "title": "የእንቅስቃሴ መዝገብ",
+    "empty": "እስካሁን ምንም እንቅስቃሴ የለም።",
+    "when": "መቼ",
+    "who": "ማን",
+    "action": "ተግባር",
+    "branch": "ቅርንጫፍ"
+  },
+  "account": {
+    "title": "የእኔ መለያ",
+    "profile": "መገለጫ",
+    "name": "ስም",
+    "language": "ቋንቋ",
+    "password": "የይለፍ ቃል ቀይር",
+    "currentPassword": "የአሁኑ የይለፍ ቃል",
+    "newPassword": "አዲስ የይለፍ ቃል",
+    "confirmPassword": "አዲሱን የይለፍ ቃል ያረጋግጡ",
+    "telegram": "ቴሌግራም",
+    "telegramLinked": "ተገናኝቷል። ኮዶች እና ማሳወቂያዎች በቴሌግራም ይደርሳሉ።",
+    "telegramNotLinked": "አልተገናኘም። የይለፍ ቃልዎን ራስዎ ለመቀየር ቴሌግራምን ያገናኙ።",
+    "telegramLink": "ቴሌግራም ያገናኙ",
+    "telegramLinkHelp": "ቴሌግራም በአዲስ ትር ተከፍቷል። በቦቱ ውስጥ Start ይጫኑ፣ ከዚያ ተመልሰው ያረጋግጡ።",
+    "telegramCheck": "Start ተጭኛለሁ",
+    "telegramUnlink": "አቋርጥ",
+    "phone": "ስልክ ቁጥር",
+    "phoneVerified": "ተረጋግጧል",
+    "phoneNotVerified": "አልተረጋገጠም",
+    "sendCode": "ኮድ ወደ ቴሌግራም ላክ",
+    "code": "ባለ 6 አሃዝ ኮድ",
+    "verify": "አረጋግጥ"
+  },
+  "trainerPage": {
+    "comingUp": "ክፍሎችዎ እና የግል ስልጠና ደንበኞችዎ ከደረጃ 8 ጀምሮ እዚህ ይታያሉ።"
+  },
+  "deskPage": {
+    "today": "ዛሬ",
+    "openToday": "ክፍት {opens}–{closes}",
+    "closedToday": "ዛሬ ዝግ ነው",
+    "comingUp": "የQR መግቢያ እና የአባላት ፈጣን ማሳያ በደረጃ 4 ይመጣሉ።"
+  },
+  "adminPage": {
+    "intro": "የ{organization} ቅርንጫፎችን፣ ሰራተኞችን እና ቅንብሮችን ያስተዳድሩ።"
   }
 }

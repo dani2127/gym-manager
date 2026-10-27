@@ -130,14 +130,37 @@ branch_closures id · branch_id FK · date · opens_at NULL · closes_at NULL ·
 
 ### B. Identity & roles
 ```
-users        id · ulid · organization_id FK NULL(platform admin) · name · phone · email NULL · password
-             · locale · photo_path · status · last_login_at
-             UQ(organization_id, phone) · UQ(organization_id, email)
-branch_user  branch_id FK · user_id FK · role(owner|manager|receptionist|trainer)    PK(branch_id, user_id)
-             (+ spatie/laravel-permission, team = organization)
+users        id · ulid · organization_id FK NULL(platform admin) · account_type(owner|staff|member)
+             · name · phone(E.164) · phone_verified_at · email NULL · password · locale(en|am)
+             · photo_path · status(active|disabled) · last_login_at
+             UQ(organization_id, phone) · UQ(organization_id, email) · IDX(organization_id, account_type, status)
+branch_user  branch_id FK · user_id FK · role(manager|receptionist|trainer)    PK(branch_id, user_id)
 audit_logs   id · organization_id · branch_id NULL · user_id NULL · action · subject_type · subject_id
              · changes JSON · ip · created_at       IDX(organization_id, subject_type, subject_id)
+otp_codes    see §7 (Telegram one-time codes)
 ```
+
+**Roles (as built in M1).** `owner` is an organization-wide account type with
+access to every branch. Branch staff are `account_type = staff` with one role
+per branch in `branch_user`: a person can be a trainer in one branch and a
+receptionist in another. Laravel policies (`BranchPolicy`, `UserPolicy`)
+implement the rules; spatie/laravel-permission was not needed for four fixed
+roles and can be added if custom roles are ever required.
+
+| Action | Owner | Manager | Receptionist | Trainer |
+|---|---|---|---|---|
+| See branches | all | assigned | assigned | assigned |
+| Create branches, change branch status | ✓ | | | |
+| Edit branch details, hours, closures | ✓ | own branches | | |
+| Tax / feature settings (org and branch) | ✓ | read | read | read |
+| Manage staff | everyone | receptionists & trainers in own branches | | |
+| Activity log | ✓ | | | |
+
+**Tenant isolation.** `ResolveTenant` middleware sets the organization from the
+signed-in user before route-model binding, and the `BelongsToOrganization`
+global scope filters every tenant model, so another gym's records resolve to
+404. Code that runs without a signed-in user (login, Telegram webhook, queued
+jobs) filters by organization explicitly.
 
 ### C. Members
 ```
@@ -304,7 +327,7 @@ row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
 | # | Milestone | Exit criteria | Status |
 |---|---|---|---|
 | **M0** | Foundation: monorepo, Laravel API, Next.js sections, en/am i18n, Docker stack, env templates, CI | API + web build and run; CI green | ✅ Done |
-| **M1** | Tenancy, auth & roles: organizations, branches, users, `branch_user`, policies, branch switcher, audit log | Owner creates 2 branches; staff see only their branch | |
+| **M1** | Tenancy, auth & roles: organizations, branches, users, `branch_user`, policies, branch switcher, audit log, Telegram linking + OTP password reset | Owner creates 2 branches; staff see only their branch | ✅ Done |
 | **M2** | Members: CRUD, photos, member numbers, groups, search | Desk registers and finds members quickly | |
 | **M3** | Plans, fees, discounts, tax engine, invoices, cash/POS payments, Amharic PDF receipts, activation | Desk sale yields a correct invoice with VAT on/off | |
 | **M4** | Check-in & live desk: rotating QR, scan endpoint, Reverb pop-up, lockers toggle, occupancy, kiosk mode | Scan shows the desk pop-up in under 1 s | |

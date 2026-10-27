@@ -33,6 +33,21 @@ cp .env.example .env.local
 npm run dev
 ```
 
+Demo data: `php artisan migrate:fresh --seed` creates the gym **demo-gym**
+(branches Bole and Piassa). Sign in at http://localhost:3000/login with
+password `password` and one of:
+
+| Phone | Role |
+|---|---|
+| 0911 000 001 | Owner |
+| 0911 000 002 | Manager (Bole) |
+| 0911 000 003 | Receptionist (Bole) |
+| 0911 000 004 | Trainer (Bole, Piassa) |
+
+Telegram (linking and password-reset codes) needs a bot from @BotFather:
+set the `TELEGRAM_*` variables, then run `php artisan telegram:set-webhook`
+once the API is reachable over HTTPS.
+
 Checks: `php artisan test` and `vendor/bin/pint --test` in `apps/api`;
 `npm run lint` and `npm run build` in `apps/web`.
 

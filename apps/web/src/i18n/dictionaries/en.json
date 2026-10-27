@@ -9,7 +9,20 @@
     "apiStatus": "API",
     "apiOnline": "online",
     "apiOffline": "offline",
-    "apiChecking": "checking…"
+    "apiChecking": "checking…",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "cancel": "Cancel",
+    "add": "Add",
+    "edit": "Edit",
+    "loading": "Loading…",
+    "error": "Something went wrong. Please try again.",
+    "signOut": "Sign out",
+    "notAllowed": "You do not have access to this page.",
+    "enabled": "On",
+    "disabled": "Off",
+    "remove": "Remove"
   },
   "public": {
     "nav": {
@@ -69,5 +82,142 @@
       "title": "Trainer portal",
       "body": "Your classes, personal-training clients and attendance."
     }
+  },
+  "auth": {
+    "loginTitle": "Staff sign in",
+    "organization": "Gym ID",
+    "organizationHint": "The short name your gym signed up with, e.g. lion-fitness",
+    "phone": "Phone number",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "forgot": "Forgot password?",
+    "forgotTitle": "Reset your password",
+    "forgotIntro": "We will send a 6-digit code to the Telegram account linked to your profile.",
+    "sendCode": "Send code",
+    "code": "6-digit code",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "resetPassword": "Reset password",
+    "resetDone": "Your password has been reset.",
+    "backToLogin": "Back to sign in"
+  },
+  "nav": {
+    "desk": "Front desk",
+    "trainer": "Trainer",
+    "admin": "Admin",
+    "account": "My account",
+    "branch": "Branch",
+    "branches": "Branches",
+    "staff": "Staff",
+    "settings": "Settings",
+    "audit": "Activity log"
+  },
+  "branches": {
+    "title": "Branches",
+    "add": "Add branch",
+    "name": "Name",
+    "code": "Code",
+    "codeHint": "Capital letters, e.g. BOLE",
+    "city": "City",
+    "phone": "Phone",
+    "address": "Address",
+    "capacity": "Capacity",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "hours": "Opening hours",
+    "closed": "Closed",
+    "saveHours": "Save hours",
+    "details": "Details",
+    "weekdays": [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ]
+  },
+  "staffPage": {
+    "title": "Staff",
+    "add": "Add staff member",
+    "name": "Full name",
+    "phone": "Phone",
+    "email": "Email (optional)",
+    "password": "Initial password",
+    "passwordHint": "At least 8 characters. Share it privately; they can change it later.",
+    "assignments": "Branch roles",
+    "addAssignment": "Add another branch",
+    "branch": "Branch",
+    "role": "Role",
+    "roles": {
+      "owner": "Owner",
+      "manager": "Manager",
+      "receptionist": "Receptionist",
+      "trainer": "Trainer"
+    },
+    "disable": "Disable",
+    "enable": "Enable",
+    "disabledBadge": "Disabled",
+    "allBranches": "All branches"
+  },
+  "settingsPage": {
+    "title": "Settings",
+    "tax": "Tax",
+    "taxEnabled": "Charge tax on invoices",
+    "taxName": "Tax type",
+    "taxRate": "Rate (%)",
+    "pricesInclusive": "Prices already include tax",
+    "pricesInclusiveHelp": "On: the listed price is what members pay and tax is shown inside it. Off: tax is added on top at checkout.",
+    "features": "Features",
+    "freeze": "Allow membership freezing",
+    "lockers": "Assign lockers at check-in",
+    "chapa": "Online payments with Chapa",
+    "ownerOnly": "Only the owner can change these settings."
+  },
+  "audit": {
+    "title": "Activity log",
+    "empty": "No activity yet.",
+    "when": "When",
+    "who": "Who",
+    "action": "Action",
+    "branch": "Branch"
+  },
+  "account": {
+    "title": "My account",
+    "profile": "Profile",
+    "name": "Name",
+    "language": "Language",
+    "password": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "telegram": "Telegram",
+    "telegramLinked": "Linked. Codes and notifications arrive in Telegram.",
+    "telegramNotLinked": "Not linked. Link Telegram to reset your password yourself.",
+    "telegramLink": "Link Telegram",
+    "telegramLinkHelp": "Telegram opened in a new tab. Press Start in the bot, then come back and check.",
+    "telegramCheck": "I pressed Start",
+    "telegramUnlink": "Disconnect",
+    "phone": "Phone number",
+    "phoneVerified": "Verified",
+    "phoneNotVerified": "Not verified",
+    "sendCode": "Send code to Telegram",
+    "code": "6-digit code",
+    "verify": "Verify"
+  },
+  "trainerPage": {
+    "comingUp": "Your classes and personal-training clients appear here from Milestone 8."
+  },
+  "deskPage": {
+    "today": "Today",
+    "openToday": "Open {opens}–{closes}",
+    "closedToday": "Closed today",
+    "comingUp": "QR check-in and live member pop-ups arrive in Milestone 4."
+  },
+  "adminPage": {
+    "intro": "Manage branches, staff and settings for {organization}."
   }
 }

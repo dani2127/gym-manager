@@ -88,8 +88,11 @@ services:
         NEXT_PUBLIC_REVERB_PORT: "443"
         NEXT_PUBLIC_REVERB_SCHEME: https
         NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+        NEXT_PUBLIC_ORGANIZATION: ${DEFAULT_ORGANIZATION:-}
     image: gym-web:latest
     restart: unless-stopped
+    environment:
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE:-gym_session}
 
   mysql:
     image: mysql:8.4

@@ -57,6 +57,7 @@ return [
     'encoding' => 'The :attribute field must be encoded in :encoding.',
     'ends_with' => 'The :attribute field must end with one of the following: :values.',
     'enum' => 'The selected :attribute is invalid.',
+    'ethiopian_phone' => 'The :attribute must be an Ethiopian mobile number, e.g. 0911 234 567.',
     'exists' => 'The selected :attribute is invalid.',
     'extensions' => 'The :attribute field must have one of the following extensions: :values.',
     'file' => 'The :attribute field must be a file.',

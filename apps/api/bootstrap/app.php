@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Middleware\EnsureStaff;
+use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,6 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         $middleware->api(append: [SetLocale::class]);
+        $middleware->alias([
+            'tenant' => ResolveTenant::class,
+            'staff' => EnsureStaff::class,
+        ]);
+        // Tenant scoping must be active before route-model binding resolves {branch}, {staff}.
+        $middleware->prependToPriorityList(before: SubstituteBindings::class, prepend: ResolveTenant::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
