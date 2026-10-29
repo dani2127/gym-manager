@@ -1,0 +1,454 @@
+# Architecture & Master Plan
+
+The permanent reference for the multi-branch, SaaS-ready gym platform. Update
+this file whenever a decision changes. It supersedes the legacy GYM One PHP app,
+which is kept read-only in [`legacy/`](legacy/) for porting reference.
+
+---
+
+## 1. Product scope
+
+| Area | Decision |
+|---|---|
+| Tenancy | SaaS-ready: many **organizations** (gym owners), each with many **branches**. All data scoped by `organization_id`, and by `branch_id` where it belongs to a branch. |
+| Clients | API-first. Next.js web app serves the public site, a mobile-first **member PWA**, staff workspaces and the trainer portal. A React Native / Expo app can follow on the same API. |
+| Memberships | Prepaid passes: time-based, visit-based, or both. Optional (admin toggle) **freezing/pausing**. Registration fees, student / couple / family / corporate / promo discounts. |
+| Money | **ETB**. Stored as integer santim (1 ETB = 100). Admin toggle for **15% VAT / TOT** on invoices; prices inclusive or exclusive of tax. |
+| Payments | Cash and desk POS. **Manual bank transfer / Telebirr**: member uploads a screenshot and FT / transaction number, staff approve. **Chapa** as an optional online gateway. |
+| Check-in | Search or **QR scan**. **Live desk pop-up** (photo, name, status, days/visits left) pushed over WebSockets. Optional locker assignment. |
+| Classes & trainers | Members book group classes from their phone (capacity, waitlist). Trainers have restricted portals: their classes, PT clients, attendance. |
+| Notifications | Each member chooses a **preferred channel: Telegram bot or WhatsApp** (SMS and email as fallbacks). |
+| Languages | **English (`en`) and Amharic (`am`)** only. |
+
+---
+
+## 2. Tech stack
+
+| Layer | Choice | Notes |
+|---|---|---|
+| Backend | **Laravel 13** (PHP 8.3+), REST under `/api/v1` | `apps/api` |
+| Auth | **Sanctum**: cookie sessions for the web app, bearer tokens for mobile | `statefulApi()` enabled |
+| Real time | **Laravel Reverb** | Private channel `branch.{id}.desk` for check-in pop-ups |
+| Jobs | Redis queues (Horizon later) | Notifications, PDFs, Chapa webhooks |
+| Scheduler | `schedule:work` container | Expiries, unfreezes, class generation, reminders |
+| Database | **MySQL 8.4**, utf8mb4 | |
+| Cache / sessions | **Redis 7** | |
+| Files | Local disk volume, S3-compatible later | Photos, payment screenshots (private, signed URLs) |
+| Frontend | **Next.js 16** (App Router, TypeScript, Tailwind 4, Cache Components) | `apps/web` |
+| Edge | **Caddy 2** | Automatic HTTPS, host-based routing |
+
+### Repository layout
+
+```
+apps/
+  api/        Laravel API (+ Dockerfile used for app, queue, scheduler, reverb)
+  web/        Next.js: public site, member PWA, desk, admin, trainer
+docker/
+  caddy/      Edge proxy config
+legacy/       Original GYM One PHP app (reference only, removed after M13)
+docker-compose.yml   Single-VPS production stack
+.env.example         Production / compose configuration template
+```
+
+Later: `packages/api-client` (TypeScript client generated from the OpenAPI
+spec) and `apps/mobile` (Expo) sharing translations and the client.
+
+### Runtime topology (single VPS)
+
+```
+                 ┌──────────── Caddy (80/443, auto-TLS) ────────────┐
+ browser ──HTTPS─┤ {domain}      → web:3000     (Next.js)           │
+                 │ api.{domain}  → api:8000     (Laravel/FrankenPHP)│
+                 │ ws.{domain}   → reverb:8080  (WebSockets)        │
+                 └──────────────────────────────────────────────────┘
+ api ─┬─ mysql:3306      queue ─┐
+      ├─ redis:6379   scheduler ┼─ same image as api, different command
+      └─ reverb (broadcast)     ┘
+ Chapa ──webhook──▶ api.{domain}/api/v1/webhooks/chapa
+ Telegram ─webhook─▶ api.{domain}/api/v1/webhooks/telegram
+ Meta WhatsApp ─webhook─▶ api.{domain}/api/v1/webhooks/whatsapp
+```
+
+Reverb gets its own host because its WebSocket path (`/app/{key}`) would
+collide with the member PWA at `/app`. Session cookies use
+`SESSION_DOMAIN=.{domain}` so the web app and API share Sanctum auth.
+Tenant subdomains (`{gym}.{domain}`) and custom domains come later.
+
+### Frontend sections
+
+| Path | Audience | Notes |
+|---|---|---|
+| `/` | Public | Gym marketing pages, server-rendered for SEO |
+| `/app` | Members | Installable PWA (manifest scope `/app/`, service worker scoped to `/app/`) |
+| `/desk` | Receptionists | Check-in, live pop-ups, desk sales, payment approvals |
+| `/admin` | Owners / managers | Branches, staff, plans, pricing, tax, reports |
+| `/trainer` | Trainers | Classes, PT clients, attendance |
+
+### Localization
+
+- Web: pages live under `app/[lang]` and are prerendered for `en` and `am`.
+  `src/proxy.ts` keeps URLs clean (`/app`, not `/en/app`) by rewriting to the
+  locale from the `NEXT_LOCALE` cookie, then `Accept-Language`, then `en`.
+  Explicit `/am/...` URLs also work. Strings live in
+  `src/i18n/dictionaries/{en,am}.json`; Ethiopic glyphs use Noto Sans Ethiopic.
+- API: `SetLocale` middleware reads `X-Locale` (then `Accept-Language`),
+  limited to `en`/`am`, and sets `Content-Language`. Strings in `lang/{en,am}`.
+- Translatable database content is JSON: `{"en": "...", "am": "..."}`.
+- Dates are stored Gregorian in UTC and shown in `Africa/Addis_Ababa`.
+  An Ethiopian-calendar display option is an open question.
+
+---
+
+## 3. Schema conventions
+
+- Primary keys `BIGINT UNSIGNED` auto-increment; anything exposed in a URL or
+  QR code also has a random **`ulid`**.
+- **Money is `BIGINT` santim**, never floats. Currency column defaults to `ETB`.
+- **Snapshot pricing**: memberships and invoice items copy name/price/tax at
+  the moment of sale.
+- Every tenant table has `organization_id NOT NULL` (FK + index); branch data
+  also has `branch_id`. Eloquent global scopes enforce the organization, and
+  policies enforce branch access.
+- Composite indexes lead with `organization_id` / `branch_id`.
+- FKs: `RESTRICT` on financial records, `CASCADE` on pure child rows; soft
+  deletes on master data (members, plans, products).
+
+## 4. Master database schema
+
+### A. Tenancy & settings
+```
+organizations   id · ulid · name · slug UQ · status · timezone · default_locale(en|am) · currency(ETB) · tin_number · plan_tier
+branches        id · organization_id FK · name · code · phone · address · city · capacity · status
+                UQ(organization_id, code)
+settings        id · organization_id FK · branch_id FK NULL · key · value JSON
+                UQ(organization_id, branch_id, key)
+                ↳ freeze.enabled, lockers.enabled, tax.enabled, tax.prices_inclusive, chapa.enabled,
+                  booking.window_hours, booking.cancel_cutoff_hours … (secrets encrypted)
+opening_hours   id · branch_id FK · weekday(0-6) · opens_at · closes_at · is_closed       UQ(branch_id, weekday)
+branch_closures id · branch_id FK · date · opens_at NULL · closes_at NULL · reason         UQ(branch_id, date)
+```
+
+### B. Identity & roles
+```
+users        id · ulid · organization_id FK NULL(platform admin) · account_type(owner|staff|member)
+             · name · phone(E.164) · phone_verified_at · email NULL · password · locale(en|am)
+             · photo_path · status(active|disabled) · last_login_at
+             UQ(organization_id, phone) · UQ(organization_id, email) · IDX(organization_id, account_type, status)
+branch_user  branch_id FK · user_id FK · role(manager|receptionist|trainer)    PK(branch_id, user_id)
+audit_logs   id · organization_id · branch_id NULL · user_id NULL · action · subject_type · subject_id
+             · changes JSON · ip · created_at       IDX(organization_id, subject_type, subject_id)
+otp_codes    see §7 (Telegram one-time codes)
+```
+
+**Roles (as built in M1).** `owner` is an organization-wide account type with
+access to every branch. Branch staff are `account_type = staff` with one role
+per branch in `branch_user`: a person can be a trainer in one branch and a
+receptionist in another. Laravel policies (`BranchPolicy`, `UserPolicy`)
+implement the rules; spatie/laravel-permission was not needed for four fixed
+roles and can be added if custom roles are ever required.
+
+| Action | Owner | Manager | Receptionist | Trainer |
+|---|---|---|---|---|
+| See branches | all | assigned | assigned | assigned |
+| Create branches, change branch status | ✓ | | | |
+| Edit branch details, hours, closures | ✓ | own branches | | |
+| Tax / feature settings (org and branch) | ✓ | read | read | read |
+| Manage staff | everyone | receptionists & trainers in own branches | | |
+| Activity log | ✓ | | | |
+
+**Tenant isolation.** `ResolveTenant` middleware sets the organization from the
+signed-in user before route-model binding, and the `BelongsToOrganization`
+global scope filters every tenant model, so another gym's records resolve to
+404. Code that runs without a signed-in user (login, Telegram webhook, queued
+jobs) filters by organization explicitly.
+
+### C. Members
+```
+members        id · ulid · organization_id FK · home_branch_id FK · user_id FK NULL UQ · member_no
+               · first_name · last_name · gender NULL · date_of_birth NULL · phone NULL · email NULL · photo_path NULL
+               · emergency_name · emergency_phone · status(active|inactive|banned) · qr_secret(encrypted)
+               · joined_at · notes · created_by FK NULL · timestamps · deleted_at
+               UQ(organization_id, member_no) · IDX(organization_id, phone) · IDX(organization_id, first_name)
+               · IDX(organization_id, last_name) · IDX(organization_id, home_branch_id, status)
+member_groups         id · ulid · organization_id FK · type(couple|family|corporate) · name · primary_member_id FK NULL
+member_group_members  member_group_id FK · member_id FK UQ        PK(member_group_id, member_id)
+organizations.next_member_no   per-gym counter, row-locked when a member is registered
+```
+
+**As built in M2.**
+- Member numbers are sequential per gym (`0001`, shown on the bib) and never reused, even after a delete.
+- Phone is not unique: families share phones. A repeated number is a warning the desk confirms (`phone_duplicate`), re-checked only when the number changes.
+- A member belongs to at most one group, so group discounts in M3 stay unambiguous. Sizes: couple 2, family 2–12, company 2–500.
+- Any staff member can find and view members from every branch (the desk serves visitors from other branches). Registering and editing needs the owner or a manager/receptionist of the member's home branch; deleting (soft) is owners and managers.
+- Photos are centre-cropped to 512px JPEG (camera metadata stripped), kept on the private disk and served only through the authorized `/members/{id}/photo` endpoint.
+- Search: each word prefixes the first or father's name; digits match the member number exactly or, with five or more significant digits, the phone number.
+
+### D. Catalog, pricing & tax
+```
+plans          id · ulid · organization_id FK · name JSON · type(time|visits|time_visits)
+               · duration_days NULL · visit_count NULL · price_cents
+               · access_scope(home_branch|all_branches|selected) · freeze_allowed · max_freeze_days
+               · max_freezes · class_credits NULL(NULL = unlimited) · is_active · sort
+plan_branch    plan_id FK · branch_id FK                   PK(plan_id, branch_id)
+fees           id · organization_id FK · name JSON · kind(registration|card_replacement|other) · amount_cents · is_active
+discount_rules id · organization_id FK · name JSON · kind(student|couple|family|corporate|promo)
+               · value_type(percent|fixed) · value · min_group_size NULL · requires_proof · promo_code NULL
+               · plan_id FK NULL · valid_from · valid_until · is_active      UQ(organization_id, promo_code)
+tax_rates      (not built: the rate lives in settings `tax.rate`, per organization or branch)
+```
+
+**As built in M3.**
+- Plans store `name` as `{"en", "am"}`; Amharic falls back to English. Prices are integer santim. Only owners change the catalog (audited); every staff member can read plans and fees. Archiving a plan soft-deletes it; members keep their snapshot.
+- A sale gets **at most one discount**, on the plan line only. Couple/family/company discounts are offered from the member's group (respecting `min_group_size`); student discounts need the desk to tick "ID checked" (`discount_proof_checked`); promo codes are stored upper-case and unique per gym. Rules can be limited to one plan and a date window.
+- The registration fee is suggested for a member's first membership (any non-cancelled one counts) and the desk can untick it.
+- Tax per line: inclusive → `tax = net × r / (100 + r)`, exclusive → `tax = net × r / 100`, rounded half-up to the santim. The tax name, rate and inclusive flag are snapshotted on the invoice.
+
+### E. Memberships
+```
+memberships         id · ulid · organization_id FK · branch_id FK(sold at) · member_id FK · plan_id FK
+                    · plan_snapshot JSON · starts_on · ends_on NULL · visits_total NULL · visits_remaining NULL
+                    · status(pending_payment|active|frozen|expired|cancelled) · invoice_id FK NULL · sold_by FK NULL
+                    IDX(member_id, status, ends_on) · IDX(organization_id, branch_id, status, ends_on)
+                    (state shown to staff: upcoming | current | expired, derived from dates and visits)
+membership_freezes  id · membership_id FK · starts_on · ends_on · days · reason
+                    · status(requested|approved|rejected|active|completed) · requested_by · approved_by
+```
+
+### F. Billing & payments
+```
+invoice_sequences    branch_id FK · year · next_number     PK(branch_id, year)  (row-locked, gap-free)
+invoices             id · ulid · organization_id FK · branch_id FK · member_id FK NULL · number
+                     · status(draft|issued|partially_paid|paid|void|refunded)
+                     · subtotal_cents · discount_cents · tax_cents · total_cents · tax_name · tax_rate
+                     · tax_inclusive · currency · issued_at · created_by
+                     UQ(branch_id, number) · IDX(organization_id, branch_id, status, issued_at)
+invoice_items        id · invoice_id FK CASCADE · itemable_type · itemable_id(plan|fee|product|pt_package)
+                     · description · qty · unit_price_cents · discount_cents · discount_rule_id NULL · tax_cents · total_cents
+payments             id · ulid · organization_id FK · branch_id FK · invoice_id FK · member_id FK NULL
+                     · method(cash|pos_card|bank_transfer|telebirr|chapa) · amount_cents
+                     · status(pending|awaiting_verification|completed|rejected|failed|refunded)
+                     · reference NULL(FT no. / Telebirr txn / Chapa tx_ref) · proof_path NULL
+                     · received_by · verified_by · verified_at · rejection_reason
+                     UQ(organization_id, method, reference)  ← blocks reused FT / Telebirr numbers
+                     IDX(organization_id, branch_id, status, created_at)
+gateway_transactions id · payment_id FK · provider(chapa) · tx_ref UQ · checkout_url · status
+                     · request JSON · webhook_payload JSON · verified_at
+refunds              id · payment_id FK · amount_cents · reason · refunded_by · created_at   (not built yet; see below)
+```
+
+**As built in M3.**
+- Desk flow: `POST /branches/{branch}/sales/quote` prices a sale without saving anything (the live preview); `POST /branches/{branch}/sales` issues the invoice, creates the membership as `pending_payment`, and records an optional cash or POS payment. Selling needs the owner or a manager/receptionist of that branch; any member can buy at any branch.
+- Invoice numbers are `{BRANCH CODE}-{YEAR}-{000001}`, gap-free per branch and year (row-locked `invoice_sequences`, rolled back with a failed sale). Invoice status: `issued → partially_paid → paid`, or `void`. There are no drafts.
+- A membership goes live when its invoice is **fully paid**. Paid late, it starts that day (the member never loses days they could not use). A renewal sold early starts the day after the current membership ends.
+- A banned member cannot buy; buying a plan reactivates an inactive member.
+- Payments cannot exceed the balance; a POS slip number can be used once per gym (`UQ(organization_id, method, reference)`).
+- **Void** (owners and branch managers, reason required): payments become `refunded`, memberships `cancelled`, the number stays used. Partial refunds (the `refunds` table) are left for M12 reporting.
+- Receipts: `GET /invoices/{id}/receipt?format=a5|thermal` renders a bilingual PDF with mPDF (bundled Abyssinica SIL font for Ethiopic).
+- `GET /branches/{branch}/takings?date=` totals completed payments by method for the day in Addis time, plus amounts still owed and refunded.
+- `memberships:expire` runs nightly at 00:05 Addis time and marks memberships past `ends_on` or out of visits as expired.
+
+### G. Check-in & lockers
+```
+lockers        id · branch_id FK · number · zone(male|female|unisex) · status(available|out_of_order)   UQ(branch_id, number)
+check_ins      id · organization_id FK · branch_id FK · member_id FK · membership_id FK NULL
+               · method(qr|search|kiosk|manual) · result(allowed|denied|overridden) · denial_reason NULL
+               · locker_id FK NULL · checked_in_at · checked_out_at NULL · handled_by NULL
+               IDX(branch_id, checked_in_at) · IDX(member_id, checked_in_at) · IDX(branch_id, checked_out_at)
+kiosk_devices  id · branch_id FK · name · token_hash · last_seen_at
+```
+"Currently inside" = `checked_out_at IS NULL`. Replaces legacy
+`temp_loggeduser` and `workout_stats`.
+
+**As built in M4a.**
+- Two QR codes per member, both signed with the member's secret (HMAC-SHA256), using only upper-case letters, digits and dots so the QR stays small:
+  - **Phone:** `G1.{member}.{30-second window}.{signature}`. Accepted for the current window, 2 before and 1 after, so a screenshot dies in about a minute while an offline phone with a slightly wrong clock still works.
+  - **Card:** `G2.{member}.{card_version}.{signature}`, printed at 85.6 × 54 mm from the member's profile. "Replace lost card" raises `members.card_version`, so every earlier card is refused (`card_replaced`).
+- `POST /branches/{branch}/check-ins/scan` (rate-limited 120/min per user) and `POST /branches/{branch}/check-ins` (by member, method `search`). Allowed for owners and the branch's managers and receptionists.
+- Decision order: banned → already inside today (shown again, nothing recorded) → membership → opening hours. The membership must be active, started, not ended, and valid at this branch according to its snapshot (`home_branch`, `all_branches`, or `selected` branches). Visit passes use **one visit per day** however often the member comes and goes.
+- Every attempt by a known member is stored, allowed or denied, with `denial_reason`: `member_banned`, `branch_closed`, `membership_frozen`, `payment_pending`, `wrong_branch`, `no_visits_left`, `not_started`, `membership_expired`, `no_membership`. Codes that are forged, expired or replaced aren't stored. A forged code never reveals the member it names.
+- Overrides (`POST /check-ins/{id}/override`, reason required, audited) are allowed for every denial except `member_banned`.
+- `CheckInChanged` broadcasts `check-in.scanned | overridden | checked_out` on the private channel `branch.{ulid}.desk` (auth at `/api/broadcasting/auth` with the staff session). Desks fall back to polling every 5 s without Reverb.
+- `check-ins:close-day` runs nightly at 00:10 and checks out anyone still inside from earlier days at that day's closing time.
+- The desk reads codes from a webcam (decoded in the browser with jsQR), a USB scanner (typed fast and ending with Enter) or a pasted code.
+
+**As built in M4b.**
+- **Lockers** (when `lockers.enabled` is on for the branch): owners and branch managers add numbered ranges per zone (women, men, unisex), mark lockers out of order, and remove unused ones. In the check-in pop-up, the desk gives the next free locker in the member's zone (unisex as a fallback) or picks one, and can change it or take the key back. A locker is in use while it's on an open visit, so checking out frees it; the visit keeps it as history. Assignment row-locks the branch's lockers so two desks can't hand out the same one.
+- **Kiosks** (`kiosk_devices`): a manager adds a kiosk and gets an 8-character pairing code (no 0/O/1/I/L), valid once for 15 minutes. The tablet opens `/kiosk`, enters the code and receives a long device token (stored hashed; sent as `X-Kiosk-Token`). `AuthenticateKiosk` scopes requests to the kiosk's gym and branch. A new pairing code signs the old tablet out; removing the kiosk stops it immediately. Pairing is rate-limited to 10 tries per 10 minutes per address.
+- `POST /kiosk/scan` shows the member only their first name, number and what's left, or "please see the front desk" with the reason. The full pop-up, with photo, override and locker, appears on every desk screen of the branch over the live channel (`method = kiosk`).
+
+### H. Classes
+```
+class_types     id · organization_id FK · name JSON · description JSON · color · default_duration_min · default_capacity
+rooms           id · branch_id FK · name · capacity
+class_schedules id · branch_id FK · class_type_id FK · trainer_id FK · room_id FK NULL · weekday · start_time
+                · duration_min · capacity · valid_from · valid_until NULL         (recurring template)
+class_sessions  id · ulid · branch_id FK · class_type_id FK · schedule_id FK NULL · trainer_id FK · room_id FK NULL
+                · starts_at · ends_at · capacity · booked_count · status(scheduled|cancelled|completed)
+                IDX(branch_id, starts_at) · IDX(trainer_id, starts_at)
+class_bookings  id · class_session_id FK · member_id FK · membership_id FK
+                · status(booked|waitlisted|cancelled|attended|no_show) · waitlist_position NULL · booked_at · cancelled_at
+                UQ(class_session_id, member_id) · IDX(member_id, status)
+```
+A nightly job materializes schedules into sessions for the next N weeks;
+booking locks the session row to prevent overbooking.
+
+### I. Trainers & personal training
+```
+trainers        id · organization_id FK · user_id FK UQ · bio JSON · specialties JSON · photo_path · is_public · status
+trainer_branch  trainer_id FK · branch_id FK                 PK(trainer_id, branch_id)
+pt_packages     id · organization_id FK · trainer_id FK NULL · name JSON · sessions_count · price_cents · validity_days
+pt_enrollments  id · member_id FK · trainer_id FK · pt_package_id FK · invoice_id FK · sessions_total
+                · sessions_remaining · starts_on · ends_on · status
+pt_sessions     id · pt_enrollment_id FK · trainer_id FK · member_id FK · branch_id FK · starts_at · ends_at
+                · status(scheduled|completed|cancelled|no_show) · trainer_notes(private)     IDX(trainer_id, starts_at)
+```
+Trainer policies only expose rows linked to their own `trainer_id`.
+
+### J. POS & inventory (ported from legacy)
+```
+products         id · organization_id FK · sku · barcode NULL · name JSON · price_cents · is_active   UQ(organization_id, barcode)
+product_stocks   product_id FK · branch_id FK · quantity       PK(product_id, branch_id)
+stock_movements  id · product_id FK · branch_id FK · change · reason(sale|restock|adjust|transfer) · reference · user_id
+```
+
+### K. Notifications (Telegram / WhatsApp preferences)
+```
+notification_preferences  id · organization_id FK · user_id FK
+                          · channel(telegram|whatsapp|sms|email|push) · destination
+                            (telegram chat_id | E.164 phone | email) · is_preferred · verified_at NULL · opted_out_at NULL
+                          UQ(user_id, channel) · IDX(organization_id, channel)
+                          (at most one is_preferred = true per user, enforced in the service layer)
+telegram_link_tokens      id · user_id FK · token_hash UQ · expires_at · used_at NULL
+message_logs              id · organization_id FK · user_id FK NULL · channel · template · locale
+                          · status(queued|sent|delivered|read|failed) · provider_message_id NULL · error NULL · created_at
+                          IDX(organization_id, created_at) · IDX(user_id, created_at)
+notifications             Laravel default table (in-app / PWA notifications)
+```
+- **Telegram linking**: the PWA opens `https://t.me/{bot}?start={token}`; the
+  bot webhook receives `/start {token}`, matches `telegram_link_tokens`, and
+  stores the `chat_id` as a verified `telegram` destination.
+- **WhatsApp**: Meta WhatsApp Business Cloud API. Business-initiated messages
+  (reminders, approvals) must use pre-approved templates in `en` and `am`.
+  The number is verified with a one-time code before use.
+- **Routing**: a `NotificationRouter` sends through the member's preferred
+  verified channel and falls back to SMS, then email, on failure. Every attempt
+  is written to `message_logs`.
+- M0 ships the PWA toggle UI (stored on the device); M5 persists it through
+  the API.
+
+---
+
+### Member app (as built in M5)
+- **Joining:** the desk taps "Invite to the app" on a member with a phone number. This creates (or links) a `member` login and returns an 8-digit setup code (`otp_codes`, purpose `app_setup`, channel `desk`, valid 72 hours, single use). The member enters gym ID, phone and code at `/app/setup`, chooses a password and is signed in (`POST /auth/member-setup`). The desk never sees the password; the phone counts as verified because the desk checked who they are in person.
+- **Signing in:** the same `POST /auth/login` as staff (gym ID, phone, password). Members land on `/app`; staff screens refuse them (`staff` middleware), and member routes (`/me/member/*`) need a linked member (`member` middleware).
+- **Offline pass:** `GET /me/member/pass` (no-store) gives the member's `qr_secret` and the server time. The app keeps both in localStorage and computes the rotating `G1` code with WebCrypto HMAC-SHA256, exactly as the API checks it, correcting for the phone's clock. The service worker (scope `/app`) serves cached pages and assets offline.
+- **Lost phone:** "Sign out all devices" deletes the member's tokens and sessions, replaces `qr_secret` (so codes the old phone makes offline stop working) and raises `card_version` (the printed card is replaced too).
+- **Notifications:** `GET/PUT /me/notifications` stores the preferred channel. Telegram must be linked through the bot first; WhatsApp takes a number (the member's phone by default).
+
+### Telebirr / bank transfers (as built in M6)
+- **Accounts:** owners list the gym's Telebirr numbers and bank accounts on the pricing page (`payment_accounts`: kind `telebirr|bank`, bank name, account name, number, shown/hidden). Only shown accounts reach the member app.
+- **Ordering:** `/app/buy` quotes a plan with `POST /me/member/shop/quote` (automatic group discount, optional promo code, registration fee if owed) and `POST /me/member/orders` creates a `pending_payment` membership and an issued invoice. A member has one open order at a time and can cancel it while nothing is waiting.
+- **Paying:** `/app/pay/{invoice}` shows the accounts with copy buttons. The member picks Telebirr or bank, enters the transaction / FT number and amount and attaches a screenshot (`POST /me/member/invoices/{invoice}/transfers`, multipart). The screenshot is re-encoded to JPEG (max 1600 px, metadata dropped) on the private disk under `transfers/{org}/`. One waiting transfer per invoice; the amount can't exceed what is owed.
+- **References:** stored trimmed and upper-cased and unique per method across every payment status, so a rejected or reused number can never be sent again. Desk sales and desk invoice payments by Telebirr or bank also require the reference.
+- **Desk queue:** "Payments to check" (`GET /payments/transfers?branch=&status=waiting|reviewed`, with a waiting count for the nav badge and the front-desk banner). The desk opens the screenshot (`/payments/{id}/proof`), approves (optionally a corrected amount; the invoice and membership activate as with cash) or rejects with a reason the member sees. `PaymentChanged` on `branch.{id}.desk` refreshes open desks live, and the member gets a Telegram message when their chat is linked. Voiding an invoice rejects any waiting transfer.
+
+### Freezing (as built in M7)
+- **Rules:** the gym switch `freeze.enabled` plus each plan's `freeze_allowed`, `max_freeze_days` (total days per membership) and `max_freezes` (count), read from the membership's plan snapshot. A paid membership that is running or about to start can be frozen; one freeze is open at a time; it starts today or later, on or before the last day.
+- **Desk:** freezes on the spot from the member page (approved at once). Going past the plan's limits needs a manager or owner, is flagged `over_limit` and audited. "Freezes" lists requests from the app first, then running and upcoming freezes, with a badge for waiting requests (live via `freeze.requested` on `branch.{id}.desk`).
+- **Member app:** "Pause your membership" on the Membership tab sends a request within the plan's limits; the member can withdraw it, or call off an approved pause before it starts. Approvals and rejections reach Telegram when linked.
+- **Dates:** approving moves the membership's end date out by the frozen days, and any membership queued after it by the same amount, so renewals never overlap. Visit passes without an end date don't move. A request approved after its start date starts the day it is approved.
+- **Running:** `memberships:freezes` (00:01, before `memberships:expire`) starts approved freezes on their first day (membership → `frozen`, the door says "membership frozen") and finishes them after their last (→ `active`). Approving a freeze that starts today applies at once.
+- **Ending early / cancelling:** "End freeze today" keeps the days already frozen and takes the unused days off the end date (ended on its first day, it counts as cancelled). Cancelling an upcoming freeze gives every day back. Voiding the sale cancels open freezes.
+
+## 5. Key flows
+
+**QR check-in with the live desk pop-up**
+1. The member PWA renders a **rotating QR** (HMAC of `qr_secret` and a 30–60 s
+   time window). It works offline, and screenshots expire.
+2. A desk webcam, USB scanner or entrance kiosk posts it to
+   `POST /api/v1/branches/{branch}/check-ins/scan`.
+3. In one transaction: validate the token → active, unfrozen membership →
+   opening hours → not already inside → decrement visits → optional locker.
+4. Reverb broadcasts `CheckInScanned` on `branch.{id}.desk`. The desk pops up
+   the photo, name, green/amber/red status and days/visits left. Denials offer
+   a logged override.
+
+**Manual Telebirr / bank transfer**: the member picks a plan → invoice
+`pending_payment` → uploads a screenshot and FT/transaction number → payment
+`awaiting_verification` in the desk queue → approve (membership activates,
+notification sent on the preferred channel) or reject with a reason. The
+unique `reference` index blocks reused transfers.
+
+**Chapa**: initialize with `tx_ref` = payment ULID → hosted checkout → signed
+webhook plus server-side verify → idempotent completion → membership activates.
+v1 renewals are expiry reminders with a one-tap Chapa link (recurring card
+charges depend on what Chapa supports).
+
+**Tax**: per invoice line from the branch's `tax.enabled`, its `tax_rates`
+row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
+
+---
+
+## 6. Roadmap
+
+| # | Milestone | Exit criteria | Status |
+|---|---|---|---|
+| **M0** | Foundation: monorepo, Laravel API, Next.js sections, en/am i18n, Docker stack, env templates, CI | API + web build and run; CI green | ✅ Done |
+| **M1** | Tenancy, auth & roles: organizations, branches, users, `branch_user`, policies, branch switcher, audit log, Telegram linking + OTP password reset | Owner creates 2 branches; staff see only their branch | ✅ Done |
+| **M2** | Members: CRUD, photos, member numbers, groups, search | Desk registers and finds members quickly | ✅ Done |
+| **M3** | Plans, fees, discounts, tax engine, invoices, cash/POS payments, Amharic PDF receipts, activation | Desk sale yields a correct invoice with VAT on/off | ✅ Done |
+| **M4** | Check-in & live desk: rotating QR, scan endpoint, Reverb pop-up, lockers toggle, occupancy, kiosk mode | Scan shows the desk pop-up in under 1 s | ✅ Done (live updates measured at 79 ms) |
+| **M5** | Member PWA v1: login, QR card, status, invoices, install prompt, offline QR, **notification preference saved via API** | Installs on Android/iOS; QR works offline | ✅ Done |
+| **M6** | Manual Telebirr / bank verification queue | Upload → approve → active; duplicate FT blocked | ✅ Done |
+| — | **MVP line: one real branch can run on M0–M6** | Pilot at one branch | |
+| **M7** | Membership freezing (toggle, rules, approvals, auto-unfreeze) | Freeze moves the end date; door refuses while frozen; auto-unfreeze | ✅ Done |
+| **M8** | Classes: types, rooms, schedules, sessions, booking, waitlist, attendance | | |
+| **M9** | Trainer portal & PT packages / sessions | | |
+| **M10** | Chapa integration & renewal links | | |
+| **M11** | POS & per-branch inventory (ported) | | |
+| **M12** | Reports (revenue by branch/method, VAT, attendance, expiring) + **Telegram bot & WhatsApp delivery**, SMS fallback | | |
+| **M13** | Hardening & launch: security review, backups, monitoring, legacy data migration script, production deploy | | |
+
+### Legacy porting map
+
+| Legacy (`legacy/`) | New |
+|---|---|
+| `users` | `members` + `users` |
+| `current_tickets` | `memberships` (matched to `plans` by name) |
+| `tickets` | `plans` |
+| `workers` | `users` + `branch_user` roles |
+| `invoices` | `invoices` (imported as legacy, read-only) |
+| `temp_loggeduser`, `workout_stats` | `check_ins` |
+| `lockers` | `lockers` |
+| `timetable` | `class_schedules` |
+| `trainers` | `trainers` |
+| `products` | `products` + `product_stocks` |
+| `opening_hours`, `opening_hours_exceptions` | `opening_hours`, `branch_closures` |
+| `admin/dashboard/process.php` check-in transaction | M4 check-in service |
+| `crontab/send_reminders.php` | M12 scheduled reminder job |
+
+---
+
+## 7. Decisions log
+
+| Date | Decision |
+|---|---|
+| 2026-10-27 | **Login**: phone + password for members and staff. One-time codes (phone verification, password reset) are delivered through the **Telegram bot**; members without a linked Telegram reset at the front desk (SMS OTP can be added later). |
+| 2026-10-27 | **Cross-branch access**: decided **per plan** — home branch only, all branches, or selected branches (`plans.access_scope` + `plan_branch`). |
+| 2026-10-27 | **VAT pricing**: **configurable per organization** — `tax.prices_inclusive` setting (inclusive by default), overridable per branch. |
+
+Supporting table for Telegram OTP (added to §4B):
+```
+otp_codes   id · user_id FK · purpose(phone_verify|password_reset) · channel(telegram)
+            · code_hash · attempts · expires_at · consumed_at NULL · created_at
+            IDX(user_id, purpose, expires_at)   (5-minute expiry, max 5 attempts, rate-limited)
+```
+
+## 8. Open decisions
+
+1. ~~Cross-branch access~~ → decided (see log).
+2. ~~Member login~~ → decided (see log).
+3. Tax: ~~inclusive vs exclusive~~ decided (configurable). Still open: applicable TOT rate, and whether Ministry of Revenue fiscal-printer integration is required. The M3 PDF is a payment receipt; whether it may serve as the tax invoice, or a registered cash register must also print one, needs an accountant's answer before launch.
+4. Keep the legacy prepaid wallet balance?
+5. Show Ethiopian-calendar dates alongside Gregorian?
+6. **Licensing**: the legacy code is under the GYM One License (`legacy/LICENSE`), which restricts rebranding and sublicensing. Decide a license for the new code, and keep ported logic clean-room or attributed.

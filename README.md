@@ -1,104 +1,84 @@
+# Gym Platform
 
----
+Multi-branch, SaaS-ready gym management: prepaid memberships in ETB, QR
+check-in with live front-desk pop-ups, class booking, trainer portals, and
+Telegram / WhatsApp notifications. English and Amharic.
 
-# GYM One - Open Source Gym Management Software
-<p align="center"><img src="https://gymoneglobal.com/assets/img/text-color-logo.png" alt="project-image"></p>
+**Read [`ARCHITECTURE.md`](ARCHITECTURE.md) first.** It is the master plan:
+stack, database schema, flows and the milestone roadmap.
 
+| Path | What |
+|---|---|
+| `apps/api` | Laravel 13 REST API (`/api/v1`), Sanctum, Reverb |
+| `apps/web` | Next.js 16 app: `/` public, `/app` member PWA, `/desk`, `/admin`, `/trainer` |
+| `docker-compose.yml` | Single-VPS stack: Caddy, API, queue, scheduler, Reverb, web, MySQL 8, Redis |
+| `legacy/` | Original GYM One PHP app, kept read-only for porting |
 
+## Local development
 
+Requirements: PHP 8.3+, Composer, Node 22+.
 
-Welcome to GYM One! This open-source gym management software is designed to help fitness centers, personal trainers, and sports clubs streamline their operations. With its user-friendly interface and powerful features, GYM One makes managing your gym simpler and more efficient.
+```bash
+# API → http://localhost:8000
+cd apps/api
+composer install
+cp .env.example .env && php artisan key:generate
+touch database/database.sqlite && php artisan migrate
+php artisan serve
 
-## Table of Contents
+# Live desk updates (optional, third terminal): set BROADCAST_CONNECTION=reverb in apps/api/.env
+php artisan reverb:start
 
-1. [Features](#features)
-2. [Requirements](#requirements)
-3. [Installation](#installation)
-4. [Configuration](#configuration)
-5. [Usage](#usage)
-6. [Admin Panel](#admin-panel)
-7. [Database Structure](#database-structure)
-8. [Contribution](#contribution)
-9. [License](#license)
-10. [Contact](#contact)
+# Web → http://localhost:3000  (second terminal)
+cd apps/web
+npm install
+cp .env.example .env.local
+npm run dev
+```
 
-## Features
+Without Reverb the desk still works and refreshes every few seconds.
+To try check-in, open the desk and paste a member's code. Generate one with
+`php artisan tinker --execute 'echo app(App\CheckIns\MemberCodes::class)->phoneCode(App\Models\Member::first());'`
+(it expires in about a minute), or print a member card from a member's profile.
 
-- **Member Management:** Easily add, edit, and remove members. Track their membership status, expiration dates, and attendance records.
-- **Ticketing System:** Manage different types of tickets (e.g., day passes, monthly memberships) with varying prices and benefits.
-- **Class Scheduling:** Create and manage class schedules. Allow members to sign up for classes online.
-- **Payment Tracking:** Keep track of payments made by members. Generate reports for financial analysis.
-- **Admin Panel:** A dedicated area for administrators to manage the entire system, including member and ticket management.
-- **Responsive Design:** Built with Bootstrap for a seamless experience on desktops, tablets, and mobile devices.
-- **Customizable:** Easily modify the code and design to fit your gym's branding and needs.
+Demo data: `php artisan migrate:fresh --seed` creates the gym **demo-gym**
+(branches Bole and Piassa). Sign in at http://localhost:3000/login with
+password `password` and one of:
 
-## Requirements
+| Phone | Role |
+|---|---|
+| 0911 000 001 | Owner |
+| 0911 000 002 | Manager (Bole) |
+| 0911 000 003 | Receptionist (Bole) |
+| 0911 000 004 | Trainer (Bole, Piassa) |
 
-To run GYM One, ensure that you have the following:
+The demo also has five plans, a registration fee, student/couple/family
+discounts, the promo code `BOLE500`, 15% VAT included in prices, and a few
+weeks of sales at Bole. Run `php artisan schedule:work` locally (or the
+scheduler container) so `memberships:expire` runs each night.
 
-- PHP version 7.4 or higher
-- MySQL version 5.7 or higher
-- A web server (Apache, Nginx, etc.)
-- Composer for dependency management
-- Bootstrap for styling (included)
+Telegram (linking and password-reset codes) needs a bot from @BotFather:
+set the `TELEGRAM_*` variables, then run `php artisan telegram:set-webhook`
+once the API is reachable over HTTPS.
 
-## Installation
+Checks: `php artisan test` and `vendor/bin/pint --test` in `apps/api`;
+`npm run lint` and `npm run build` in `apps/web`.
 
-### ⚠️ Please Use the Official GYM One Installer Repository!
+Useful endpoints: `GET /api/v1/health`, `GET /api/v1/meta/config`
+(send `X-Locale: am` for Amharic).
 
-To properly install and configure GYM One, **always use the official installer repository**:
+## Production (single VPS)
 
-👉 [GYM One Installer Repository](https://github.com/mayerbalintdev/GYM-One-Installer)
+1. Point DNS for `{domain}`, `api.{domain}` and `ws.{domain}` at the server.
+2. `cp .env.example .env` and replace every `CHANGE_ME`. Set `APP_DOMAIN`,
+   the URLs, and an `APP_KEY` (`docker compose run --rm api php artisan key:generate --show`).
+3. `docker compose up -d --build`
 
-This ensures you get the latest version, correct file structure, and access to automatic updates.
+Caddy obtains TLS certificates automatically. The API container runs
+migrations on start; set `RUN_MIGRATIONS=false` in `.env` to manage them
+yourself.
 
+## Attribution
 
-## Configuration
-
-After installation, you may want to configure additional settings:
-
-- **Email Notifications:** Configure SMTP settings for email notifications regarding membership renewals, class reminders, etc.
-- **Payment Gateway:** Set up payment integration for online transactions.
-
-## Usage
-
-### Dashboard
-
-Upon logging in, you will be greeted with the dashboard, which provides an overview of member activity, class schedules, and financial statistics.
-
-## Admin Panel
-
-The admin panel is a comprehensive management interface that allows you to oversee all operations of your gym. Key features include:
-
-- **User Management:** Manage users and Admin roles.
-- **Reports:** Generate reports on membership sales, attendance, and revenue.
-- **Settings:** Adjust various application settings such as operating hours, fees, and class schedules.
-
-## Database Structure
-
-The database consists of several tables to manage different aspects of the gym's operations:
-
-## Contribution
-
-We welcome contributions! If you would like to contribute to GYM One, please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Submit a pull request.
-
-**Translations:** Use Crowdin for translations to help us reach a wider audience.
-
-## License
-
-GYM One is open source software and is licensed under the CUSTOM license. You are free to use, modify and distribute this software as long as the original license is included.
-
-## Contact
-
-For any inquiries, suggestions, or feedback, feel free to contact us:
-
-- **Email:** center@gymoneglobal.com
-- **GitHub:** [Mayer Bálint](https://github.com/mayerbalintdev)
-
-Thank you for choosing GYM One! We hope this software helps you manage your gym more efficiently.
-
---- 
+The code in `legacy/` is based on GYM One, developed by the GYM One
+contributors, and is covered by `legacy/LICENSE`.
