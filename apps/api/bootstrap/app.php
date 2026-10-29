@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthenticateKiosk;
 use App\Http\Middleware\EnsureStaff;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetLocale;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant' => ResolveTenant::class,
             'staff' => EnsureStaff::class,
+            'kiosk' => AuthenticateKiosk::class,
         ]);
         // Tenant scoping must be active before route-model binding resolves {branch}, {staff}.
         $middleware->prependToPriorityList(before: SubstituteBindings::class, prepend: ResolveTenant::class);

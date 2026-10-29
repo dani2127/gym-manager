@@ -13,14 +13,24 @@ const SAME_CODE_PAUSE_MS = 4000;
  * USB scanner (it types the code and presses Enter), or pasting the code.
  * The same code is ignored for a few seconds so a held-up phone counts once.
  */
-export function QrScanner({ onCode, busy }: { onCode: (code: string) => void; busy: boolean }) {
+export function QrScanner({
+  onCode,
+  busy,
+  variant = "desk",
+}: {
+  onCode: (code: string) => void;
+  busy: boolean;
+  /** kiosk: front camera that starts by itself, no paste box or desk hints. */
+  variant?: "desk" | "kiosk";
+}) {
   const { dict } = useDictionary();
   const t = dict.checkins.scanner;
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const last = useRef<{ code: string; at: number }>({ code: "", at: 0 });
   const onCodeRef = useRef(onCode);
-  const [camera, setCamera] = useState<"off" | "starting" | "on" | "denied" | "missing">("off");
+  const kiosk = variant === "kiosk";
+  const [camera, setCamera] = useState<"off" | "starting" | "on" | "denied" | "missing">(kiosk ? "starting" : "off");
   const [manual, setManual] = useState("");
 
   useEffect(() => {
@@ -72,7 +82,7 @@ export function QrScanner({ onCode, busy }: { onCode: (code: string) => void; bu
     let cancelled = false;
 
     navigator.mediaDevices
-      ?.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
+      ?.getUserMedia({ video: { facingMode: kiosk ? "user" : "environment", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
       .then((s) => {
         if (cancelled) return s.getTracks().forEach((track) => track.stop());
         stream = s;
@@ -132,6 +142,8 @@ export function QrScanner({ onCode, busy }: { onCode: (code: string) => void; bu
         )}
         {busy && <span className="absolute top-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">{t.checking}</span>}
       </div>
+      {!kiosk && (
+      <>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-graphite">
         <span className="inline-flex items-center gap-1.5">
           <Keyboard aria-hidden className="h-4 w-4" />
@@ -164,6 +176,8 @@ export function QrScanner({ onCode, busy }: { onCode: (code: string) => void; bu
           {t.check}
         </button>
       </form>
+      </>
+      )}
     </div>
   );
 }

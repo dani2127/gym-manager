@@ -282,6 +282,27 @@ export type CheckIn = {
     visits_remaining: number | null;
   } | null;
   handled_by?: string | null;
+  locker?: { id: number; number: string; zone: LockerZone } | null;
+};
+
+export type LockerZone = "male" | "female" | "unisex";
+
+export type Locker = {
+  id: number;
+  number: string;
+  zone: LockerZone;
+  status: "available" | "out_of_order";
+  in_use_by: { check_in: string; member: NonNullable<CheckIn["member"]> } | null;
+};
+
+export type Kiosk = {
+  id: string;
+  name: string;
+  status: "paired" | "pairing" | "unpaired";
+  paired_at: string | null;
+  pairing_expires_at: string | null;
+  last_seen_at: string | null;
+  pairing_code?: string;
 };
 
 export type CheckInList = {

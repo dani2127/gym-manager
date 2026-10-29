@@ -4,6 +4,7 @@ import { CheckCircle2, CircleAlert, ShieldCheck, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { LockerPicker } from "@/components/checkins/locker-picker";
 import { MemberAvatar } from "@/components/members/member-avatar";
 import { useFormAction } from "@/components/staff/use-form-action";
 import { Button } from "@/components/ui";
@@ -45,12 +46,26 @@ function beep(ok: boolean) {
  * The desk pop-up: who it is, whether they may come in, and why not.
  * Entries close themselves; denials wait for the desk to decide.
  */
-export function CheckInPopup({ checkIn, onClose, onChanged }: { checkIn: CheckIn; onClose: () => void; onChanged: (checkIn: CheckIn) => void }) {
+export function CheckInPopup({
+  checkIn,
+  onClose,
+  onChanged,
+  branchId,
+  lockersEnabled = false,
+}: {
+  checkIn: CheckIn;
+  onClose: () => void;
+  onChanged: (checkIn: CheckIn) => void;
+  branchId?: string;
+  lockersEnabled?: boolean;
+}) {
   const { locale, dict } = useDictionary();
   const t = dict.checkins;
   const tone = TONES[checkIn.result];
   const entered = checkIn.result === "allowed" || checkIn.result === "overridden";
-  const closes = checkIn.result !== "denied";
+  const lockerStep = lockersEnabled && Boolean(branchId) && entered && Boolean(checkIn.id) && !checkIn.checked_out_at;
+  // Waits while a locker still has to be handed out.
+  const closes = checkIn.result !== "denied" && !(lockerStep && !checkIn.locker);
   const [left, setLeft] = useState(AUTO_CLOSE_SECONDS);
   const [overriding, setOverriding] = useState(false);
   const { busy, error, general, run } = useFormAction();
@@ -125,6 +140,8 @@ export function CheckInPopup({ checkIn, onClose, onChanged }: { checkIn: CheckIn
             <p className={`text-base font-semibold ${tone.text}`}>{t.reasons[checkIn.reason as keyof typeof t.reasons] ?? checkIn.reason}</p>
           )}
           {checkIn.result === "overridden" && checkIn.override_reason && <p className="text-sm text-graphite">“{checkIn.override_reason}”</p>}
+
+          {lockerStep && branchId && !overriding && <LockerPicker checkIn={checkIn} branchId={branchId} onChanged={onChanged} />}
 
           {overriding ? (
             <form onSubmit={override} className="space-y-3" noValidate>

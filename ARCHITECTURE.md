@@ -271,6 +271,11 @@ kiosk_devices  id · branch_id FK · name · token_hash · last_seen_at
 - `check-ins:close-day` runs nightly at 00:10 and checks out anyone still inside from earlier days at that day's closing time.
 - The desk reads codes from a webcam (decoded in the browser with jsQR), a USB scanner (typed fast and ending with Enter) or a pasted code.
 
+**As built in M4b.**
+- **Lockers** (when `lockers.enabled` is on for the branch): owners and branch managers add numbered ranges per zone (women, men, unisex), mark lockers out of order, and remove unused ones. In the check-in pop-up, the desk gives the next free locker in the member's zone (unisex as a fallback) or picks one, and can change it or take the key back. A locker is in use while it's on an open visit, so checking out frees it; the visit keeps it as history. Assignment row-locks the branch's lockers so two desks can't hand out the same one.
+- **Kiosks** (`kiosk_devices`): a manager adds a kiosk and gets an 8-character pairing code (no 0/O/1/I/L), valid once for 15 minutes. The tablet opens `/kiosk`, enters the code and receives a long device token (stored hashed; sent as `X-Kiosk-Token`). `AuthenticateKiosk` scopes requests to the kiosk's gym and branch. A new pairing code signs the old tablet out; removing the kiosk stops it immediately. Pairing is rate-limited to 10 tries per 10 minutes per address.
+- `POST /kiosk/scan` shows the member only their first name, number and what's left, or "please see the front desk" with the reason. The full pop-up, with photo, override and locker, appears on every desk screen of the branch over the live channel (`method = kiosk`).
+
 ### H. Classes
 ```
 class_types     id · organization_id FK · name JSON · description JSON · color · default_duration_min · default_capacity
@@ -370,7 +375,7 @@ row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
 | **M1** | Tenancy, auth & roles: organizations, branches, users, `branch_user`, policies, branch switcher, audit log, Telegram linking + OTP password reset | Owner creates 2 branches; staff see only their branch | ✅ Done |
 | **M2** | Members: CRUD, photos, member numbers, groups, search | Desk registers and finds members quickly | ✅ Done |
 | **M3** | Plans, fees, discounts, tax engine, invoices, cash/POS payments, Amharic PDF receipts, activation | Desk sale yields a correct invoice with VAT on/off | ✅ Done |
-| **M4** | Check-in & live desk: rotating QR, scan endpoint, Reverb pop-up, lockers toggle, occupancy, kiosk mode | Scan shows the desk pop-up in under 1 s | M4a ✅ (QR + card, scan, pop-up, live, inside now); M4b: lockers, kiosk |
+| **M4** | Check-in & live desk: rotating QR, scan endpoint, Reverb pop-up, lockers toggle, occupancy, kiosk mode | Scan shows the desk pop-up in under 1 s | ✅ Done (live updates measured at 79 ms) |
 | **M5** | Member PWA v1: login, QR card, status, invoices, install prompt, offline QR, **notification preference saved via API** | Installs on Android/iOS; QR works offline | |
 | **M6** | Manual Telebirr / bank verification queue | Upload → approve → active; duplicate FT blocked | |
 | — | **MVP line: one real branch can run on M0–M6** | Pilot at one branch | |

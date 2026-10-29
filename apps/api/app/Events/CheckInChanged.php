@@ -17,7 +17,7 @@ class CheckInChanged implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets;
 
-    /** @param  'scanned'|'overridden'|'checked_out'  $type */
+    /** @param  'scanned'|'overridden'|'checked_out'|'locker'  $type */
     public function __construct(public CheckIn $checkIn, public string $type) {}
 
     /** @return array<int, PrivateChannel> */

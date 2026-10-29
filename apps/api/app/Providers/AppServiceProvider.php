@@ -30,7 +30,10 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         // A busy door at opening time, but not a guessing machine for codes.
-        RateLimiter::for('check-in', fn (Request $request) => Limit::perMinute(120)->by('check-in:'.($request->user()?->id ?? $request->ip())));
+        RateLimiter::for('check-in', fn (Request $request) => Limit::perMinute(120)->by('check-in:'.($request->user()?->id ?? $request->attributes->get('kiosk')?->id ?? $request->ip())));
+
+        // Pairing codes are short, so guessing is capped hard per address.
+        RateLimiter::for('kiosk-pair', fn (Request $request) => Limit::perMinutes(10, 10)->by('kiosk-pair:'.$request->ip()));
 
         RateLimiter::for('registration', fn (Request $request) => Limit::perHour(5)->by($request->ip()));
     }

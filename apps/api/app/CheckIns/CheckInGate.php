@@ -65,7 +65,7 @@ class CheckInGate
         // An open visit already exists: a double scan, not a new visit.
         $open = $this->openVisit($branch, $member, $today);
         if ($open) {
-            return CheckInOutcome::repeat($open->load('member.homeBranch', 'membership', 'branch'));
+            return CheckInOutcome::repeat($open->load('member.homeBranch', 'membership', 'branch', 'locker'));
         }
 
         $checkIn = DB::transaction(function () use ($branch, $member, $method, $by, $now, $today) {
@@ -103,7 +103,7 @@ class CheckInGate
             ]);
         });
 
-        $checkIn->load('member.homeBranch', 'membership', 'branch');
+        $checkIn->load('member.homeBranch', 'membership', 'branch', 'locker');
         CheckInChanged::dispatch($checkIn, 'scanned');
 
         return CheckInOutcome::recorded($checkIn);
@@ -115,17 +115,18 @@ class CheckInGate
         $checkIn->forceFill(['result' => 'overridden', 'override_reason' => $reason, 'handled_by' => $by->id])->save();
         Audit::record('check_in.overridden', $checkIn, ['member_id' => $checkIn->member_id, 'denial' => $checkIn->denial_reason, 'reason' => $reason], $by);
 
-        $checkIn->load('member.homeBranch', 'membership', 'branch');
+        $checkIn->load('member.homeBranch', 'membership', 'branch', 'locker');
         CheckInChanged::dispatch($checkIn, 'overridden');
 
         return $checkIn;
     }
 
+    /** Checking out also frees the locker (it stays on the visit as history). */
     public function checkOut(CheckIn $checkIn): CheckIn
     {
         if ($checkIn->checked_out_at === null) {
             $checkIn->forceFill(['checked_out_at' => now()])->save();
-            CheckInChanged::dispatch($checkIn->load('member.homeBranch', 'membership', 'branch'), 'checked_out');
+            CheckInChanged::dispatch($checkIn->load('member.homeBranch', 'membership', 'branch', 'locker'), 'checked_out');
         }
 
         return $checkIn;

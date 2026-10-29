@@ -118,7 +118,8 @@
     "audit": "የእንቅስቃሴ መዝገብ",
     "members": "አባላት",
     "invoices": "ደረሰኞች",
-    "pricing": "ዕቅዶችና ዋጋዎች"
+    "pricing": "ዕቅዶችና ዋጋዎች",
+    "door": "ሎከሮችና ኪዮስኮች"
   },
   "branches": {
     "title": "ቅርንጫፎች",
@@ -695,6 +696,77 @@
       "replaceYes": "ካርድ ተካ",
       "version": "ካርድ ቁ. {n}",
       "cardShow": "ይህን ካርድ በዴስኩ ያሳዩ"
+    },
+    "lockers": {
+      "title": "ሎከር",
+      "give": "ሎከር ስጥ",
+      "pick": "ወይም ይምረጡ",
+      "pickPlaceholder": "ነፃ ሎከር ይምረጡ",
+      "change": "ቀይር",
+      "return": "ቁልፍ መልስ",
+      "none": "ነፃ ሎከር የለም",
+      "zones": {
+        "male": "ወንዶች",
+        "female": "ሴቶች",
+        "unisex": "ለሁሉም"
+      },
+      "short": "ሎከር {n}"
+    },
+    "door": {
+      "title": "ሎከሮችና ኪዮስኮች",
+      "description": "በዴስኩ የሚሰጡ ሎከሮች እና የራስ-አገልግሎት የመግቢያ ታብሌቶች።",
+      "branch": "ቅርንጫፍ",
+      "lockersTitle": "ሎከሮች",
+      "lockersOff": "ሎከሮች ለዚህ ቅርንጫፍ ጠፍተዋል። ባለቤቱ በቅንብሮች ውስጥ ሊያበራቸው ይችላል።",
+      "lockersEmpty": "እስካሁን ሎከር የለም። ከታች የቁጥር ክልል ይጨምሩ።",
+      "summary": "{free} ነፃ · {used} በጥቅም ላይ · {total} በአጠቃላይ",
+      "add": "ሎከሮች ጨምር",
+      "from": "ከ",
+      "to": "እስከ",
+      "prefix": "ቅድመ ቅጥያ",
+      "prefixHint": "አማራጭ፣ ለምሳሌ M ለ M1–M20",
+      "zone": "ክፍል",
+      "legendFree": "ነፃ",
+      "legendUsed": "በጥቅም ላይ",
+      "legendBroken": "ተበላሽቷል",
+      "markBroken": "እንደተበላሸ ምልክት አድርግ",
+      "markFixed": "እንደሚሰራ ምልክት አድርግ",
+      "remove": "አስወግድ",
+      "usedBy": "በ{name} ጥቅም ላይ",
+      "close": "ዝጋ",
+      "kiosksTitle": "የመግቢያ ኪዮስኮች",
+      "kiosksHint": "አባላት የራሳቸውን QR ኮድ ወይም ካርድ የሚያስቃኙበት በበሩ ላይ ያለ ታብሌት። ቅኝቶቹ በዴስኩ ስክሪን ላይ ይታያሉ።",
+      "kiosksEmpty": "እስካሁን ኪዮስክ የለም።",
+      "addKiosk": "ኪዮስክ ጨምር",
+      "kioskName": "ስም",
+      "kioskNamePlaceholder": "ለምሳሌ ዋና በር",
+      "status": {
+        "paired": "ተገናኝቷል",
+        "pairing": "ለመጣመር በመጠበቅ ላይ",
+        "unpaired": "አልተጣመረም"
+      },
+      "lastSeen": "መጨረሻ የታየው {time}",
+      "never": "ተገናኝቶ አያውቅም",
+      "pairTitle": "\"{name}\"ን አጣምር",
+      "pairSteps": "በታብሌቱ ላይ {url} ይክፈቱና ይህን ኮድ ያስገቡ። አንድ ጊዜ ብቻ ይሰራል፣ በ15 ደቂቃ ውስጥ ጊዜው ያልፋል።",
+      "repair": "አዲስ የማጣመሪያ ኮድ",
+      "removeKiosk": "አስወግድ",
+      "removeConfirm": "ይህ ኪዮስክ ይወገድ? ታብሌቱ ወዲያውኑ መስራት ያቆማል።"
+    },
+    "kiosk": {
+      "pairTitle": "ይህን ታብሌት ያገናኙ",
+      "pairBody": "ከጂሙ ስራ አስኪያጅ የማጣመሪያ ኮድ ይጠይቁ (አስተዳደር → ሎከሮችና ኪዮስኮች)፣ ከዚያ እዚህ ያስገቡት።",
+      "code": "የማጣመሪያ ኮድ",
+      "connect": "አገናኝ",
+      "scanTitle": "QR ኮድዎን ያስቃኙ",
+      "scanBody": "የስልክዎን QR ኮድ ወይም የአባልነት ካርድዎን ወደ ካሜራው ያቅርቡ።",
+      "welcome": "እንኳን ደህና መጡ፣ {name}!",
+      "seeDesk": "እባክዎ ወደ መቀበያው ይሂዱ",
+      "alreadyIn": "{name}፣ አስቀድመው ገብተዋል።",
+      "notRecognised": "ኮዱን ማንበብ አልቻልንም። እባክዎ ወደ መቀበያው ይሂዱ።",
+      "startCamera": "ጀምር",
+      "cameraBlocked": "ካሜራው ታግዷል። ሰራተኞች በአሳሹ ቅንብሮች ውስጥ እንዲፈቅዱ ይጠይቁ።",
+      "disconnected": "ይህ ታብሌት ተቋርጧል። ከስራ አስኪያጁ አዲስ የማጣመሪያ ኮድ ይጠይቁ።"
     }
   }
 }

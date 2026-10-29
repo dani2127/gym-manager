@@ -8,6 +8,7 @@ import useSWR from "swr";
 
 import { MemberInvoicesCard, MembershipsCard } from "@/components/billing/member-billing";
 import { CheckInPopup } from "@/components/checkins/check-in-popup";
+import { useLockersEnabled } from "@/components/checkins/locker-picker";
 import { MemberCardPanel } from "@/components/checkins/member-card";
 import { MemberAvatar, StatusBadge } from "@/components/members/member-avatar";
 import { MemberForm } from "@/components/members/member-form";
@@ -29,6 +30,7 @@ export function MemberProfile({ id }: { id: string }) {
   const [editing, setEditing] = useState(false);
   const [checkIn, setCheckIn] = useState<CheckIn | null>(null);
   const checkInAction = useFormAction();
+  const lockersEnabled = useLockersEnabled(branch?.id);
 
   if (error instanceof ApiError && error.status === 404) {
     return (
@@ -85,7 +87,16 @@ export function MemberProfile({ id }: { id: string }) {
         </div>
       </section>
 
-      {checkIn && <CheckInPopup key={`${checkIn.id}-${checkIn.result}`} checkIn={checkIn} onClose={() => setCheckIn(null)} onChanged={setCheckIn} />}
+      {checkIn && (
+        <CheckInPopup
+          key={`${checkIn.id}-${checkIn.result}`}
+          checkIn={checkIn}
+          branchId={branch?.id}
+          lockersEnabled={lockersEnabled}
+          onClose={() => setCheckIn(null)}
+          onChanged={setCheckIn}
+        />
+      )}
 
       {editing ? (
         <Card title={t.edit}>

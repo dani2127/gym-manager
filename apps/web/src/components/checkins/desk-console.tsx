@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 
 import { CheckInPopup } from "@/components/checkins/check-in-popup";
+import { useLockersEnabled } from "@/components/checkins/locker-picker";
 import { QrScanner } from "@/components/checkins/qr-scanner";
 import { MemberAvatar } from "@/components/members/member-avatar";
 import { Card } from "@/components/ui";
@@ -32,6 +33,7 @@ export function DeskConsole({ branchId }: { branchId: string }) {
   const [popup, setPopup] = useState<CheckIn | null>(null);
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState(false);
+  const lockersEnabled = useLockersEnabled(branchId);
 
   const insideKey = `/branches/${branchId}/check-ins?scope=inside`;
   const recentKey = `/branches/${branchId}/check-ins?scope=recent`;
@@ -56,7 +58,8 @@ export function DeskConsole({ branchId }: { branchId: string }) {
         if (event.check_in.method === "kiosk") setPopup(event.check_in);
       })
       .listen(".check-in.overridden", () => void reload())
-      .listen(".check-in.checked_out", () => void reload());
+      .listen(".check-in.checked_out", () => void reload())
+      .listen(".check-in.locker", () => void reload());
     return () => {
       pusher.connection.unbind("state_change", onState);
       echo.leave(`branch.${branchId}.desk`);
@@ -130,6 +133,7 @@ export function DeskConsole({ branchId }: { branchId: string }) {
                       <span className="block truncate text-sm font-semibold">{c.member?.full_name}</span>
                       <span className="tabular block text-xs text-graphite">
                         #{c.member?.member_no} · {format(t.desk.since, { time: timeOf(c.checked_in_at) })}
+                        {c.locker && <> · {format(t.lockers.short, { n: c.locker.number })}</>}
                       </span>
                     </span>
                     <button
@@ -172,6 +176,8 @@ export function DeskConsole({ branchId }: { branchId: string }) {
         <CheckInPopup
           key={`${popup.id}-${popup.result}`}
           checkIn={popup}
+          branchId={branchId}
+          lockersEnabled={lockersEnabled}
           onClose={() => setPopup(null)}
           onChanged={(changed) => {
             setPopup(changed);

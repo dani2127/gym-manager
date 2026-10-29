@@ -118,7 +118,8 @@
     "audit": "Activity log",
     "members": "Members",
     "invoices": "Invoices",
-    "pricing": "Plans & prices"
+    "pricing": "Plans & prices",
+    "door": "Lockers & kiosks"
   },
   "branches": {
     "title": "Branches",
@@ -695,6 +696,77 @@
       "replaceYes": "Replace card",
       "version": "Card no. {n}",
       "cardShow": "Show this card at the desk"
+    },
+    "lockers": {
+      "title": "Locker",
+      "give": "Give a locker",
+      "pick": "Or pick",
+      "pickPlaceholder": "Choose a free locker",
+      "change": "Change",
+      "return": "Return key",
+      "none": "No free lockers",
+      "zones": {
+        "male": "Men",
+        "female": "Women",
+        "unisex": "Unisex"
+      },
+      "short": "Locker {n}"
+    },
+    "door": {
+      "title": "Lockers & kiosks",
+      "description": "Lockers handed out at the desk, and self-service entrance tablets.",
+      "branch": "Branch",
+      "lockersTitle": "Lockers",
+      "lockersOff": "Lockers are switched off for this branch. The owner can turn them on in Settings.",
+      "lockersEmpty": "No lockers yet. Add a numbered range below.",
+      "summary": "{free} free · {used} in use · {total} in total",
+      "add": "Add lockers",
+      "from": "From",
+      "to": "To",
+      "prefix": "Prefix",
+      "prefixHint": "Optional, e.g. M for M1–M20",
+      "zone": "Zone",
+      "legendFree": "Free",
+      "legendUsed": "In use",
+      "legendBroken": "Out of order",
+      "markBroken": "Mark out of order",
+      "markFixed": "Mark working",
+      "remove": "Remove",
+      "usedBy": "In use by {name}",
+      "close": "Close",
+      "kiosksTitle": "Entrance kiosks",
+      "kiosksHint": "A tablet at the door where members scan their own QR code or card. Scans pop up on the desk screen.",
+      "kiosksEmpty": "No kiosks yet.",
+      "addKiosk": "Add kiosk",
+      "kioskName": "Name",
+      "kioskNamePlaceholder": "e.g. Main door",
+      "status": {
+        "paired": "Connected",
+        "pairing": "Waiting to pair",
+        "unpaired": "Not paired"
+      },
+      "lastSeen": "Last seen {time}",
+      "never": "Never connected",
+      "pairTitle": "Pair \"{name}\"",
+      "pairSteps": "On the tablet, open {url} and type this code. It works once and expires in 15 minutes.",
+      "repair": "New pairing code",
+      "removeKiosk": "Remove",
+      "removeConfirm": "Remove this kiosk? The tablet stops working at once."
+    },
+    "kiosk": {
+      "pairTitle": "Connect this tablet",
+      "pairBody": "Ask the gym manager for a pairing code (Admin → Lockers & kiosks), then type it here.",
+      "code": "Pairing code",
+      "connect": "Connect",
+      "scanTitle": "Scan your QR code",
+      "scanBody": "Hold your phone's QR code or your member card up to the camera.",
+      "welcome": "Welcome, {name}!",
+      "seeDesk": "Please see the front desk",
+      "alreadyIn": "You're already checked in, {name}.",
+      "notRecognised": "We couldn't read that code. Please see the front desk.",
+      "startCamera": "Start",
+      "cameraBlocked": "The camera is blocked. Ask staff to allow it in the browser settings.",
+      "disconnected": "This tablet was disconnected. Ask the manager for a new pairing code."
     }
   }
 }

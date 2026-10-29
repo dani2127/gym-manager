@@ -58,7 +58,7 @@ class CheckInController extends Controller
     {
         abort_unless($request->user()->worksDeskAt($checkIn->branch), 403);
 
-        return response()->json(['data' => new CheckInResource($this->gate->checkOut($checkIn)->load('member.homeBranch', 'membership', 'branch'))]);
+        return response()->json(['data' => new CheckInResource($this->gate->checkOut($checkIn)->load('member.homeBranch', 'membership', 'branch', 'locker'))]);
     }
 
     /**
@@ -77,7 +77,7 @@ class CheckInController extends Controller
 
         $list = (clone $today)
             ->when($scope === 'inside', fn ($q) => $q->inside())
-            ->with('member.homeBranch', 'membership', 'handler')
+            ->with('member.homeBranch', 'membership', 'handler', 'locker')
             ->latest('checked_in_at')
             ->latest('id')
             ->limit($scope === 'inside' ? 200 : 30)

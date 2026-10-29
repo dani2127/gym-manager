@@ -28,6 +28,7 @@ class CheckInResource extends JsonResource
             'member' => $this->whenLoaded('member', fn () => self::member($this->member)),
             'membership' => $this->whenLoaded('membership', fn () => $this->membership ? self::membership($this->membership) : null),
             'handled_by' => $this->whenLoaded('handler', fn () => $this->handler?->name),
+            'locker' => $this->whenLoaded('locker', fn () => $this->locker ? ['id' => $this->locker->id, 'number' => $this->locker->number, 'zone' => $this->locker->zone] : null),
         ];
     }
 

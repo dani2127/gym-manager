@@ -17,6 +17,9 @@ use App\Http\Controllers\Api\V1\Catalog\DiscountRuleController;
 use App\Http\Controllers\Api\V1\Catalog\FeeController;
 use App\Http\Controllers\Api\V1\Catalog\PlanController;
 use App\Http\Controllers\Api\V1\CheckIns\CheckInController;
+use App\Http\Controllers\Api\V1\CheckIns\KioskAdminController;
+use App\Http\Controllers\Api\V1\CheckIns\KioskController;
+use App\Http\Controllers\Api\V1\CheckIns\LockerController;
 use App\Http\Controllers\Api\V1\CheckIns\MemberCardController;
 use App\Http\Controllers\Api\V1\Me\PhoneVerificationController;
 use App\Http\Controllers\Api\V1\Me\ProfileController;
@@ -41,6 +44,13 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::post('/webhooks/telegram', TelegramWebhookController::class);
+
+    // --- Entrance kiosk (device token, no staff login) ---------------------
+    Route::post('/kiosk/pair', [KioskController::class, 'pair'])->middleware('throttle:kiosk-pair');
+    Route::middleware('kiosk')->prefix('kiosk')->group(function () {
+        Route::get('/', [KioskController::class, 'show']);
+        Route::post('/scan', [KioskController::class, 'scan'])->middleware('throttle:check-in');
+    });
 
     // --- Authenticated, tenant-scoped -------------------------------------
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
@@ -103,6 +113,16 @@ Route::prefix('v1')->group(function () {
             Route::get('/branches/{branch}/check-ins', [CheckInController::class, 'index']);
             Route::post('/check-ins/{checkIn}/override', [CheckInController::class, 'override']);
             Route::post('/check-ins/{checkIn}/check-out', [CheckInController::class, 'checkOut']);
+            Route::get('/branches/{branch}/lockers', [LockerController::class, 'index']);
+            Route::post('/branches/{branch}/lockers', [LockerController::class, 'store']);
+            Route::patch('/branches/{branch}/lockers/{locker}', [LockerController::class, 'update']);
+            Route::delete('/branches/{branch}/lockers/{locker}', [LockerController::class, 'destroy']);
+            Route::post('/check-ins/{checkIn}/locker', [LockerController::class, 'assign']);
+            Route::delete('/check-ins/{checkIn}/locker', [LockerController::class, 'release']);
+            Route::get('/branches/{branch}/kiosks', [KioskAdminController::class, 'index']);
+            Route::post('/branches/{branch}/kiosks', [KioskAdminController::class, 'store']);
+            Route::post('/branches/{branch}/kiosks/{kiosk}/pair', [KioskAdminController::class, 'pair']);
+            Route::delete('/branches/{branch}/kiosks/{kiosk}', [KioskAdminController::class, 'destroy']);
             Route::get('/members/{member}/card', [MemberCardController::class, 'show']);
             Route::post('/members/{member}/card/reissue', [MemberCardController::class, 'reissue']);
         });
