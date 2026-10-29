@@ -18,7 +18,7 @@ import { handlesMoneyAt } from "@/lib/roles";
 import { useSession } from "@/lib/session";
 import type { Fee, Invoice, Member, Membership, Plan, Quote } from "@/lib/types";
 
-type Method = "cash" | "pos_card" | "later";
+type Method = "cash" | "pos_card" | "transfer" | "later";
 
 /**
  * The desk sale: pick a plan, start date, fees and discount, take the money.
@@ -94,6 +94,7 @@ function SaleForm({
   const [method, setMethod] = useState<Method>("cash");
   const [cashReceived, setCashReceived] = useState("");
   const [slip, setSlip] = useState("");
+  const [channel, setChannel] = useState<"telebirr" | "bank_transfer">("telebirr");
   const [quote, setQuote] = useState<Quote | undefined>(undefined);
 
   // Until the desk chooses, follow the server: the registration fee for
@@ -139,7 +140,7 @@ function SaleForm({
   const paying = method === "later" ? 0 : method === "cash" && received !== null ? Math.min(received, total) : total;
   const change = method === "cash" && received !== null ? Math.max(0, received - total) : 0;
   const owed = total - paying;
-  const canSubmit = Boolean(quote) && (planId !== null || feeIds.length > 0) && !(selectedDiscount?.requires_proof && !promo && !proofChecked);
+  const canSubmit = Boolean(quote) && (planId !== null || feeIds.length > 0) && !(method === "transfer" && !slip.trim()) && !(selectedDiscount?.requires_proof && !promo && !proofChecked);
 
   function choosePlan(id: string | null) {
     setPlanId(id);
@@ -155,7 +156,10 @@ function SaleForm({
         json: {
           ...payload,
           discount_proof_checked: proofChecked,
-          payment: method === "later" ? null : { method, amount_cents: paying, reference: method === "pos_card" && slip.trim() ? slip.trim() : null },
+          payment:
+            method === "later"
+              ? null
+              : { method: method === "transfer" ? channel : method, amount_cents: paying, reference: method !== "cash" && slip.trim() ? slip.trim() : null },
         },
       });
       await Promise.all([mutate(`/members/${member.id}/memberships`), mutate(`/members/${member.id}`)]);
@@ -317,8 +321,8 @@ function SaleForm({
         )}
 
         <Step number={String((planId ? 3 : 1) + (fees.length > 0 ? 2 : 1)).padStart(2, "0")} title={t.stepPayment}>
-          <div role="radiogroup" aria-label={t.stepPayment} className="grid grid-cols-3 gap-1 rounded-[6px] bg-surface-2 p-1">
-            {(["cash", "pos_card", "later"] as const).map((m) => (
+          <div role="radiogroup" aria-label={t.stepPayment} className="grid grid-cols-2 gap-1 rounded-[6px] bg-surface-2 p-1 sm:grid-cols-4">
+            {(["cash", "pos_card", "transfer", "later"] as const).map((m) => (
               <button
                 key={m}
                 type="button"
@@ -327,12 +331,34 @@ function SaleForm({
                 onClick={() => setMethod(m)}
                 className="min-h-11 cursor-pointer rounded-[5px] text-sm font-semibold text-graphite transition-colors aria-checked:bg-surface aria-checked:text-ink aria-checked:shadow-sm"
               >
-                {dict.billing.methods[m]}
+                {m === "transfer" ? dict.transfers.desk.transfer : dict.billing.methods[m]}
               </button>
             ))}
           </div>
 
           <div className="mt-4">
+            {method === "transfer" && (
+              <div className="grid max-w-xl gap-3 sm:grid-cols-[10rem_1fr]">
+                <label className="block">
+                  <span className="mb-1 block text-sm font-semibold">{dict.transfers.desk.channel}</span>
+                  <select
+                    value={channel}
+                    onChange={(e) => setChannel(e.target.value as "telebirr" | "bank_transfer")}
+                    className="h-10 w-full rounded-[6px] border border-line-strong bg-surface px-3 text-sm"
+                  >
+                    <option value="telebirr">{dict.billing.methods.telebirr}</option>
+                    <option value="bank_transfer">{dict.billing.methods.bank_transfer}</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-sm font-semibold">{dict.transfers.desk.reference}</span>
+                  <Input value={slip} onChange={(e) => setSlip(e.target.value)} maxLength={64} className="font-mono uppercase" aria-invalid={saleError?.field("payment.reference") || saleError?.field("reference") ? true : undefined} />
+                  <span className={`mt-1 block text-xs ${saleError?.field("payment.reference") || saleError?.field("reference") ? "font-medium text-critical" : "text-graphite"}`}>
+                    {saleError?.field("payment.reference") ?? saleError?.field("reference") ?? dict.transfers.desk.referenceHint}
+                  </span>
+                </label>
+              </div>
+            )}
             {method === "cash" && (
               <div className="space-y-3">
                 <div className="flex flex-wrap items-end gap-2">

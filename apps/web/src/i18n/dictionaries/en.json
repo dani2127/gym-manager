@@ -111,7 +111,8 @@
     "members": "Members",
     "invoices": "Invoices",
     "pricing": "Plans & prices",
-    "door": "Lockers & kiosks"
+    "door": "Lockers & kiosks",
+    "transfers": "Payments to check"
   },
   "branches": {
     "title": "Branches",
@@ -833,6 +834,44 @@
       "connectTelegram": "Connect Telegram",
       "linked": "Telegram connected",
       "save": "Save"
+    },
+    "buy": {
+      "title": "Renew",
+      "choose": "Choose a plan",
+      "total": "Total",
+      "includes": "Includes {name} {rate}%",
+      "registration": "Includes the registration fee",
+      "discount": "{name} discount applied",
+      "promo": "Promo code",
+      "apply": "Apply",
+      "starts": "Starts {date}",
+      "order": "Continue to payment",
+      "renew": "Renew or buy",
+      "studentNote": "Student discount? Show your ID at the front desk."
+    },
+    "pay": {
+      "title": "Pay",
+      "toPay": "To pay",
+      "steps": "1. Send the amount to one of these accounts. 2. Enter the transaction number and add a screenshot. 3. The desk checks it, usually the same day.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "method": "Paid with",
+      "reference": "Transaction or FT number",
+      "referenceHint": "From the Telebirr or bank confirmation message.",
+      "amount": "Amount sent (birr)",
+      "screenshot": "Screenshot of the payment",
+      "screenshotHint": "The confirmation screen from Telebirr or your bank app.",
+      "submit": "Send for checking",
+      "waiting": "Waiting for the desk to check your payment",
+      "waitingBody": "We'll tell you in Telegram when it's approved. You don't need to do anything else.",
+      "rejected": "Your last payment was not accepted: {reason}",
+      "rejectedBody": "Send a new payment, or talk to the front desk.",
+      "paid": "Paid. Your membership is ready.",
+      "cancel": "Cancel this order",
+      "noAccounts": "The gym hasn't added a Telebirr or bank account yet. Please pay at the front desk.",
+      "order": "Order {number}",
+      "awaitingPill": "Waiting for check",
+      "payNow": "Pay now"
     }
   },
   "memberAccess": {
@@ -848,5 +887,56 @@
     "signOutConfirm": "Signs out every device and replaces their door QR code. Their printed card stops working too, so print a new one.",
     "signOutYes": "Sign out and replace code",
     "close": "Done"
+  },
+  "transfers": {
+    "queue": {
+      "title": "Payments to check",
+      "description": "Telebirr and bank transfers sent from the member app. Check the money arrived in the gym's account, then approve.",
+      "waiting": "Waiting",
+      "reviewed": "Checked",
+      "empty": "Nothing to check. New transfers appear here as members send them.",
+      "emptyReviewed": "No checked transfers yet.",
+      "new": "New payment to check",
+      "amount": "Amount",
+      "reference": "Transaction number",
+      "sent": "Sent {time}",
+      "invoice": "Invoice {number}",
+      "owed": "{amount} owed",
+      "approve": "Approve",
+      "approveAmount": "Approve a different amount",
+      "reject": "Reject",
+      "rejectReason": "Why? The member sees this.",
+      "rejectPlaceholder": "e.g. No money received with this number",
+      "confirmReject": "Reject payment",
+      "approved": "Approved by {name}",
+      "rejected": "Rejected by {name}: {reason}",
+      "viewProof": "Open screenshot",
+      "deskCard": "{n} transfers waiting to be checked",
+      "deskCardOne": "1 transfer waiting to be checked",
+      "check": "Check now"
+    },
+    "accounts": {
+      "title": "Telebirr and bank accounts",
+      "description": "Shown to members paying from the app. Owner only.",
+      "empty": "No accounts yet. Add the Telebirr number or bank account members should pay into.",
+      "add": "Add account",
+      "kinds": {
+        "telebirr": "Telebirr",
+        "bank": "Bank"
+      },
+      "bankName": "Bank",
+      "bankPlaceholder": "e.g. Commercial Bank of Ethiopia",
+      "accountName": "Account name",
+      "accountNumber": "Account or phone number",
+      "active": "Shown to members",
+      "hidden": "Hidden",
+      "remove": "Remove"
+    },
+    "desk": {
+      "transfer": "Transfer",
+      "channel": "Paid with",
+      "reference": "Transaction or FT number",
+      "referenceHint": "Required. Check it on the member's phone or the bank statement."
+    }
   }
 }

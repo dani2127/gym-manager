@@ -345,6 +345,13 @@ notifications             Laravel default table (in-app / PWA notifications)
 - **Lost phone:** "Sign out all devices" deletes the member's tokens and sessions, replaces `qr_secret` (so codes the old phone makes offline stop working) and raises `card_version` (the printed card is replaced too).
 - **Notifications:** `GET/PUT /me/notifications` stores the preferred channel. Telegram must be linked through the bot first; WhatsApp takes a number (the member's phone by default).
 
+### Telebirr / bank transfers (as built in M6)
+- **Accounts:** owners list the gym's Telebirr numbers and bank accounts on the pricing page (`payment_accounts`: kind `telebirr|bank`, bank name, account name, number, shown/hidden). Only shown accounts reach the member app.
+- **Ordering:** `/app/buy` quotes a plan with `POST /me/member/shop/quote` (automatic group discount, optional promo code, registration fee if owed) and `POST /me/member/orders` creates a `pending_payment` membership and an issued invoice. A member has one open order at a time and can cancel it while nothing is waiting.
+- **Paying:** `/app/pay/{invoice}` shows the accounts with copy buttons. The member picks Telebirr or bank, enters the transaction / FT number and amount and attaches a screenshot (`POST /me/member/invoices/{invoice}/transfers`, multipart). The screenshot is re-encoded to JPEG (max 1600 px, metadata dropped) on the private disk under `transfers/{org}/`. One waiting transfer per invoice; the amount can't exceed what is owed.
+- **References:** stored trimmed and upper-cased and unique per method across every payment status, so a rejected or reused number can never be sent again. Desk sales and desk invoice payments by Telebirr or bank also require the reference.
+- **Desk queue:** "Payments to check" (`GET /payments/transfers?branch=&status=waiting|reviewed`, with a waiting count for the nav badge and the front-desk banner). The desk opens the screenshot (`/payments/{id}/proof`), approves (optionally a corrected amount; the invoice and membership activate as with cash) or rejects with a reason the member sees. `PaymentChanged` on `branch.{id}.desk` refreshes open desks live, and the member gets a Telegram message when their chat is linked. Voiding an invoice rejects any waiting transfer.
+
 ## 5. Key flows
 
 **QR check-in with the live desk pop-up**
@@ -384,7 +391,7 @@ row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
 | **M3** | Plans, fees, discounts, tax engine, invoices, cash/POS payments, Amharic PDF receipts, activation | Desk sale yields a correct invoice with VAT on/off | ✅ Done |
 | **M4** | Check-in & live desk: rotating QR, scan endpoint, Reverb pop-up, lockers toggle, occupancy, kiosk mode | Scan shows the desk pop-up in under 1 s | ✅ Done (live updates measured at 79 ms) |
 | **M5** | Member PWA v1: login, QR card, status, invoices, install prompt, offline QR, **notification preference saved via API** | Installs on Android/iOS; QR works offline | ✅ Done |
-| **M6** | Manual Telebirr / bank verification queue | Upload → approve → active; duplicate FT blocked | |
+| **M6** | Manual Telebirr / bank verification queue | Upload → approve → active; duplicate FT blocked | ✅ Done |
 | — | **MVP line: one real branch can run on M0–M6** | Pilot at one branch | |
 | **M7** | Membership freezing (toggle, rules, approvals, auto-unfreeze) | | |
 | **M8** | Classes: types, rooms, schedules, sessions, booking, waitlist, attendance | | |

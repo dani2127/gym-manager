@@ -66,7 +66,7 @@ class InvoiceController extends Controller
         $data = $request->validate([
             'method' => ['required', Rule::in(Payment::DESK_METHODS)],
             'amount_cents' => ['required', 'integer', 'min:1'],
-            'reference' => ['nullable', 'string', 'max:64'],
+            'reference' => ['nullable', Rule::requiredIf(in_array($request->input('method'), Payment::REFERENCE_REQUIRED, true)), 'string', 'max:64'],
         ]);
 
         $ledger->recordPayment($invoice, $data['method'], $data['amount_cents'], $data['reference'] ?? null, $request->user());

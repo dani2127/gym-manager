@@ -191,7 +191,7 @@ function PaymentForm({ invoice, onPaid }: { invoice: Invoice; onPaid: (invoice: 
   const t = dict.billing.invoices;
   const { mutate } = useSWRConfig();
   const { busy, error, general, run } = useFormAction();
-  const [method, setMethod] = useState<"cash" | "pos_card">("cash");
+  const [method, setMethod] = useState<"cash" | "pos_card" | "telebirr" | "bank_transfer">("cash");
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -200,7 +200,7 @@ function PaymentForm({ invoice, onPaid }: { invoice: Invoice; onPaid: (invoice: 
     const reference = String(form.get("reference") ?? "").trim();
     run(async () => {
       const { data } = await apiFetch<{ data: Invoice }>(`/invoices/${invoice.id}/payments`, {
-        json: { method, amount_cents: amount ?? 0, reference: method === "pos_card" && reference ? reference : null },
+        json: { method, amount_cents: amount ?? 0, reference: method !== "cash" && reference ? reference : null },
       });
       onPaid(data);
       if (data.member) await mutate(`/members/${data.member.id}/memberships`);
@@ -214,9 +214,12 @@ function PaymentForm({ invoice, onPaid }: { invoice: Invoice; onPaid: (invoice: 
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label={dict.billing.sale.stepPayment}>
           {(p) => (
-            <Select {...p} value={method} onChange={(e) => setMethod(e.target.value as "cash" | "pos_card")}>
-              <option value="cash">{dict.billing.methods.cash}</option>
-              <option value="pos_card">{dict.billing.methods.pos_card}</option>
+            <Select {...p} value={method} onChange={(e) => setMethod(e.target.value as typeof method)}>
+              {(["cash", "pos_card", "telebirr", "bank_transfer"] as const).map((m) => (
+                <option key={m} value={m}>
+                  {dict.billing.methods[m]}
+                </option>
+              ))}
             </Select>
           )}
         </Field>
@@ -224,8 +227,12 @@ function PaymentForm({ invoice, onPaid }: { invoice: Invoice; onPaid: (invoice: 
           {(p) => <Input {...p} name="amount" inputMode="decimal" className="tabular" defaultValue={centsToBirr(invoice.balance_cents)} />}
         </Field>
       </div>
-      {method === "pos_card" && (
-        <Field label={dict.billing.sale.slip} hint={dict.billing.sale.slipHint} error={error?.field("reference")}>
+      {method !== "cash" && (
+        <Field
+          label={method === "pos_card" ? dict.billing.sale.slip : dict.transfers.desk.reference}
+          hint={method === "pos_card" ? dict.billing.sale.slipHint : dict.transfers.desk.referenceHint}
+          error={error?.field("reference")}
+        >
           {(p) => <Input {...p} name="reference" maxLength={64} />}
         </Field>
       )}

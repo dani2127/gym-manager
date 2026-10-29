@@ -52,6 +52,7 @@ class InvoiceResource extends JsonResource
                 'amount_cents' => $p->amount_cents,
                 'status' => $p->status,
                 'reference' => $p->reference,
+                'rejection_reason' => $p->rejection_reason,
                 'received_by' => $p->receiver?->name,
                 'created_at' => $p->created_at,
             ])),

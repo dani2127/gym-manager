@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { InstallPrompt } from "@/components/member/install-prompt";
@@ -71,8 +73,37 @@ export function MemberHome() {
       {pass ? <PassCard pass={pass} offline={offline} /> : !home && !error ? <div className="aspect-[3/4] animate-pulse rounded-[12px] bg-surface" /> : <Alert>{t.pass.noPass}</Alert>}
 
       {home && <StatusCard home={home} />}
+      {home && <RenewCard home={home} />}
       <InstallPrompt />
     </div>
+  );
+}
+
+/** Pay an open order, or renew. */
+function RenewCard({ home }: { home: Home }) {
+  const { locale, dict } = useDictionary();
+  const t = dict.memberApp;
+  const order = home.open_order;
+
+  if (order) {
+    const waiting = order.transfer?.status === "awaiting_verification";
+    return (
+      <Link href={`/app/pay/${order.id}`} className="flex items-center gap-3 rounded-[10px] border border-amber/40 bg-amber-soft p-4">
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold text-amber">{waiting ? t.pay.awaitingPill : t.pay.payNow}</span>
+          <span className="tabular block text-sm">
+            {format(t.pay.order, { number: order.number })} · {formatMoney(order.balance_cents, locale)}
+          </span>
+        </span>
+        <ChevronRight aria-hidden className="h-5 w-5 text-amber" />
+      </Link>
+    );
+  }
+
+  return (
+    <Link href="/app/buy" className="flex min-h-12 items-center justify-center rounded-[10px] bg-track text-base font-semibold text-white hover:bg-track-deep">
+      {t.buy.renew}
+    </Link>
   );
 }
 
@@ -115,7 +146,7 @@ function StatusCard({ home }: { home: Home }) {
           {next.status === "pending_payment" ? `${next.plan.name} · ${t.pending}` : format(t.upcoming, { plan: next.plan.name, date: formatDate(next.starts_on, locale) })}
         </p>
       )}
-      {home.owed_cents > 0 && <p className="rounded-[6px] bg-amber-soft px-3 py-2 text-sm font-semibold text-amber">{format(t.owed, { amount: formatMoney(home.owed_cents, locale) })}</p>}
+      {home.owed_cents > 0 && !home.open_order && <p className="rounded-[6px] bg-amber-soft px-3 py-2 text-sm font-semibold text-amber">{format(t.owed, { amount: formatMoney(home.owed_cents, locale) })}</p>}
     </section>
   );
 }

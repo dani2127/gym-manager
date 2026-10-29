@@ -12,6 +12,7 @@ import {
   Menu,
   ReceiptText,
   ScanLine,
+  Smartphone,
   Settings2,
   UserRound,
   Users,
@@ -21,13 +22,15 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import useSWR from "swr";
 
 import { Logo } from "@/components/brand/logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Alert, Button } from "@/components/ui";
 import { hasLocale } from "@/i18n/config";
 import { useDictionary } from "@/i18n/dictionary-context";
-import { workspaces } from "@/lib/roles";
+import { swrFetcher } from "@/lib/api";
+import { handlesMoneyAt, workspaces } from "@/lib/roles";
 import { SessionProvider, useSession } from "@/lib/session";
 
 /** Signed-in shell for /desk, /admin, /trainer and /account. */
@@ -52,17 +55,20 @@ export function StaffFrame({ children }: { children: ReactNode }) {
   );
 }
 
-type NavItem = { href: string; label: string; icon: LucideIcon; exact?: boolean };
+type NavItem = { href: string; label: string; icon: LucideIcon; exact?: boolean; badge?: number };
 
 function useNav() {
   const { dict } = useDictionary();
-  const { me } = useSession();
+  const { me, branch } = useSession();
   const access = workspaces(me);
+  // Transfers waiting for the desk at the selected branch, shown as a count.
+  const { data: transfers } = useSWR<{ meta: { waiting: number } }>(access.desk && branch && handlesMoneyAt(me, branch.id) ? `/payments/transfers?branch=${branch.id}` : null, swrFetcher, { refreshInterval: 30_000 });
 
   const work: NavItem[] = [
     ...(access.desk ? [{ href: "/desk", label: dict.nav.desk, icon: ScanLine }] : []),
     { href: "/members", label: dict.nav.members, icon: Contact },
     ...(access.desk ? [{ href: "/invoices", label: dict.nav.invoices, icon: ReceiptText }] : []),
+    ...(access.desk ? [{ href: "/payments", label: dict.nav.transfers, icon: Smartphone, badge: transfers?.meta.waiting }] : []),
     ...(access.trainer ? [{ href: "/trainer", label: dict.nav.trainer, icon: Dumbbell }] : []),
   ];
 
@@ -211,7 +217,7 @@ function NavGroup({
     <div>
       {title && <p className="mb-1 px-3 text-xs font-semibold text-asphalt-muted">{title}</p>}
       <ul className="space-y-0.5">
-        {items.map(({ href, label, icon: Icon, exact }) => {
+        {items.map(({ href, label, icon: Icon, exact, badge }) => {
           const active = exact ? current === href : current === href || current.startsWith(`${href}/`);
           return (
             <li key={href}>
@@ -222,7 +228,8 @@ function NavGroup({
                 className="group flex min-h-10 items-center gap-3 rounded-[6px] px-3 text-sm font-medium text-asphalt-muted transition-colors duration-150 hover:bg-asphalt-2 hover:text-asphalt-ink aria-[current=page]:bg-asphalt-2 aria-[current=page]:text-asphalt-ink"
               >
                 <Icon aria-hidden className="h-4 w-4 shrink-0 group-aria-[current=page]:text-track" />
-                {label}
+                <span className="flex-1">{label}</span>
+                {badge ? <span className="tabular rounded-full bg-track px-2 py-0.5 text-xs font-semibold text-white">{badge}</span> : null}
               </Link>
             </li>
           );

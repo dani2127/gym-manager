@@ -233,7 +233,7 @@ export type Invoice = {
   member?: { id: string; full_name: string; member_no: string } | null;
   created_by?: string | null;
   items?: { description: string; kind: string | null; qty: number; unit_price_cents: number; discount_cents: number; discount: { kind: DiscountKind; name: string } | null; tax_cents: number; total_cents: number }[];
-  payments?: { id: string; method: PaymentMethod; amount_cents: number; status: string; reference: string | null; received_by: string | null; created_at: string }[];
+  payments?: { id: string; method: PaymentMethod; amount_cents: number; status: string; reference: string | null; rejection_reason?: string | null; received_by: string | null; created_at: string }[];
   memberships?: Membership[];
   void_reason: string | null;
   voided_at: string | null;
@@ -316,4 +316,30 @@ export type MemberHome = {
   current: Membership | null;
   upcoming: Membership[];
   owed_cents: number;
+  open_order: { id: string; number: string; balance_cents: number; transfer: { status: string; rejection_reason: string | null } | null } | null;
+};
+
+export type PaymentAccount = {
+  id: string;
+  kind: "telebirr" | "bank";
+  bank_name: string | null;
+  account_name: string;
+  account_number: string;
+  is_active: boolean;
+};
+
+export type TransferReview = {
+  id: string;
+  method: "telebirr" | "bank_transfer";
+  amount_cents: number;
+  reference: string;
+  status: "awaiting_verification" | "completed" | "rejected";
+  rejection_reason: string | null;
+  submitted_at: string;
+  verified_at: string | null;
+  verified_by: string | null;
+  proof_url: string | null;
+  branch: { id: string; name: string };
+  member: NonNullable<CheckIn["member"]> | null;
+  invoice: { id: string; number: string; total_cents: number; balance_cents: number; status: InvoiceStatus };
 };

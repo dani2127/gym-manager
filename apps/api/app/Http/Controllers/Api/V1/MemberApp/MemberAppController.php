@@ -44,7 +44,32 @@ class MemberAppController extends Controller
             'current' => $current ? new MembershipResource($current) : null,
             'upcoming' => MembershipResource::collection($memberships->filter(fn (Membership $m) => $m->id !== $current?->id)->values()),
             'owed_cents' => (int) Invoice::where('member_id', $member->id)->whereIn('status', ['issued', 'partially_paid'])->get()->sum(fn (Invoice $i) => $i->balanceCents()),
+            'open_order' => $this->openOrder($member),
         ]]);
+    }
+
+    /** The unpaid invoice to pay from the app, and where its transfer stands. */
+    private function openOrder(Member $member): ?array
+    {
+        $invoice = Invoice::where('member_id', $member->id)->whereIn('status', ['issued', 'partially_paid'])->with('payments')->latest('id')->first();
+        if (! $invoice) {
+            return null;
+        }
+        $latest = $invoice->payments->whereIn('method', ['telebirr', 'bank_transfer'])->sortByDesc('id')->first();
+
+        return [
+            'id' => $invoice->ulid,
+            'number' => $invoice->number,
+            'balance_cents' => $invoice->balanceCents(),
+            'transfer' => $latest ? ['status' => $latest->status, 'rejection_reason' => $latest->rejection_reason] : null,
+        ];
+    }
+
+    public function invoice(Request $request, Invoice $invoice): InvoiceResource
+    {
+        abort_unless($invoice->member_id === $this->member($request)->id, 404);
+
+        return new InvoiceResource($invoice->load('branch', 'items.discountRule', 'payments', 'memberships'));
     }
 
     /**
@@ -74,7 +99,7 @@ class MemberAppController extends Controller
     public function invoices(Request $request): AnonymousResourceCollection
     {
         return InvoiceResource::collection(
-            Invoice::where('member_id', $this->member($request)->id)->with('branch', 'items')->latest('issued_at')->limit(30)->get()
+            Invoice::where('member_id', $this->member($request)->id)->with('branch', 'items', 'payments')->latest('issued_at')->latest('id')->limit(30)->get()
         );
     }
 

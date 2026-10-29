@@ -54,7 +54,7 @@ class SaleController extends Controller
             'payment' => ['nullable', 'array'],
             'payment.method' => ['required_with:payment', Rule::in(Payment::DESK_METHODS)],
             'payment.amount_cents' => ['required_with:payment', 'integer', 'min:0'],
-            'payment.reference' => ['nullable', 'string', 'max:64'],
+            'payment.reference' => ['nullable', Rule::requiredIf(in_array($request->input('payment.method'), Payment::REFERENCE_REQUIRED, true)), 'string', 'max:64'],
         ])['payment'] ?? null;
 
         [$member, $quote] = $this->build($request, $branch, forSale: true);

@@ -12,7 +12,7 @@ import { apiFetch, swrFetcher } from "@/lib/api";
 import { birrToCents, centsToBirr, formatDate, formatMoney } from "@/lib/format";
 import { isOwner } from "@/lib/roles";
 import { useSession } from "@/lib/session";
-import type { AccessScope, DiscountKind, DiscountRule, Fee, FeeKind, Plan, PlanType, Settings } from "@/lib/types";
+import type { AccessScope, DiscountKind, DiscountRule, Fee, FeeKind, PaymentAccount, Plan, PlanType, Settings } from "@/lib/types";
 
 type Editing<T> = T | "new" | null;
 
@@ -31,6 +31,7 @@ export function PricingAdmin() {
         <PlansCard editable={owner} />
         <FeesCard editable={owner} />
         {owner && <DiscountsCard />}
+        {owner && <PaymentAccountsCard />}
       </div>
     </>
   );
@@ -407,6 +408,128 @@ function FeeForm({ fee, onDone, onCancel }: { fee?: Fee; onDone: () => void; onC
         <Toggle label={t.active} checked={active} onChange={setActive} />
       </div>
       <FormActions busy={busy} onCancel={onCancel} />
+    </form>
+  );
+}
+
+/* ------------------------------------------------------- Payment accounts */
+
+function PaymentAccountsCard() {
+  const { dict } = useDictionary();
+  const t = dict.transfers.accounts;
+  const { data, mutate } = useSWR<{ data: PaymentAccount[] }>("/payment-accounts", swrFetcher);
+  const [editing, setEditing] = useState<Editing<PaymentAccount>>(null);
+  const done = () => {
+    setEditing(null);
+    mutate();
+  };
+
+  return (
+    <Card title={t.title} actions={editing === null && <AddButton label={t.add} onClick={() => setEditing("new")} />}>
+      <p className="-mt-2 mb-4 text-sm text-graphite">{t.description}</p>
+      {editing === "new" && <PaymentAccountForm onDone={done} onCancel={() => setEditing(null)} />}
+      {!data ? (
+        <div className="h-16 animate-pulse rounded-[6px] bg-surface-2" />
+      ) : data.data.length === 0 && editing !== "new" ? (
+        <p className="text-sm text-graphite">{t.empty}</p>
+      ) : (
+        <ul className="divide-y divide-line">
+          {data.data.map((account) =>
+            editing !== "new" && editing?.id === account.id ? (
+              <li key={account.id} className="py-4">
+                <PaymentAccountForm account={account} onDone={done} onCancel={() => setEditing(null)} />
+              </li>
+            ) : (
+              <li key={account.id} className="flex items-center gap-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold">
+                    {account.kind === "bank" ? account.bank_name : t.kinds.telebirr}
+                    {!account.is_active && <span className="ml-2"><OffBadge label={t.hidden} /></span>}
+                  </p>
+                  <p className="text-xs text-graphite">{account.account_name}</p>
+                </div>
+                <span className="tabular font-mono font-semibold">{account.account_number}</span>
+                {editing === null && <EditButton label={`${dict.common.edit}: ${account.account_number}`} onClick={() => setEditing(account)} />}
+              </li>
+            ),
+          )}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+function PaymentAccountForm({ account, onDone, onCancel }: { account?: PaymentAccount; onDone: () => void; onCancel: () => void }) {
+  const { dict } = useDictionary();
+  const t = dict.transfers.accounts;
+  const { busy, error, general, run } = useFormAction();
+  const [kind, setKind] = useState<PaymentAccount["kind"]>(account?.kind ?? "telebirr");
+  const [active, setActive] = useState(account?.is_active ?? true);
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    run(async () => {
+      await apiFetch(account ? `/payment-accounts/${account.id}` : "/payment-accounts", {
+        method: account ? "PATCH" : "POST",
+        json: {
+          kind,
+          bank_name: kind === "bank" ? String(form.get("bank_name") ?? "").trim() || null : null,
+          account_name: String(form.get("account_name") ?? "").trim(),
+          account_number: String(form.get("account_number") ?? "").trim(),
+          is_active: active,
+        },
+      });
+      onDone();
+    });
+  }
+
+  function remove() {
+    if (!account) return;
+    run(async () => {
+      await apiFetch(`/payment-accounts/${account.id}`, { method: "DELETE" });
+      onDone();
+    });
+  }
+
+  return (
+    <form onSubmit={submit} className="mb-4 space-y-4 rounded-[6px] border border-line-strong bg-ground/40 p-4" noValidate>
+      {general && <Alert tone="error">{general}</Alert>}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label={dict.billing.pricing.type} error={error?.field("kind")}>
+          {(p) => (
+            <Select {...p} name="kind" value={kind} onChange={(e) => setKind(e.target.value as PaymentAccount["kind"])}>
+              <option value="telebirr">{t.kinds.telebirr}</option>
+              <option value="bank">{t.kinds.bank}</option>
+            </Select>
+          )}
+        </Field>
+        {kind === "bank" && (
+          <Field label={t.bankName} error={error?.field("bank_name")}>
+            {(p) => <Input {...p} name="bank_name" placeholder={t.bankPlaceholder} defaultValue={account?.bank_name ?? ""} required />}
+          </Field>
+        )}
+        <Field label={t.accountName} error={error?.field("account_name")}>
+          {(p) => <Input {...p} name="account_name" defaultValue={account?.account_name ?? ""} required />}
+        </Field>
+        <Field label={t.accountNumber} error={error?.field("account_number")}>
+          {(p) => <Input {...p} name="account_number" inputMode="tel" className="font-mono" defaultValue={account?.account_number ?? ""} required />}
+        </Field>
+      </div>
+      <div className="rounded-[6px] border border-line bg-surface px-4">
+        <Toggle label={t.active} checked={active} onChange={setActive} />
+      </div>
+      <FormActions
+        busy={busy}
+        onCancel={onCancel}
+        extra={
+          account && (
+            <Button type="button" variant="danger" onClick={remove} disabled={busy}>
+              {t.remove}
+            </Button>
+          )
+        }
+      />
     </form>
   );
 }
