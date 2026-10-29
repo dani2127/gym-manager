@@ -2,7 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Memberships\Freezes;
 use App\Models\Membership;
+use App\Models\MembershipFreeze;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Carbon;
@@ -37,6 +39,9 @@ class MembershipResource extends JsonResource
                 'status' => $this->invoice->status,
                 'balance_cents' => $this->invoice->balanceCents(),
             ] : null),
+            // Freezes and what the plan still allows, when loaded.
+            'freezes' => $this->whenLoaded('freezes', fn () => $this->freezes->whereNotIn('status', ['cancelled'])->values()->map(fn (MembershipFreeze $f) => $f->present())),
+            'freeze_policy' => $this->whenLoaded('freezes', fn () => app(Freezes::class)->policy($this->resource, $today)),
             'created_at' => $this->created_at,
         ];
     }

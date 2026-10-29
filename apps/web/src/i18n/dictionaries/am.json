@@ -112,7 +112,8 @@
     "invoices": "ደረሰኞች",
     "pricing": "ዕቅዶችና ዋጋዎች",
     "door": "ሎከሮችና ኪዮስኮች",
-    "transfers": "የሚረጋገጡ ክፍያዎች"
+    "transfers": "የሚረጋገጡ ክፍያዎች",
+    "freezes": "ማቆሚያዎች"
   },
   "branches": {
     "title": "ቅርንጫፎች",
@@ -872,6 +873,21 @@
       "order": "ትዕዛዝ {number}",
       "awaitingPill": "ማረጋገጫ በመጠበቅ ላይ",
       "payNow": "አሁን ክፈል"
+    },
+    "freeze": {
+      "title": "አባልነትዎን ያቁሙ",
+      "body": "ጉዞ ወይም ጉዳት አለዎት? ያቁሙ፣ ቀናቱ መጨረሻ ላይ ይጨመራሉ።",
+      "allowance": "በዚህ ጥቅል የሚጠቀሙበት {days} ቀናት ቀርተዋል",
+      "request": "ማቆም ይጠይቁ",
+      "send": "ጥያቄ ላክ",
+      "requested": "ማቆም ተጠይቋል፦ {from} – {to}። የፊት ዴስክ ያረጋግጣል።",
+      "approved": "ከ{from} እስከ {to} ቆሟል። በ{back} ይመለሳሉ።",
+      "active": "እስከ {to} ቆሟል። በ{back} ይመለሳሉ።",
+      "rejected": "የመጨረሻው የማቆም ጥያቄዎ አልተቀበለም፦ {reason}",
+      "withdraw": "ጥያቄውን ሰርዝ",
+      "callOff": "ማቆሙን ሰርዝ",
+      "frozen": "ቆሟል",
+      "backOn": "በ{date} ይመለሳሉ"
     }
   },
   "memberAccess": {
@@ -938,5 +954,51 @@
       "reference": "የግብይት ወይም የFT ቁጥር",
       "referenceHint": "ግዴታ ነው። በአባሉ ስልክ ወይም በባንክ መግለጫው ላይ ያረጋግጡ።"
     }
+  },
+  "freezes": {
+    "title": "ማቆሚያዎች",
+    "description": "ከአባላት መተግበሪያ የመጡ ጥያቄዎች እና እየሰሩ ያሉ ወይም የሚመጡ ማቆሚያዎች። ማጽደቅ የአባልነቱን የመጨረሻ ቀን በቆሙት ቀናት ያራዝማል።",
+    "open": "ክፍት",
+    "done": "የተጠናቀቁ",
+    "empty": "አሁን ምንም ማቆሚያ የለም። ከአባላት መተግበሪያ የሚመጡ ጥያቄዎች እዚህ ይታያሉ።",
+    "emptyDone": "እስካሁን የተጠናቀቀ ማቆሚያ የለም።",
+    "freeze": "አቁም",
+    "freezeTitle": "ይህን አባልነት አቁም",
+    "startsOn": "የመጀመሪያ ቀን",
+    "days": "ቀናት",
+    "reason": "ምክንያት (አማራጭ)",
+    "reasonPlaceholder": "ለምሳሌ ጉዞ፣ ጉዳት",
+    "backOn": "በ{date} ይመለሳሉ",
+    "newEnd": "አዲስ የመጨረሻ ቀን፦ {date}",
+    "allowance": "በዚህ ጥቅል ከ{max} ቀናት {days} እና ከ{maxFreezes} ማቆሚያዎች {freezes} ቀርተዋል",
+    "allowanceDays": "በዚህ ጥቅል ከ{max} የማቆሚያ ቀናት {days} ቀርተዋል",
+    "noLimit": "በዚህ ጥቅል ገደብ የለም",
+    "notAllowed": "ይህ ጥቅል ማቆም አይፈቅድም።",
+    "override": "ከጥቅሉ ገደብ በላይ (ሥራ አስኪያጅ)",
+    "overLimit": "ከጥቅሉ ገደብ በላይ",
+    "save": "አባልነቱን አቁም",
+    "frozenNow": "እስከ {date} ቆሟል",
+    "upcoming": "ከ{from} እስከ {to} ይቆማል",
+    "requested": "አባሉ ከ{from} – {to} ({days} ቀናት) ማቆም ጠይቀዋል",
+    "requestedShort": "የማቆም ጥያቄ",
+    "endNow": "ማቆሙን ዛሬ ጨርስ",
+    "cancel": "ማቆሙን ሰርዝ",
+    "approve": "አጽድቅ",
+    "reject": "ውድቅ አድርግ",
+    "rejectReason": "ለምን? አባሉ ይህን ያያሉ።",
+    "confirmReject": "ጥያቄውን ውድቅ አድርግ",
+    "statuses": {
+      "requested": "ተጠይቋል",
+      "approved": "ጸድቋል",
+      "active": "አሁን ቆሟል",
+      "completed": "ተጠናቋል",
+      "rejected": "ውድቅ ተደርጓል",
+      "cancelled": "ተሰርዟል"
+    },
+    "fromMember": "ከመተግበሪያው",
+    "byStaff": "በ{name}",
+    "dayCount": "{n} ቀናት",
+    "deskCard": "{n} የማቆም ጥያቄዎች ይጠብቃሉ",
+    "deskCardOne": "1 የማቆም ጥያቄ ይጠብቃል"
   }
 }

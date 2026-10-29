@@ -60,7 +60,8 @@ export function DeskConsole({ branchId }: { branchId: string }) {
       .listen(".check-in.overridden", () => void reload())
       .listen(".check-in.checked_out", () => void reload())
       .listen(".check-in.locker", () => void reload())
-      .listen(".payment.submitted", () => void mutate(`/payments/transfers?branch=${branchId}`));
+      .listen(".payment.submitted", () => void mutate(`/payments/transfers?branch=${branchId}`))
+      .listen(".freeze.requested", () => void mutate(`/freezes?branch=${branchId}`));
     return () => {
       pusher.connection.unbind("state_change", onState);
       echo.leave(`branch.${branchId}.desk`);

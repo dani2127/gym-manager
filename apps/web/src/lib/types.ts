@@ -210,7 +210,45 @@ export type Membership = {
   visits_remaining: number | null;
   branch?: { id: string; name: string };
   invoice?: { id: string; number: string; status: InvoiceStatus; balance_cents: number } | null;
+  freezes?: MembershipFreeze[];
+  freeze_policy?: FreezePolicy;
   created_at: string;
+};
+
+export type FreezeStatus = "requested" | "approved" | "rejected" | "active" | "completed" | "cancelled";
+
+export type MembershipFreeze = {
+  id: string;
+  starts_on: string;
+  ends_on: string;
+  back_on: string;
+  days: number;
+  reason: string | null;
+  status: FreezeStatus;
+  over_limit: boolean;
+  from_member: boolean;
+  requested_by: string | null;
+  reviewed_by: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+};
+
+export type FreezePolicy = {
+  enabled: boolean;
+  allowed: boolean;
+  max_days: number | null;
+  max_freezes: number | null;
+  days_used: number;
+  freezes_used: number;
+  days_left: number | null;
+  freezes_left: number | null;
+  freezable: boolean;
+};
+
+/** A freeze in the desk list, with who it belongs to. */
+export type FreezeReview = MembershipFreeze & {
+  member: NonNullable<CheckIn["member"]> | null;
+  membership: { id: string; plan: string; ends_on: string | null; status: Membership["status"] };
 };
 
 export type Invoice = {

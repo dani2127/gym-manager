@@ -4,6 +4,7 @@ import { FileText } from "lucide-react";
 import useSWR from "swr";
 
 import { InvoiceStatusBadge, MembershipStateBadge } from "@/components/billing/badges";
+import { PauseCard } from "@/components/member/member-pause";
 import { useMember } from "@/components/member/use-member";
 import { useDictionary } from "@/i18n/dictionary-context";
 import { API_URL, swrFetcher } from "@/lib/api";
@@ -15,13 +16,15 @@ export function MemberMembership() {
   const { locale, dict } = useDictionary();
   const t = dict.memberApp.membership;
   const { signedOut } = useMember();
-  const { data: memberships } = useSWR<{ data: Membership[] }>(signedOut ? null : "/me/member/memberships", swrFetcher);
+  const { data: memberships, mutate } = useSWR<{ data: Membership[] }>(signedOut ? null : "/me/member/memberships", swrFetcher);
   const { data: invoices } = useSWR<{ data: Invoice[] }>(signedOut ? null : "/me/member/invoices", swrFetcher);
   const { data: visits } = useSWR<{ data: { id: string; branch: string; checked_in_at: string }[] }>(signedOut ? null : "/me/member/visits", swrFetcher);
 
   return (
     <div className="space-y-6">
       <h1 className="font-bib text-4xl">{t.title}</h1>
+
+      {memberships && <PauseCard memberships={memberships.data} onChanged={() => mutate()} />}
 
       <Section title={t.memberships} empty={t.noMemberships} items={memberships?.data}>
         {(m) => (

@@ -14,6 +14,7 @@ import {
   ScanLine,
   Smartphone,
   Settings2,
+  Snowflake,
   UserRound,
   Users,
   X,
@@ -64,11 +65,17 @@ function useNav() {
   // Transfers waiting for the desk at the selected branch, shown as a count.
   const { data: transfers } = useSWR<{ meta: { waiting: number } }>(access.desk && branch && handlesMoneyAt(me, branch.id) ? `/payments/transfers?branch=${branch.id}` : null, swrFetcher, { refreshInterval: 30_000 });
 
+  const desk = access.desk && branch && handlesMoneyAt(me, branch.id);
+  const { data: branchSettings } = useSWR<{ settings: Record<string, unknown> }>(desk ? `/branches/${branch.id}/settings` : null, swrFetcher);
+  const freezing = Boolean(branchSettings?.settings["freeze.enabled"]);
+  const { data: freezes } = useSWR<{ meta: { requested: number } }>(desk && freezing ? `/freezes?branch=${branch.id}` : null, swrFetcher, { refreshInterval: 30_000 });
+
   const work: NavItem[] = [
     ...(access.desk ? [{ href: "/desk", label: dict.nav.desk, icon: ScanLine }] : []),
     { href: "/members", label: dict.nav.members, icon: Contact },
     ...(access.desk ? [{ href: "/invoices", label: dict.nav.invoices, icon: ReceiptText }] : []),
     ...(access.desk ? [{ href: "/payments", label: dict.nav.transfers, icon: Smartphone, badge: transfers?.meta.waiting }] : []),
+    ...(desk && freezing ? [{ href: "/freezes", label: dict.nav.freezes, icon: Snowflake, badge: freezes?.meta.requested }] : []),
     ...(access.trainer ? [{ href: "/trainer", label: dict.nav.trainer, icon: Dumbbell }] : []),
   ];
 

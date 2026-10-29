@@ -1,6 +1,7 @@
 <?php
 
 use App\CheckIns\BranchHours;
+use App\Memberships\Freezes;
 use App\Models\CheckIn;
 use App\Models\Membership;
 use App\Services\Telegram\TelegramClient;
@@ -26,6 +27,15 @@ Artisan::command('telegram:set-webhook {url? : Public base URL of the API, defau
     $telegram->setWebhook($url, $secret);
     $this->info("Telegram webhook set to {$url}");
 })->purpose('Register the Telegram bot webhook');
+
+Artisan::command('memberships:freezes', function (Freezes $freezes) {
+    // Before memberships:expire, so a freeze ending today never lets the pass lapse.
+    $changed = $freezes->activateDue(Carbon::parse(Carbon::now(config('gym.timezone'))->toDateString()));
+
+    $this->info("Started or finished {$changed} freezes.");
+})->purpose('Start freezes whose first day has come and end those whose last day has passed');
+
+Schedule::command('memberships:freezes')->dailyAt('00:01')->timezone(config('gym.timezone'));
 
 Artisan::command('memberships:expire', function () {
     // Runs outside a tenant, so it covers every gym; all share the platform timezone today.

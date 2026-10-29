@@ -16,7 +16,7 @@ class MembershipController extends Controller
         $this->authorize('view', $member);
 
         $memberships = $member->memberships()
-            ->with('branch', 'invoice')
+            ->with('branch', 'invoice', 'freezes.requester', 'freezes.reviewer')
             ->latest('starts_on')
             ->latest('id')
             ->limit(50)

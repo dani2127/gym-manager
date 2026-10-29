@@ -6,6 +6,7 @@ import useSWR from "swr";
 
 import { InvoiceStatusBadge, MembershipStateBadge } from "@/components/billing/badges";
 import { membershipLeft } from "@/components/billing/membership-line";
+import { FreezePanel } from "@/components/memberships/freeze-panel";
 import { Card } from "@/components/ui";
 import { format, useDictionary } from "@/i18n/dictionary-context";
 import { swrFetcher } from "@/lib/api";
@@ -21,7 +22,7 @@ export function MembershipsCard({ member }: { member: Member }) {
   const { locale, dict } = useDictionary();
   const { me, branch } = useSession();
   const t = dict.billing.memberships;
-  const { data } = useSWR<{ data: Membership[] }>(`/members/${member.id}/memberships`, swrFetcher);
+  const { data, mutate } = useSWR<{ data: Membership[] }>(`/members/${member.id}/memberships`, swrFetcher);
 
   const memberships = data?.data ?? [];
   const live = memberships.filter((m) => LIVE.has(m.state)).sort((a, b) => a.starts_on.localeCompare(b.starts_on));
@@ -38,7 +39,7 @@ export function MembershipsCard({ member }: { member: Member }) {
             className="inline-flex min-h-9 items-center gap-1.5 rounded-[6px] bg-track px-3 text-sm font-semibold text-lane hover:bg-track-deep"
           >
             <Plus aria-hidden className="h-4 w-4" />
-            {live.some((m) => m.state === "current") ? t.renew : t.sell}
+            {live.some((m) => m.state === "current" || m.state === "frozen") ? t.renew : t.sell}
           </Link>
         )
       }
@@ -50,7 +51,7 @@ export function MembershipsCard({ member }: { member: Member }) {
       ) : (
         <div className="space-y-4">
           {live.map((m) => (
-            <LiveMembership key={m.id} membership={m} />
+            <LiveMembership key={m.id} membership={m} onChanged={() => mutate()} />
           ))}
           {past.length > 0 && (
             <div>
@@ -80,7 +81,7 @@ function dateRange(m: Membership, locale: "en" | "am", dict: ReturnType<typeof u
     : formatDate(m.starts_on, locale);
 }
 
-function LiveMembership({ membership: m }: { membership: Membership }) {
+function LiveMembership({ membership: m, onChanged }: { membership: Membership; onChanged: () => void }) {
   const { locale, dict } = useDictionary();
   const { me } = useSession();
   const t = dict.billing.memberships;
@@ -111,6 +112,7 @@ function LiveMembership({ membership: m }: { membership: Membership }) {
           )}
         </>
       )}
+      {m.status !== "pending_payment" && <FreezePanel membership={m} onChanged={onChanged} />}
       {owed && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-[6px] bg-amber-soft px-3 py-2 text-sm text-amber">
           <span className="font-medium">{format(t.owed, { amount: formatMoney(owed.balance_cents, locale), number: owed.number })}</span>

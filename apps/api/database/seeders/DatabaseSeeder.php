@@ -119,7 +119,7 @@ class DatabaseSeeder extends Seeder
         $discount(['name' => ['en' => 'Opening offer', 'am' => 'የመክፈቻ ቅናሽ'], 'kind' => 'promo', 'value_type' => 'fixed', 'value' => 50000, 'promo_code' => 'BOLE500', 'valid_until' => now()->addMonths(2)->toDateString()]);
 
         // Demo gym charges 15% VAT, included in its prices.
-        app(SettingsRepository::class)->put($organization, ['tax.enabled' => true, 'tax.name' => 'VAT', 'tax.rate' => 15, 'tax.prices_inclusive' => true]);
+        app(SettingsRepository::class)->put($organization, ['tax.enabled' => true, 'tax.name' => 'VAT', 'tax.rate' => 15, 'tax.prices_inclusive' => true, 'freeze.enabled' => true]);
 
         // Sales spread over recent weeks, rung up as the desk would: member,
         // plan, discount, days ago, payment method, amount paid (null = all).

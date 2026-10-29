@@ -29,11 +29,13 @@ use App\Http\Controllers\Api\V1\Me\PhoneVerificationController;
 use App\Http\Controllers\Api\V1\Me\ProfileController;
 use App\Http\Controllers\Api\V1\Me\TelegramController;
 use App\Http\Controllers\Api\V1\MemberApp\MemberAppController;
+use App\Http\Controllers\Api\V1\MemberApp\MemberFreezeController;
 use App\Http\Controllers\Api\V1\MemberApp\MemberShopController;
 use App\Http\Controllers\Api\V1\Members\MemberAppAccessController;
 use App\Http\Controllers\Api\V1\Members\MemberController;
 use App\Http\Controllers\Api\V1\Members\MemberGroupController;
 use App\Http\Controllers\Api\V1\Members\MemberPhotoController;
+use App\Http\Controllers\Api\V1\Memberships\FreezeController;
 use App\Http\Controllers\Api\V1\MetaController;
 use App\Http\Controllers\Api\V1\Webhooks\TelegramWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -89,6 +91,8 @@ Route::prefix('v1')->group(function () {
                 Route::post('/orders', [MemberShopController::class, 'order']);
                 Route::delete('/orders/{invoice}', [MemberShopController::class, 'cancel']);
                 Route::post('/invoices/{invoice}/transfers', [MemberShopController::class, 'transfer'])->middleware('throttle:check-in');
+                Route::post('/memberships/{membership}/freezes', [MemberFreezeController::class, 'store']);
+                Route::delete('/freezes/{freeze}', [MemberFreezeController::class, 'cancel']);
             });
         });
 
@@ -117,6 +121,12 @@ Route::prefix('v1')->group(function () {
             Route::patch('/member-groups/{memberGroup}', [MemberGroupController::class, 'update']);
             Route::delete('/member-groups/{memberGroup}', [MemberGroupController::class, 'destroy']);
             Route::get('/members/{member}/memberships', [MembershipController::class, 'index']);
+            Route::get('/freezes', [FreezeController::class, 'index']);
+            Route::post('/memberships/{membership}/freezes', [FreezeController::class, 'store']);
+            Route::post('/freezes/{freeze}/approve', [FreezeController::class, 'approve']);
+            Route::post('/freezes/{freeze}/reject', [FreezeController::class, 'reject']);
+            Route::post('/freezes/{freeze}/end', [FreezeController::class, 'end']);
+            Route::delete('/freezes/{freeze}', [FreezeController::class, 'cancel']);
 
             // Catalog: everyone reads plans and fees; owners change them.
             Route::apiResource('plans', PlanController::class)->except('show');

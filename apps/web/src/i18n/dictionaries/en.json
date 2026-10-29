@@ -112,7 +112,8 @@
     "invoices": "Invoices",
     "pricing": "Plans & prices",
     "door": "Lockers & kiosks",
-    "transfers": "Payments to check"
+    "transfers": "Payments to check",
+    "freezes": "Freezes"
   },
   "branches": {
     "title": "Branches",
@@ -872,6 +873,21 @@
       "order": "Order {number}",
       "awaitingPill": "Waiting for check",
       "payNow": "Pay now"
+    },
+    "freeze": {
+      "title": "Pause your membership",
+      "body": "Travelling or injured? Pause and the days are added to the end.",
+      "allowance": "{days} days left to use on this plan",
+      "request": "Ask to pause",
+      "send": "Send request",
+      "requested": "Pause requested: {from} – {to}. The front desk will confirm.",
+      "approved": "Paused from {from} to {to}. Back on {back}.",
+      "active": "Paused until {to}. Back on {back}.",
+      "rejected": "Your last pause request was not accepted: {reason}",
+      "withdraw": "Withdraw request",
+      "callOff": "Call off pause",
+      "frozen": "Paused",
+      "backOn": "Back on {date}"
     }
   },
   "memberAccess": {
@@ -938,5 +954,51 @@
       "reference": "Transaction or FT number",
       "referenceHint": "Required. Check it on the member's phone or the bank statement."
     }
+  },
+  "freezes": {
+    "title": "Freezes",
+    "description": "Requests from the member app, and freezes running or coming up. Approving moves the membership's end date by the frozen days.",
+    "open": "Open",
+    "done": "Finished",
+    "empty": "No freezes right now. Requests from the member app appear here.",
+    "emptyDone": "No finished freezes yet.",
+    "freeze": "Freeze",
+    "freezeTitle": "Freeze this membership",
+    "startsOn": "First day",
+    "days": "Days",
+    "reason": "Reason (optional)",
+    "reasonPlaceholder": "e.g. Travelling, injury",
+    "backOn": "Back on {date}",
+    "newEnd": "New last day: {date}",
+    "allowance": "{days} of {max} days and {freezes} of {maxFreezes} freezes left on this plan",
+    "allowanceDays": "{days} of {max} freeze days left on this plan",
+    "noLimit": "No limit on this plan",
+    "notAllowed": "This plan can't be frozen.",
+    "override": "Go past the plan's limit (manager)",
+    "overLimit": "Over the plan's limit",
+    "save": "Freeze membership",
+    "frozenNow": "Frozen until {date}",
+    "upcoming": "Freeze from {from} to {to}",
+    "requested": "Member asked to freeze {from} – {to} ({days} days)",
+    "requestedShort": "Freeze request",
+    "endNow": "End freeze today",
+    "cancel": "Cancel freeze",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectReason": "Why? The member sees this.",
+    "confirmReject": "Reject request",
+    "statuses": {
+      "requested": "Requested",
+      "approved": "Approved",
+      "active": "Frozen now",
+      "completed": "Finished",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "fromMember": "From the app",
+    "byStaff": "By {name}",
+    "dayCount": "{n} days",
+    "deskCard": "{n} freeze requests to check",
+    "deskCardOne": "1 freeze request to check"
   }
 }

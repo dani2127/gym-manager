@@ -29,7 +29,7 @@ class MemberAppController extends Controller
     public function show(Request $request, Tenant $tenant): JsonResponse
     {
         $member = $this->member($request)->load('homeBranch');
-        $memberships = $member->memberships()->with('branch')->whereIn('status', ['active', 'frozen', 'pending_payment'])->orderBy('starts_on')->get();
+        $memberships = $member->memberships()->with('branch', 'freezes')->whereIn('status', ['active', 'frozen', 'pending_payment'])->orderBy('starts_on')->get();
         $today = $tenant->organization()->today();
 
         $current = $memberships->first(fn (Membership $m) => $m->status !== 'pending_payment' && in_array($m->stateOn($today), ['current', 'frozen'], true));
@@ -92,7 +92,7 @@ class MemberAppController extends Controller
     public function memberships(Request $request): AnonymousResourceCollection
     {
         return MembershipResource::collection(
-            $this->member($request)->memberships()->with('branch')->latest('starts_on')->latest('id')->limit(30)->get()
+            $this->member($request)->memberships()->with('branch', 'freezes')->latest('starts_on')->latest('id')->limit(30)->get()
         );
     }
 

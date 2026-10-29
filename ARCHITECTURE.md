@@ -352,6 +352,14 @@ notifications             Laravel default table (in-app / PWA notifications)
 - **References:** stored trimmed and upper-cased and unique per method across every payment status, so a rejected or reused number can never be sent again. Desk sales and desk invoice payments by Telebirr or bank also require the reference.
 - **Desk queue:** "Payments to check" (`GET /payments/transfers?branch=&status=waiting|reviewed`, with a waiting count for the nav badge and the front-desk banner). The desk opens the screenshot (`/payments/{id}/proof`), approves (optionally a corrected amount; the invoice and membership activate as with cash) or rejects with a reason the member sees. `PaymentChanged` on `branch.{id}.desk` refreshes open desks live, and the member gets a Telegram message when their chat is linked. Voiding an invoice rejects any waiting transfer.
 
+### Freezing (as built in M7)
+- **Rules:** the gym switch `freeze.enabled` plus each plan's `freeze_allowed`, `max_freeze_days` (total days per membership) and `max_freezes` (count), read from the membership's plan snapshot. A paid membership that is running or about to start can be frozen; one freeze is open at a time; it starts today or later, on or before the last day.
+- **Desk:** freezes on the spot from the member page (approved at once). Going past the plan's limits needs a manager or owner, is flagged `over_limit` and audited. "Freezes" lists requests from the app first, then running and upcoming freezes, with a badge for waiting requests (live via `freeze.requested` on `branch.{id}.desk`).
+- **Member app:** "Pause your membership" on the Membership tab sends a request within the plan's limits; the member can withdraw it, or call off an approved pause before it starts. Approvals and rejections reach Telegram when linked.
+- **Dates:** approving moves the membership's end date out by the frozen days, and any membership queued after it by the same amount, so renewals never overlap. Visit passes without an end date don't move. A request approved after its start date starts the day it is approved.
+- **Running:** `memberships:freezes` (00:01, before `memberships:expire`) starts approved freezes on their first day (membership → `frozen`, the door says "membership frozen") and finishes them after their last (→ `active`). Approving a freeze that starts today applies at once.
+- **Ending early / cancelling:** "End freeze today" keeps the days already frozen and takes the unused days off the end date (ended on its first day, it counts as cancelled). Cancelling an upcoming freeze gives every day back. Voiding the sale cancels open freezes.
+
 ## 5. Key flows
 
 **QR check-in with the live desk pop-up**
@@ -393,7 +401,7 @@ row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
 | **M5** | Member PWA v1: login, QR card, status, invoices, install prompt, offline QR, **notification preference saved via API** | Installs on Android/iOS; QR works offline | ✅ Done |
 | **M6** | Manual Telebirr / bank verification queue | Upload → approve → active; duplicate FT blocked | ✅ Done |
 | — | **MVP line: one real branch can run on M0–M6** | Pilot at one branch | |
-| **M7** | Membership freezing (toggle, rules, approvals, auto-unfreeze) | | |
+| **M7** | Membership freezing (toggle, rules, approvals, auto-unfreeze) | Freeze moves the end date; door refuses while frozen; auto-unfreeze | ✅ Done |
 | **M8** | Classes: types, rooms, schedules, sessions, booking, waitlist, attendance | | |
 | **M9** | Trainer portal & PT packages / sessions | | |
 | **M10** | Chapa integration & renewal links | | |

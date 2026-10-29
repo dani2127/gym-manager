@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceSequence;
 use App\Models\Member;
 use App\Models\Membership;
+use App\Models\MembershipFreeze;
 use App\Models\Payment;
 use App\Models\User;
 use App\Notifications\PaymentReviewedNotification;
@@ -271,6 +272,7 @@ class Ledger
 
             $locked->payments()->where('status', 'completed')->update(['status' => 'refunded']);
             $locked->payments()->where('status', 'awaiting_verification')->update(['status' => 'rejected', 'rejection_reason' => $reason]);
+            MembershipFreeze::whereIn('membership_id', $locked->memberships()->pluck('id'))->whereIn('status', MembershipFreeze::OPEN)->update(['status' => 'cancelled']);
             $locked->memberships()->update(['status' => 'cancelled']);
             $locked->forceFill(['status' => 'void', 'voided_at' => now(), 'voided_by' => $by->id, 'void_reason' => $reason])->save();
         });

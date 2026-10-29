@@ -112,6 +112,7 @@ function StatusCard({ home }: { home: Home }) {
   const t = dict.memberApp.status;
   const m = home.current;
   const next = home.upcoming[0];
+  const frozen = m?.state === "frozen" ? m.freezes?.find((f) => f.status === "active") : undefined;
 
   return (
     <section className="space-y-3 rounded-[10px] border border-line bg-surface p-5">
@@ -124,7 +125,9 @@ function StatusCard({ home }: { home: Home }) {
             </span>
           </div>
           <p className="font-bib tabular text-3xl">
-            {m.days_left !== null
+            {frozen
+              ? format(dict.memberApp.freeze.backOn, { date: formatDate(frozen.back_on, locale) })
+              : m.days_left !== null
               ? m.days_left === 1
                 ? t.lastDay
                 : format(t.days, { n: String(m.days_left) })
