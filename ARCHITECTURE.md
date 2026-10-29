@@ -259,6 +259,18 @@ kiosk_devices  id · branch_id FK · name · token_hash · last_seen_at
 "Currently inside" = `checked_out_at IS NULL`. Replaces legacy
 `temp_loggeduser` and `workout_stats`.
 
+**As built in M4a.**
+- Two QR codes per member, both signed with the member's secret (HMAC-SHA256), using only upper-case letters, digits and dots so the QR stays small:
+  - **Phone:** `G1.{member}.{30-second window}.{signature}`. Accepted for the current window, 2 before and 1 after, so a screenshot dies in about a minute while an offline phone with a slightly wrong clock still works.
+  - **Card:** `G2.{member}.{card_version}.{signature}`, printed at 85.6 × 54 mm from the member's profile. "Replace lost card" raises `members.card_version`, so every earlier card is refused (`card_replaced`).
+- `POST /branches/{branch}/check-ins/scan` (rate-limited 120/min per user) and `POST /branches/{branch}/check-ins` (by member, method `search`). Allowed for owners and the branch's managers and receptionists.
+- Decision order: banned → already inside today (shown again, nothing recorded) → membership → opening hours. The membership must be active, started, not ended, and valid at this branch according to its snapshot (`home_branch`, `all_branches`, or `selected` branches). Visit passes use **one visit per day** however often the member comes and goes.
+- Every attempt by a known member is stored, allowed or denied, with `denial_reason`: `member_banned`, `branch_closed`, `membership_frozen`, `payment_pending`, `wrong_branch`, `no_visits_left`, `not_started`, `membership_expired`, `no_membership`. Codes that are forged, expired or replaced aren't stored. A forged code never reveals the member it names.
+- Overrides (`POST /check-ins/{id}/override`, reason required, audited) are allowed for every denial except `member_banned`.
+- `CheckInChanged` broadcasts `check-in.scanned | overridden | checked_out` on the private channel `branch.{ulid}.desk` (auth at `/api/broadcasting/auth` with the staff session). Desks fall back to polling every 5 s without Reverb.
+- `check-ins:close-day` runs nightly at 00:10 and checks out anyone still inside from earlier days at that day's closing time.
+- The desk reads codes from a webcam (decoded in the browser with jsQR), a USB scanner (typed fast and ending with Enter) or a pasted code.
+
 ### H. Classes
 ```
 class_types     id · organization_id FK · name JSON · description JSON · color · default_duration_min · default_capacity
@@ -358,7 +370,7 @@ row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
 | **M1** | Tenancy, auth & roles: organizations, branches, users, `branch_user`, policies, branch switcher, audit log, Telegram linking + OTP password reset | Owner creates 2 branches; staff see only their branch | ✅ Done |
 | **M2** | Members: CRUD, photos, member numbers, groups, search | Desk registers and finds members quickly | ✅ Done |
 | **M3** | Plans, fees, discounts, tax engine, invoices, cash/POS payments, Amharic PDF receipts, activation | Desk sale yields a correct invoice with VAT on/off | ✅ Done |
-| **M4** | Check-in & live desk: rotating QR, scan endpoint, Reverb pop-up, lockers toggle, occupancy, kiosk mode | Scan shows the desk pop-up in under 1 s | |
+| **M4** | Check-in & live desk: rotating QR, scan endpoint, Reverb pop-up, lockers toggle, occupancy, kiosk mode | Scan shows the desk pop-up in under 1 s | M4a ✅ (QR + card, scan, pop-up, live, inside now); M4b: lockers, kiosk |
 | **M5** | Member PWA v1: login, QR card, status, invoices, install prompt, offline QR, **notification preference saved via API** | Installs on Android/iOS; QR works offline | |
 | **M6** | Manual Telebirr / bank verification queue | Upload → approve → active; duplicate FT blocked | |
 | — | **MVP line: one real branch can run on M0–M6** | Pilot at one branch | |

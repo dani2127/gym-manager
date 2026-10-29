@@ -45,7 +45,7 @@ export function setApiLocale(locale: Locale) {
  */
 export async function apiFetch<T>(
   path: string,
-  { locale, json, ...init }: RequestInit & { locale?: Locale; json?: unknown } = {},
+  { locale, json, base = "/api/v1", ...init }: RequestInit & { locale?: Locale; json?: unknown; base?: string } = {},
 ): Promise<T> {
   const method = (init.method ?? (json !== undefined ? "POST" : "GET")).toUpperCase();
 
@@ -56,7 +56,7 @@ export async function apiFetch<T>(
   const xsrf = readCookie("XSRF-TOKEN");
   const lang = locale ?? currentLocale;
 
-  const response = await fetch(`${API_URL}/api/v1${path}`, {
+  const response = await fetch(`${API_URL}${base}${path}`, {
     credentials: "include",
     ...init,
     method,

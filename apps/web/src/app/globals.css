@@ -173,3 +173,27 @@ a {
     inset-inline-start: 0;
   }
 }
+
+/* Member card printing: only the card, at credit-card size, nothing else. */
+.print-card {
+  display: none;
+}
+@media print {
+  @page {
+    size: 85.6mm 54mm;
+    margin: 0;
+  }
+  body > *:not(.print-card) {
+    display: none !important;
+  }
+  .print-card {
+    display: block;
+  }
+  .print-card .member-card {
+    border-radius: 0;
+    box-shadow: none;
+    --tw-ring-shadow: 0 0 #0000;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

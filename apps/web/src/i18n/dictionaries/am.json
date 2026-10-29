@@ -222,7 +222,6 @@
     "today": "ዛሬ",
     "openToday": "ክፍት {opens}–{closes}",
     "closedToday": "ዛሬ ዝግ ነው",
-    "comingUp": "የQR መግቢያ እና የአባላት ፈጣን ማሳያ በደረጃ 4 ይመጣሉ።",
     "scanTitle": "የመግቢያ ጣቢያ",
     "scanBody": "የአባልን ካርድ ይቃኙ ወይም በስም ይፈልጉ። ፎቶው፣ እቅዱ እና የቀሩት ቀናት እዚህ ይታያሉ።",
     "findTitle": "አባል ፈልግ",
@@ -622,6 +621,80 @@
     "taxNames": {
       "VAT": "ተ.እ.ታ",
       "TOT": "ተ.ኦ.ታ"
+    }
+  },
+  "checkins": {
+    "scanner": {
+      "cameraOff": "ካሜራውን ያብሩና የአባሉን QR ኮድ ወደ ካሜራው ያቅርቡ፣ ወይም የUSB ስካነር ይጠቀሙ።",
+      "cameraDenied": "የካሜራ ፈቃድ ታግዷል። በአሳሹ የአድራሻ መስመር ላይ ይፍቀዱ፣ ወይም የUSB ስካነር ይጠቀሙ።",
+      "cameraMissing": "ካሜራ አልተገኘም። የUSB ስካነር ይጠቀሙ ወይም ኮዱን ይለጥፉ።",
+      "startCamera": "ካሜራ አብራ",
+      "stopCamera": "ካሜራ አጥፋ",
+      "usbReady": "የUSB ስካነሮች በዚህ ገጽ ላይ ሁልጊዜ ይሰራሉ",
+      "pastePlaceholder": "ወይም የአባል ኮድ ይለጥፉ",
+      "pasteLabel": "የአባል ኮድ",
+      "check": "አረጋግጥ",
+      "checking": "በማረጋገጥ ላይ…"
+    },
+    "results": {
+      "allowed": "ገብቷል",
+      "denied": "አልተፈቀደም",
+      "overridden": "በሰራተኛ ተፈቅዷል",
+      "already_inside": "አስቀድሞ ውስጥ ነው"
+    },
+    "reasons": {
+      "invalid_code": "ይህ የአባሎቻችን ኮድ አይደለም።",
+      "expired_code": "ይህ QR ኮድ ጊዜው አልፎበታል። አባሉ በመተግበሪያው ውስጥ እንደገና እንዲከፍተው ይጠይቁ።",
+      "card_replaced": "ይህ ካርድ ተተክቷል። አዲሱን ካርድ ይጠይቁ።",
+      "member_banned": "ይህ አባል ታግዷል።",
+      "branch_closed": "ቅርንጫፉ አሁን ዝግ ነው።",
+      "membership_frozen": "አባልነቱ ቆሟል።",
+      "payment_pending": "አባልነቱ ክፍያ በመጠበቅ ላይ ነው።",
+      "wrong_branch": "ዕቅዳቸው በዚህ ቅርንጫፍ አይሰራም።",
+      "no_visits_left": "በመግቢያቸው ላይ የቀረ ጉብኝት የለም።",
+      "not_started": "አባልነታቸው ገና አልጀመረም።",
+      "membership_expired": "አባልነታቸው ጊዜው አልፏል።",
+      "no_membership": "አባልነት የላቸውም።",
+      "already_inside": "ቀደም ብለው ገብተው ገና አልወጡም።"
+    },
+    "popup": {
+      "daysLeft": "{n} ቀናት ቀርተዋል",
+      "lastDay": "ዛሬ የመጨረሻ ቀን",
+      "visitsLeft": "ከ{total} {n} ጉብኝቶች ቀርተዋል",
+      "letIn": "ቢሆንም አስገባ",
+      "overrideReason": "ለምን ያስገቧቸዋል?",
+      "overridePlaceholder": "ለምሳሌ ነገ ይከፍላሉ",
+      "confirm": "አስገባ",
+      "done": "ተጠናቀቀ",
+      "openProfile": "መገለጫ ክፈት",
+      "sell": "አባልነት ሽጥ",
+      "autoClose": "በ{n} ሰከንድ ይዘጋል",
+      "bib": "አባል {n}"
+    },
+    "desk": {
+      "scanTitle": "መግቢያ",
+      "insideTitle": "አሁን ውስጥ ያሉ",
+      "capacity": "ከ{n}",
+      "visitsToday": "ዛሬ {n} ጉብኝቶች",
+      "deniedToday": "{n} አልተፈቀደላቸውም",
+      "empty": "ዛሬ እስካሁን የገባ የለም።",
+      "checkOut": "አስወጣ",
+      "recentTitle": "በመግቢያው የቅርብ ጊዜ",
+      "recentEmpty": "የተቃኙ ኮዶች እዚህ ይታያሉ።",
+      "live": "በቀጥታ",
+      "polling": "በየጥቂት ሰከንዶች ይታደሳል",
+      "since": "ከ{time} ጀምሮ ውስጥ"
+    },
+    "profile": {
+      "checkIn": "አሁን አስገባ",
+      "cardTitle": "የአባል ካርድ",
+      "cardHint": "በፕላስቲክ ካርድ (85.6 × 54 ሚሜ) ላይ ያትሙ። እንደ መተግበሪያው QR ኮድ በሩን ይከፍታል።",
+      "print": "ካርድ አትም",
+      "replace": "የጠፋ ካርድ ተካ",
+      "replaceConfirm": "አሁን ያለው ካርድ በመግቢያው መስራት ያቆማል። አዲሱን ካርድ ወዲያውኑ ያትሙ።",
+      "replaceYes": "ካርድ ተካ",
+      "version": "ካርድ ቁ. {n}",
+      "cardShow": "ይህን ካርድ በዴስኩ ያሳዩ"
     }
   }
 }

@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\V1\Billing\TakingsController;
 use App\Http\Controllers\Api\V1\Catalog\DiscountRuleController;
 use App\Http\Controllers\Api\V1\Catalog\FeeController;
 use App\Http\Controllers\Api\V1\Catalog\PlanController;
+use App\Http\Controllers\Api\V1\CheckIns\CheckInController;
+use App\Http\Controllers\Api\V1\CheckIns\MemberCardController;
 use App\Http\Controllers\Api\V1\Me\PhoneVerificationController;
 use App\Http\Controllers\Api\V1\Me\ProfileController;
 use App\Http\Controllers\Api\V1\Me\TelegramController;
@@ -94,6 +96,15 @@ Route::prefix('v1')->group(function () {
             Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'pay']);
             Route::post('/invoices/{invoice}/void', [InvoiceController::class, 'void']);
             Route::get('/invoices/{invoice}/receipt', [InvoiceController::class, 'receipt']);
+
+            // The door: QR scans, manual check-ins, overrides, who is inside.
+            Route::post('/branches/{branch}/check-ins/scan', [CheckInController::class, 'scan'])->middleware('throttle:check-in');
+            Route::post('/branches/{branch}/check-ins', [CheckInController::class, 'store']);
+            Route::get('/branches/{branch}/check-ins', [CheckInController::class, 'index']);
+            Route::post('/check-ins/{checkIn}/override', [CheckInController::class, 'override']);
+            Route::post('/check-ins/{checkIn}/check-out', [CheckInController::class, 'checkOut']);
+            Route::get('/members/{member}/card', [MemberCardController::class, 'show']);
+            Route::post('/members/{member}/card/reissue', [MemberCardController::class, 'reissue']);
         });
     });
 });

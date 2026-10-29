@@ -247,3 +247,44 @@ export type Takings = {
   invoices_count: number;
   unpaid_cents: number;
 };
+
+export type CheckInResult = "allowed" | "denied" | "overridden" | "already_inside";
+
+export type CheckIn = {
+  id: string | null;
+  result: CheckInResult;
+  reason: string | null;
+  overridable: boolean;
+  override_reason?: string | null;
+  method?: "qr" | "card" | "search" | "kiosk" | "manual";
+  checked_in_at?: string;
+  checked_out_at?: string | null;
+  branch?: { id: string; name: string };
+  member: {
+    id: string;
+    member_no: string;
+    full_name: string;
+    first_name: string;
+    last_name: string;
+    status: MemberStatus;
+    photo_url: string | null;
+    home_branch: string | null;
+  } | null;
+  membership: {
+    id: string;
+    plan: string;
+    status: string;
+    state: MembershipState;
+    starts_on: string;
+    ends_on: string | null;
+    days_left: number | null;
+    visits_total: number | null;
+    visits_remaining: number | null;
+  } | null;
+  handled_by?: string | null;
+};
+
+export type CheckInList = {
+  data: CheckIn[];
+  meta: { inside: number; capacity: number | null; visits_today: number; denied_today: number };
+};

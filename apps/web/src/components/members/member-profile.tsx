@@ -1,12 +1,14 @@
 "use client";
 
-import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
+import { ArrowLeft, DoorOpen, Pencil, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import useSWR from "swr";
 
 import { MemberInvoicesCard, MembershipsCard } from "@/components/billing/member-billing";
+import { CheckInPopup } from "@/components/checkins/check-in-popup";
+import { MemberCardPanel } from "@/components/checkins/member-card";
 import { MemberAvatar, StatusBadge } from "@/components/members/member-avatar";
 import { MemberForm } from "@/components/members/member-form";
 import { useDebounced } from "@/components/members/use-debounced";
@@ -15,16 +17,18 @@ import { Alert, Button, Card, Field, Input, Select } from "@/components/ui";
 import { format, useDictionary } from "@/i18n/dictionary-context";
 import { ApiError, apiFetch, swrFetcher } from "@/lib/api";
 import { formatDate, formatPhone } from "@/lib/format";
-import { canDeleteMemberAt, canRegisterAt } from "@/lib/roles";
+import { canDeleteMemberAt, canRegisterAt, handlesMoneyAt } from "@/lib/roles";
 import { useSession } from "@/lib/session";
-import type { Member, MemberGroup, MemberStatus, Paginated } from "@/lib/types";
+import type { CheckIn, Member, MemberGroup, MemberStatus, Paginated } from "@/lib/types";
 
 export function MemberProfile({ id }: { id: string }) {
   const { locale, dict } = useDictionary();
-  const { me } = useSession();
+  const { me, branch } = useSession();
   const t = dict.members;
   const { data, error, mutate } = useSWR<{ data: Member }>(`/members/${id}`, swrFetcher);
   const [editing, setEditing] = useState(false);
+  const [checkIn, setCheckIn] = useState<CheckIn | null>(null);
+  const checkInAction = useFormAction();
 
   if (error instanceof ApiError && error.status === 404) {
     return (
@@ -57,6 +61,20 @@ export function MemberProfile({ id }: { id: string }) {
           </div>
           <div className="flex flex-col items-end gap-3">
             <StatusBadge status={member.status} label={t.status[member.status]} />
+            {branch && handlesMoneyAt(me, branch.id) && (
+              <Button
+                busy={checkInAction.busy}
+                onClick={() =>
+                  checkInAction.run(async () => {
+                    const res = await apiFetch<{ data: CheckIn }>(`/branches/${branch.id}/check-ins`, { json: { member: member.id } });
+                    setCheckIn(res.data);
+                  })
+                }
+              >
+                <DoorOpen aria-hidden className="h-4 w-4" />
+                {dict.checkins.profile.checkIn}
+              </Button>
+            )}
             {canEdit && !editing && (
               <Button variant="secondary" onClick={() => setEditing(true)}>
                 <Pencil aria-hidden className="h-4 w-4" />
@@ -66,6 +84,8 @@ export function MemberProfile({ id }: { id: string }) {
           </div>
         </div>
       </section>
+
+      {checkIn && <CheckInPopup key={`${checkIn.id}-${checkIn.result}`} checkIn={checkIn} onClose={() => setCheckIn(null)} onChanged={setCheckIn} />}
 
       {editing ? (
         <Card title={t.edit}>
@@ -103,6 +123,7 @@ export function MemberProfile({ id }: { id: string }) {
 
           <div className="space-y-6">
             {canEdit && <StatusCard member={member} onChanged={(saved) => mutate({ data: saved }, { revalidate: false })} />}
+            {canEdit && <MemberCardPanel member={member} />}
             <GroupCard member={member} canEdit={canEdit} onChanged={() => mutate()} />
             {canDeleteMemberAt(me, member.home_branch?.id) && <DeleteCard member={member} />}
           </div>

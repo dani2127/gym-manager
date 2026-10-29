@@ -5,6 +5,7 @@ import Link from "next/link";
 import useSWR from "swr";
 
 import { TakingsStrip } from "@/components/billing/takings";
+import { DeskConsole } from "@/components/checkins/desk-console";
 import { MemberQuickFind } from "@/components/members/member-quick-find";
 import { BranchDayLanes } from "@/components/staff/branch-day-lanes";
 import { Alert, Card, PageHeader } from "@/components/ui";
@@ -26,6 +27,8 @@ export function DeskHome() {
     <>
       <PageHeader title={dict.staff.desk.title} description={branch?.name} />
       <div className="space-y-6">
+        {branch && workspaces(me).desk && handlesMoneyAt(me, branch.id) && <DeskConsole branchId={branch.id} />}
+
         <Card
           title={t.findTitle}
           actions={
@@ -38,7 +41,6 @@ export function DeskHome() {
           }
         >
           <MemberQuickFind />
-          <p className="mt-3 text-xs text-graphite">{t.comingUp}</p>
         </Card>
 
         {handlesMoneyAt(me, branch?.id) && branch && (

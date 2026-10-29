@@ -1,5 +1,7 @@
 <?php
 
+use App\CheckIns\BranchHours;
+use App\Models\CheckIn;
 use App\Models\Membership;
 use App\Services\Telegram\TelegramClient;
 use Illuminate\Foundation\Inspiring;
@@ -38,3 +40,27 @@ Artisan::command('memberships:expire', function () {
 })->purpose('Mark memberships past their end date or out of visits as expired');
 
 Schedule::command('memberships:expire')->dailyAt('00:05')->timezone(config('gym.timezone'));
+
+Artisan::command('check-ins:close-day', function (BranchHours $hours) {
+    // People who never checked out are signed out at closing time of their day,
+    // so "inside right now" starts empty each morning and visit lengths stay sensible.
+    $open = CheckIn::withoutGlobalScopes()
+        ->with('branch.organization')
+        ->whereIn('result', ['allowed', 'overridden'])
+        ->whereNull('checked_out_at')
+        ->where('checked_in_at', '<', Carbon::now(config('gym.timezone'))->startOfDay()->utc())
+        ->get();
+
+    foreach ($open as $checkIn) {
+        $tz = $checkIn->branch->organization->timezone ?: config('gym.timezone');
+        $localIn = $checkIn->checked_in_at->copy()->setTimezone($tz);
+        $closing = $hours->closingTime($checkIn->branch, $localIn);
+        $out = $closing ? Carbon::parse($localIn->toDateString().' '.$closing, $tz) : $localIn->copy()->addHours(2);
+        // Stored in the app timezone (UTC), like every other timestamp.
+        $checkIn->forceFill(['checked_out_at' => ($out->lt($localIn) ? $localIn : $out)->copy()->setTimezone(config('app.timezone'))])->save();
+    }
+
+    $this->info("Closed {$open->count()} open check-ins.");
+})->purpose('Check out everyone still marked inside from earlier days');
+
+Schedule::command('check-ins:close-day')->dailyAt('00:10')->timezone(config('gym.timezone'));

@@ -21,7 +21,7 @@ use Illuminate\Support\Str;
     'organization_id', 'home_branch_id', 'member_no', 'first_name', 'last_name', 'gender', 'date_of_birth',
     'phone', 'email', 'emergency_name', 'emergency_phone', 'status', 'joined_at', 'notes', 'created_by',
 ])]
-#[Hidden(['qr_secret'])]
+#[Hidden(['qr_secret', 'card_version'])]
 class Member extends Model
 {
     /** @use HasFactory<MemberFactory> */
@@ -44,6 +44,7 @@ class Member extends Model
             'date_of_birth' => 'date:Y-m-d',
             'joined_at' => 'date:Y-m-d',
             'qr_secret' => 'encrypted',
+            'card_version' => 'integer',
         ];
     }
 
@@ -74,6 +75,12 @@ class Member extends Model
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
+    }
+
+    /** @return HasMany<CheckIn, $this> */
+    public function checkIns(): HasMany
+    {
+        return $this->hasMany(CheckIn::class);
     }
 
     /** @return HasMany<Invoice, $this> */

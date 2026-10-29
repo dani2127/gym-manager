@@ -26,12 +26,20 @@ cp .env.example .env && php artisan key:generate
 touch database/database.sqlite && php artisan migrate
 php artisan serve
 
+# Live desk updates (optional, third terminal): set BROADCAST_CONNECTION=reverb in apps/api/.env
+php artisan reverb:start
+
 # Web → http://localhost:3000  (second terminal)
 cd apps/web
 npm install
 cp .env.example .env.local
 npm run dev
 ```
+
+Without Reverb the desk still works and refreshes every few seconds.
+To try check-in, open the desk and paste a member's code. Generate one with
+`php artisan tinker --execute 'echo app(App\CheckIns\MemberCodes::class)->phoneCode(App\Models\Member::first());'`
+(it expires in about a minute), or print a member card from a member's profile.
 
 Demo data: `php artisan migrate:fresh --seed` creates the gym **demo-gym**
 (branches Bole and Piassa). Sign in at http://localhost:3000/login with

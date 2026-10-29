@@ -118,6 +118,12 @@ class User extends Authenticatable implements HasLocalePreference
             && ($this->isOwner() || in_array($this->roleIn($branch), [BranchRole::Manager, BranchRole::Receptionist], true));
     }
 
+    /** Working the front desk (check-ins): the same people who sell. */
+    public function worksDeskAt(Branch $branch): bool
+    {
+        return $this->handlesMoneyAt($branch);
+    }
+
     /**
      * Branches whose invoices and takings this user may see.
      *

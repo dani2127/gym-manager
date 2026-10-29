@@ -29,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
             Limit::perHour(30)->by('otp-verify-ip:'.$request->ip()),
         ]);
 
+        // A busy door at opening time, but not a guessing machine for codes.
+        RateLimiter::for('check-in', fn (Request $request) => Limit::perMinute(120)->by('check-in:'.($request->user()?->id ?? $request->ip())));
+
         RateLimiter::for('registration', fn (Request $request) => Limit::perHour(5)->by($request->ip()));
     }
 

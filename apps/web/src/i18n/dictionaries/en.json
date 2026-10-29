@@ -222,7 +222,6 @@
     "today": "Today",
     "openToday": "Open {opens}–{closes}",
     "closedToday": "Closed today",
-    "comingUp": "QR check-in and live member pop-ups arrive in Milestone 4.",
     "scanTitle": "Check-in station",
     "scanBody": "Scan a member's bib or search by name. Their photo, plan and days left will pop up here.",
     "findTitle": "Find a member",
@@ -622,6 +621,80 @@
     "taxNames": {
       "VAT": "VAT",
       "TOT": "TOT"
+    }
+  },
+  "checkins": {
+    "scanner": {
+      "cameraOff": "Turn on the camera and hold a member's QR code up to it, or use a USB scanner.",
+      "cameraDenied": "Camera access is blocked. Allow it in the browser's address bar, or use a USB scanner.",
+      "cameraMissing": "No camera found. Use a USB scanner or paste the code.",
+      "startCamera": "Turn on camera",
+      "stopCamera": "Turn off camera",
+      "usbReady": "USB scanners work any time on this page",
+      "pastePlaceholder": "Or paste a member code",
+      "pasteLabel": "Member code",
+      "check": "Check",
+      "checking": "Checking…"
+    },
+    "results": {
+      "allowed": "Allowed in",
+      "denied": "Not allowed",
+      "overridden": "Let in by staff",
+      "already_inside": "Already inside"
+    },
+    "reasons": {
+      "invalid_code": "This isn't one of our member codes.",
+      "expired_code": "This QR code has expired. Ask the member to reopen it in the app.",
+      "card_replaced": "This card was replaced. Ask for the new card.",
+      "member_banned": "This member is banned.",
+      "branch_closed": "The branch is closed right now.",
+      "membership_frozen": "The membership is frozen.",
+      "payment_pending": "The membership is waiting for payment.",
+      "wrong_branch": "Their plan isn't valid at this branch.",
+      "no_visits_left": "No visits left on their pass.",
+      "not_started": "Their membership hasn't started yet.",
+      "membership_expired": "Their membership has expired.",
+      "no_membership": "They don't have a membership.",
+      "already_inside": "They checked in earlier and haven't left."
+    },
+    "popup": {
+      "daysLeft": "{n} days left",
+      "lastDay": "Last day today",
+      "visitsLeft": "{n} of {total} visits left",
+      "letIn": "Let in anyway",
+      "overrideReason": "Why are you letting them in?",
+      "overridePlaceholder": "e.g. Paying tomorrow",
+      "confirm": "Let in",
+      "done": "Done",
+      "openProfile": "Open profile",
+      "sell": "Sell membership",
+      "autoClose": "Closes in {n}s",
+      "bib": "Member {n}"
+    },
+    "desk": {
+      "scanTitle": "Check-in",
+      "insideTitle": "Inside now",
+      "capacity": "of {n}",
+      "visitsToday": "{n} visits today",
+      "deniedToday": "{n} turned away",
+      "empty": "No one is checked in yet today.",
+      "checkOut": "Check out",
+      "recentTitle": "Latest at the door",
+      "recentEmpty": "Scans appear here.",
+      "live": "Live",
+      "polling": "Refreshing every few seconds",
+      "since": "In since {time}"
+    },
+    "profile": {
+      "checkIn": "Check in now",
+      "cardTitle": "Member card",
+      "cardHint": "Print on a plastic card (85.6 × 54 mm). It opens the door like the QR code in the app.",
+      "print": "Print card",
+      "replace": "Replace lost card",
+      "replaceConfirm": "The current card will stop working at the door. Print the new card straight away.",
+      "replaceYes": "Replace card",
+      "version": "Card no. {n}",
+      "cardShow": "Show this card at the desk"
     }
   }
 }
