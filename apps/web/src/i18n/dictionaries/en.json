@@ -45,14 +45,10 @@
   },
   "member": {
     "tabs": {
-      "home": "Home",
+      "home": "Pass",
+      "membership": "Membership",
       "settings": "Settings"
     },
-    "greeting": "Welcome back",
-    "cardTitle": "Membership card",
-    "cardBody": "Your QR check-in card and membership status will appear here.",
-    "installHint": "Tip: add this app to your home screen from your browser menu.",
-    "sampleNote": "Sample pass. Your own bib appears here once member sign-in opens.",
     "photoAlt": "A member holding a phone at the gym entrance turnstile"
   },
   "settings": {
@@ -64,12 +60,8 @@
       "telegram": "Telegram",
       "whatsapp": "WhatsApp",
       "telegramHelp": "Open our Telegram bot and press Start to link your account.",
-      "telegramConnect": "Open Telegram bot",
-      "telegramUnavailable": "The gym has not set up its Telegram bot yet.",
       "whatsappHelp": "We will message this WhatsApp number.",
-      "whatsappNumber": "WhatsApp number",
-      "whatsappInvalid": "Enter a 9-digit Ethiopian mobile number, e.g. 911 234 567.",
-      "savedLocally": "Saved on this device. It will sync to your account once sign-in is available."
+      "whatsappNumber": "WhatsApp number"
     }
   },
   "staff": {
@@ -768,5 +760,93 @@
       "cameraBlocked": "The camera is blocked. Ask staff to allow it in the browser settings.",
       "disconnected": "This tablet was disconnected. Ask the manager for a new pairing code."
     }
+  },
+  "memberApp": {
+    "login": {
+      "title": "Sign in",
+      "body": "Use the phone number the gym has for you.",
+      "gym": "Gym ID",
+      "gymHint": "Ask the front desk if you don't know it.",
+      "phone": "Phone number",
+      "password": "Password",
+      "submit": "Sign in",
+      "firstTime": "First time? Use the setup code from the desk",
+      "forgot": "Forgot your password?"
+    },
+    "setup": {
+      "title": "Set up the app",
+      "body": "The front desk gave you an 8-digit setup code. Enter it with your phone number and choose a password.",
+      "code": "Setup code",
+      "password": "New password",
+      "passwordHint": "At least 8 characters.",
+      "confirm": "Repeat password",
+      "submit": "Set password and sign in",
+      "haveAccount": "Already set up? Sign in"
+    },
+    "pass": {
+      "hello": "Hello, {name}",
+      "show": "Show this at the door",
+      "refreshes": "New code in {n}s",
+      "offline": "Offline: your code still works",
+      "noPass": "Open the app once with internet to load your pass.",
+      "bib": "Member {n}"
+    },
+    "status": {
+      "current": "Active",
+      "days": "{n} days left",
+      "lastDay": "Last day today",
+      "visits": "{n} of {total} visits left",
+      "until": "Until {date}",
+      "upcoming": "Next: {plan} from {date}",
+      "none": "No active membership",
+      "noneBody": "Renew at the front desk to get back in.",
+      "pending": "Waiting for payment",
+      "owed": "{amount} to pay at the desk",
+      "frozen": "Frozen"
+    },
+    "membership": {
+      "title": "Membership",
+      "memberships": "Memberships",
+      "invoices": "Receipts",
+      "visits": "Recent visits",
+      "noMemberships": "No memberships yet.",
+      "noInvoices": "No receipts yet.",
+      "noVisits": "No visits yet.",
+      "receipt": "Receipt",
+      "visitAt": "{branch}"
+    },
+    "settings": {
+      "title": "Settings",
+      "account": "Account",
+      "signOut": "Sign out",
+      "language": "Language"
+    },
+    "install": {
+      "title": "Add to your home screen",
+      "body": "Open your pass in one tap, even offline.",
+      "button": "Install app",
+      "ios": "Tap Share, then \"Add to Home Screen\"."
+    },
+    "notMember": "This account isn't linked to a gym membership. Ask the front desk.",
+    "notifications": {
+      "saved": "Saved",
+      "connectTelegram": "Connect Telegram",
+      "linked": "Telegram connected",
+      "save": "Save"
+    }
+  },
+  "memberAccess": {
+    "title": "Member app",
+    "none": "Not invited yet.",
+    "invited": "Invited, not signed in yet.",
+    "active": "Using the app. Last signed in {time}.",
+    "invite": "Invite to the app",
+    "reinvite": "New setup code",
+    "codeTitle": "Setup code",
+    "codeSteps": "Give this code to {name}. On their phone they open {url}, tap \"First time?\" and enter it with their phone number. It works once, for 3 days.",
+    "signOut": "Lost phone: sign out all devices",
+    "signOutConfirm": "Signs out every device and replaces their door QR code. Their printed card stops working too, so print a new one.",
+    "signOutYes": "Sign out and replace code",
+    "close": "Done"
   }
 }

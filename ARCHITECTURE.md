@@ -338,6 +338,13 @@ notifications             Laravel default table (in-app / PWA notifications)
 
 ---
 
+### Member app (as built in M5)
+- **Joining:** the desk taps "Invite to the app" on a member with a phone number. This creates (or links) a `member` login and returns an 8-digit setup code (`otp_codes`, purpose `app_setup`, channel `desk`, valid 72 hours, single use). The member enters gym ID, phone and code at `/app/setup`, chooses a password and is signed in (`POST /auth/member-setup`). The desk never sees the password; the phone counts as verified because the desk checked who they are in person.
+- **Signing in:** the same `POST /auth/login` as staff (gym ID, phone, password). Members land on `/app`; staff screens refuse them (`staff` middleware), and member routes (`/me/member/*`) need a linked member (`member` middleware).
+- **Offline pass:** `GET /me/member/pass` (no-store) gives the member's `qr_secret` and the server time. The app keeps both in localStorage and computes the rotating `G1` code with WebCrypto HMAC-SHA256, exactly as the API checks it, correcting for the phone's clock. The service worker (scope `/app`) serves cached pages and assets offline.
+- **Lost phone:** "Sign out all devices" deletes the member's tokens and sessions, replaces `qr_secret` (so codes the old phone makes offline stop working) and raises `card_version` (the printed card is replaced too).
+- **Notifications:** `GET/PUT /me/notifications` stores the preferred channel. Telegram must be linked through the bot first; WhatsApp takes a number (the member's phone by default).
+
 ## 5. Key flows
 
 **QR check-in with the live desk pop-up**
@@ -376,7 +383,7 @@ row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
 | **M2** | Members: CRUD, photos, member numbers, groups, search | Desk registers and finds members quickly | ✅ Done |
 | **M3** | Plans, fees, discounts, tax engine, invoices, cash/POS payments, Amharic PDF receipts, activation | Desk sale yields a correct invoice with VAT on/off | ✅ Done |
 | **M4** | Check-in & live desk: rotating QR, scan endpoint, Reverb pop-up, lockers toggle, occupancy, kiosk mode | Scan shows the desk pop-up in under 1 s | ✅ Done (live updates measured at 79 ms) |
-| **M5** | Member PWA v1: login, QR card, status, invoices, install prompt, offline QR, **notification preference saved via API** | Installs on Android/iOS; QR works offline | |
+| **M5** | Member PWA v1: login, QR card, status, invoices, install prompt, offline QR, **notification preference saved via API** | Installs on Android/iOS; QR works offline | ✅ Done |
 | **M6** | Manual Telebirr / bank verification queue | Upload → approve → active; duplicate FT blocked | |
 | — | **MVP line: one real branch can run on M0–M6** | Pilot at one branch | |
 | **M7** | Membership freezing (toggle, rules, approvals, auto-unfreeze) | | |

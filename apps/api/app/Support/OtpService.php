@@ -45,6 +45,27 @@ class OtpService
         return true;
     }
 
+    /**
+     * Issues a code the desk hands over in person (no message is sent).
+     * Older live codes for the same purpose stop working.
+     */
+    public function issueForDesk(User $user, OtpPurpose $purpose, int $digits, int $ttlMinutes): string
+    {
+        $code = str_pad((string) random_int(0, 10 ** $digits - 1), $digits, '0', STR_PAD_LEFT);
+
+        OtpCode::where('user_id', $user->id)->where('purpose', $purpose)->whereNull('consumed_at')->update(['consumed_at' => now()]);
+        OtpCode::create([
+            'user_id' => $user->id,
+            'purpose' => $purpose,
+            'channel' => 'desk',
+            'code_hash' => $this->hash($code),
+            'expires_at' => now()->addMinutes($ttlMinutes),
+            'created_at' => now(),
+        ]);
+
+        return $code;
+    }
+
     /** Consumes the code if it matches the latest live one. */
     public function verify(User $user, OtpPurpose $purpose, string $code): bool
     {

@@ -309,3 +309,11 @@ export type CheckInList = {
   data: CheckIn[];
   meta: { inside: number; capacity: number | null; visits_today: number; denied_today: number };
 };
+
+export type MemberHome = {
+  member: NonNullable<CheckIn["member"]> & { phone: string | null; joined_at: string | null };
+  organization: { name: string; slug: string };
+  current: Membership | null;
+  upcoming: Membership[];
+  owed_cents: number;
+};

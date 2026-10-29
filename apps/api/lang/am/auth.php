@@ -27,4 +27,5 @@ return [
     'branch_not_manageable' => 'ሰራተኛን ለዚህ ቅርንጫፍ መመደብ አይችሉም።',
     'role_not_assignable' => 'የሥራ አስኪያጅ ሚና መስጠት የሚችለው ባለቤቱ ብቻ ነው።',
 
+    'telegram_link_first' => 'መጀመሪያ ቴሌግራምን ያገናኙ፤ ቁልፉን ይጫኑና በቦቱ ውስጥ Start ይጫኑ።',
 ];

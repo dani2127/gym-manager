@@ -27,4 +27,5 @@ return [
     'branch_not_manageable' => 'You cannot assign staff to this branch.',
     'role_not_assignable' => 'Only the owner can assign the manager role.',
 
+    'telegram_link_first' => 'Connect Telegram first: tap the button and press Start in the bot.',
 ];

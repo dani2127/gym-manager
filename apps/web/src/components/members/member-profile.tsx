@@ -10,6 +10,7 @@ import { MemberInvoicesCard, MembershipsCard } from "@/components/billing/member
 import { CheckInPopup } from "@/components/checkins/check-in-popup";
 import { useLockersEnabled } from "@/components/checkins/locker-picker";
 import { MemberCardPanel } from "@/components/checkins/member-card";
+import { AppAccessCard } from "@/components/member/app-access-card";
 import { MemberAvatar, StatusBadge } from "@/components/members/member-avatar";
 import { MemberForm } from "@/components/members/member-form";
 import { useDebounced } from "@/components/members/use-debounced";
@@ -134,6 +135,7 @@ export function MemberProfile({ id }: { id: string }) {
 
           <div className="space-y-6">
             {canEdit && <StatusCard member={member} onChanged={(saved) => mutate({ data: saved }, { revalidate: false })} />}
+            {canEdit && <AppAccessCard member={member} />}
             {canEdit && <MemberCardPanel member={member} />}
             <GroupCard member={member} canEdit={canEdit} onChanged={() => mutate()} />
             {canDeleteMemberAt(me, member.home_branch?.id) && <DeleteCard member={member} />}

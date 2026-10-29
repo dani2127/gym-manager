@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Admin\OpeningHoursController;
 use App\Http\Controllers\Api\V1\Admin\SettingsController;
 use App\Http\Controllers\Api\V1\Admin\StaffController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
+use App\Http\Controllers\Api\V1\Auth\MemberSetupController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RegisterOrganizationController;
 use App\Http\Controllers\Api\V1\Billing\InvoiceController;
@@ -21,9 +22,12 @@ use App\Http\Controllers\Api\V1\CheckIns\KioskAdminController;
 use App\Http\Controllers\Api\V1\CheckIns\KioskController;
 use App\Http\Controllers\Api\V1\CheckIns\LockerController;
 use App\Http\Controllers\Api\V1\CheckIns\MemberCardController;
+use App\Http\Controllers\Api\V1\Me\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\Me\PhoneVerificationController;
 use App\Http\Controllers\Api\V1\Me\ProfileController;
 use App\Http\Controllers\Api\V1\Me\TelegramController;
+use App\Http\Controllers\Api\V1\MemberApp\MemberAppController;
+use App\Http\Controllers\Api\V1\Members\MemberAppAccessController;
 use App\Http\Controllers\Api\V1\Members\MemberController;
 use App\Http\Controllers\Api\V1\Members\MemberGroupController;
 use App\Http\Controllers\Api\V1\Members\MemberPhotoController;
@@ -41,6 +45,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/login', [LoginController::class, 'store']);
         Route::post('/password/forgot', [PasswordResetController::class, 'sendCode'])->middleware('throttle:otp');
         Route::post('/password/reset', [PasswordResetController::class, 'reset'])->middleware('throttle:otp-verify');
+        Route::post('/member-setup', MemberSetupController::class)->middleware('throttle:otp-verify');
     });
 
     Route::post('/webhooks/telegram', TelegramWebhookController::class);
@@ -64,6 +69,18 @@ Route::prefix('v1')->group(function () {
             Route::delete('/telegram', [TelegramController::class, 'unlink']);
             Route::post('/phone/verification', [PhoneVerificationController::class, 'send'])->middleware('throttle:otp');
             Route::post('/phone/verify', [PhoneVerificationController::class, 'verify'])->middleware('throttle:otp-verify');
+            Route::get('/notifications', [NotificationPreferenceController::class, 'show']);
+            Route::put('/notifications', [NotificationPreferenceController::class, 'update']);
+
+            // Member app: the member's own pass, memberships, invoices and visits.
+            Route::middleware('member')->prefix('member')->group(function () {
+                Route::get('/', [MemberAppController::class, 'show']);
+                Route::get('/pass', [MemberAppController::class, 'pass']);
+                Route::get('/memberships', [MemberAppController::class, 'memberships']);
+                Route::get('/invoices', [MemberAppController::class, 'invoices']);
+                Route::get('/invoices/{invoice}/receipt', [MemberAppController::class, 'receipt']);
+                Route::get('/visits', [MemberAppController::class, 'visits']);
+            });
         });
 
         // Staff workspaces (desk, admin, trainer).
@@ -123,6 +140,9 @@ Route::prefix('v1')->group(function () {
             Route::post('/branches/{branch}/kiosks', [KioskAdminController::class, 'store']);
             Route::post('/branches/{branch}/kiosks/{kiosk}/pair', [KioskAdminController::class, 'pair']);
             Route::delete('/branches/{branch}/kiosks/{kiosk}', [KioskAdminController::class, 'destroy']);
+            Route::get('/members/{member}/app-access', [MemberAppAccessController::class, 'show']);
+            Route::post('/members/{member}/app-access', [MemberAppAccessController::class, 'invite']);
+            Route::delete('/members/{member}/app-access', [MemberAppAccessController::class, 'revoke']);
             Route::get('/members/{member}/card', [MemberCardController::class, 'show']);
             Route::post('/members/{member}/card/reissue', [MemberCardController::class, 'reissue']);
         });

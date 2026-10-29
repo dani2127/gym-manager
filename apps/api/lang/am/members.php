@@ -7,4 +7,7 @@ return [
     'group_size' => 'ይህ ቡድን ከ:min እስከ :max አባላት ያስፈልገዋል።',
     'group_unknown_member' => 'ከተመረጡት አባላት አንዱ አልተገኘም።',
     'group_taken' => ':name አስቀድሞ በ":group" ቡድን ውስጥ ነው።',
+    'app_needs_phone' => 'መጀመሪያ ለዚህ አባል ስልክ ቁጥር ያስገቡ፤ የመተግበሪያ መግቢያቸው ነው።',
+    'app_phone_taken' => 'ይህ ስልክ ቁጥር አስቀድሞ የሌላ አባል የመተግበሪያ መግቢያ ነው።',
+    'no_member_profile' => 'ይህ መግቢያ ከጂሙ አባል ጋር አልተገናኘም።',
 ];
