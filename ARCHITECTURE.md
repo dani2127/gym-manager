@@ -292,6 +292,15 @@ class_bookings  id · class_session_id FK · member_id FK · membership_id FK
 A nightly job materializes schedules into sessions for the next N weeks;
 booking locks the session row to prevent overbooking.
 
+**As built in M8.**
+- **Who does what:** owners keep the class types (name in English and Amharic, colour, default length and places). Owners and branch managers keep each branch's rooms and weekly timetable. Every staff member at a branch sees its classes. The desk books members in and takes attendance, the trainer leading a class takes attendance from `/trainer`, and managers change or cancel classes.
+- **Timetable to sessions:** each slot becomes a dated session for the next 4 weeks (`classes:generate`, nightly at 00:20, and at once when a slot is added). There is one session per slot per day, so re-runs make no doubles. Editing a slot remakes its future unbooked sessions; booked ones keep their time but take the new trainer and room. Removing a slot ends it and deletes future unbooked sessions. Managers can also add a one-off class.
+- **Booking rules (`Classes/Bookings`):** a booking needs a membership active on the class day that opens the class's branch (the same rule as the door). The plan's `class_credits` apply: null means unlimited, 0 means classes aren't included, otherwise each booking uses a credit. Members book from today up to `classes.booking_days` ahead (default 7). The desk can add a walk-in until the class ends. The session row is locked while booking, so the last place can't be taken twice.
+- **Waitlist:** a full class waitlists in order. When a booked place frees up before the start, the first person still eligible moves in and gets a Telegram message.
+- **Cancelling:** members can cancel until the start. Inside `classes.cancel_cutoff_hours` (default 2) it is a late cancel, which still uses the credit. When a manager cancels a class, everyone is cancelled with credits returned and told why.
+- **Attendance:** opens 30 minutes before the start (here, no-show, undo).
+- **Member app:** a Classes tab with a day strip, credits per membership, "my classes", Book, Join waitlist, Cancel and Leave waitlist. A member sees classes at their home branch and at any branch a current membership opens.
+
 ### I. Trainers & personal training
 ```
 trainers        id · organization_id FK · user_id FK UQ · bio JSON · specialties JSON · photo_path · is_public · status
@@ -410,7 +419,7 @@ row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
 | **M6** | Manual Telebirr / bank verification queue | Upload → approve → active; duplicate FT blocked | ✅ Done |
 | — | **MVP line: one real branch can run on M0–M6** | Pilot at one branch | |
 | **M7** | Membership freezing (toggle, rules, approvals, auto-unfreeze) | Freeze moves the end date; door refuses while frozen; auto-unfreeze | ✅ Done |
-| **M8** | Classes: types, rooms, schedules, sessions, booking, waitlist, attendance | | |
+| **M8** | Classes: types, rooms, schedules, sessions, booking, waitlist, attendance | Book from the app; full class waitlists and moves people in; attendance | ✅ Done |
 | **M9** | Trainer portal & PT packages / sessions | | |
 | **M10** | Chapa integration & renewal links | | |
 | **M11** | POS & per-branch inventory (ported) | | |

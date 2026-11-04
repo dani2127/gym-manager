@@ -48,7 +48,8 @@
     "tabs": {
       "home": "መግቢያ",
       "membership": "አባልነት",
-      "settings": "ቅንብሮች"
+      "settings": "ቅንብሮች",
+      "classes": "ክፍለ ጊዜዎች"
     },
     "photoAlt": "በጂሙ መግቢያ ላይ ስልክ የያዘ አባል"
   },
@@ -114,7 +115,8 @@
     "pricing": "ዕቅዶችና ዋጋዎች",
     "door": "ሎከሮችና ኪዮስኮች",
     "transfers": "የሚረጋገጡ ክፍያዎች",
-    "freezes": "ማቆሚያዎች"
+    "freezes": "ማቆሚያዎች",
+    "classes": "ክፍለ ጊዜዎች"
   },
   "branches": {
     "title": "ቅርንጫፎች",
@@ -889,6 +891,25 @@
       "callOff": "ማቆሙን ሰርዝ",
       "frozen": "ቆሟል",
       "backOn": "በ{date} ይመለሳሉ"
+    },
+    "classes": {
+      "title": "ክፍለ ጊዜዎች",
+      "subtitle": "ቦታ ያስይዙ። ክፍለ ጊዜው ከሞላ ተጠባባቂ ይሁኑ፤ ቦታ ሲገኝ እናስገባዎታለን።",
+      "book": "አስይዝ",
+      "join": "ተጠባባቂ ሁን",
+      "cancel": "ሰርዝ",
+      "leave": "ከተጠባባቂ ውጣ",
+      "booked": "ተመዝግበዋል",
+      "waiting": "ተጠባባቂ #{n}",
+      "credits": "በ{plan} {n} የክፍለ ጊዜ ክሬዲቶች ቀርተዋል",
+      "creditsUnlimited": "በ{plan} ያልተገደበ ክፍለ ጊዜ",
+      "notIncluded": "{plan} ክፍለ ጊዜዎችን አያካትትም።",
+      "empty": "በሚቀጥሉት ቀናት ክፍለ ጊዜ የለም።",
+      "myBookings": "የእኔ ክፍለ ጊዜዎች",
+      "lateWarning": "አሁን መሰረዝ የክፍለ ጊዜ ክሬዲቱን ይጠቀማል።",
+      "full": "ሞልቷል",
+      "left": "{n} ቀርቷል",
+      "with": "ከ{name} ጋር"
     }
   },
   "memberAccess": {
@@ -1047,5 +1068,97 @@
     "settingRequire": "ለባለቤቶች እና ለሥራ አስኪያጆች ባለሁለት ደረጃ መግቢያን አስገድድ",
     "settingRequireHint": "እስኪያበሩት ድረስ የሠራተኛ ገጾችን መክፈት አይችሉም። እንግዳ ተቀባዮች እና አሰልጣኞች በፈቃዳቸው መምረጥ ይችላሉ።",
     "signedOutOne": "ከ1 ሌላ መሣሪያ ወጥተዋል።"
+  },
+  "classes": {
+    "title": "የቡድን ክፍለ ጊዜዎች",
+    "description": "በዚህ ቅርንጫፍ ያሉ የቡድን ክፍለ ጊዜዎች፦ የተመዘገቡ፣ ተጠባባቂዎች እና መገኘት።",
+    "adminTitle": "ክፍለ ጊዜዎች እና የጊዜ ሰሌዳ",
+    "adminDescription": "የጂሙ የክፍለ ጊዜ ዓይነቶች፣ እና የእያንዳንዱ ቅርንጫፍ ክፍሎች እና ሳምንታዊ የጊዜ ሰሌዳ። የጊዜ ሰሌዳው ለአራት ሳምንታት የሚያዙ ክፍለ ጊዜዎች ይሆናል።",
+    "types": "የክፍለ ጊዜ ዓይነቶች",
+    "typesEmpty": "እስካሁን የክፍለ ጊዜ ዓይነት የለም። ጂምዎ የሚያካሂዳቸውን እንደ ስፒኒንግ ወይም ዮጋ ያክሉ።",
+    "addType": "የክፍለ ጊዜ ዓይነት ጨምር",
+    "nameEn": "ስም (እንግሊዝኛ)",
+    "nameAm": "ስም (አማርኛ)",
+    "color": "ቀለም",
+    "duration": "ርዝመት (ደቂቃ)",
+    "capacity": "ቦታዎች",
+    "active": "ይሰጣል",
+    "inactive": "አይሰጥም",
+    "colors": {
+      "track": "ቀይ",
+      "infield": "አረንጓዴ",
+      "amber": "ብርቱካናማ",
+      "sky": "ሰማያዊ",
+      "plum": "ወይን ጠጅ",
+      "graphite": "ግራጫ"
+    },
+    "rooms": "ክፍሎች",
+    "roomsEmpty": "እስካሁን ክፍል የለም። አባላት የት እንደሚሄዱ እንዲያውቁ ስቱዲዮ ወይም ክፍል ያክሉ።",
+    "addRoom": "ክፍል ጨምር",
+    "roomName": "የክፍሉ ስም",
+    "remove": "አስወግድ",
+    "timetable": "ሳምንታዊ የጊዜ ሰሌዳ",
+    "timetableEmpty": "እስካሁን በጊዜ ሰሌዳው ላይ ምንም የለም።",
+    "addSlot": "በጊዜ ሰሌዳው ላይ ጨምር",
+    "classType": "ክፍለ ጊዜ",
+    "weekday": "ቀን",
+    "startTime": "የሚጀምርበት",
+    "trainer": "አሰልጣኝ",
+    "room": "ክፍል",
+    "none": "የለም",
+    "weekdays": [
+      "እሑድ",
+      "ሰኞ",
+      "ማክሰኞ",
+      "ረቡዕ",
+      "ሐሙስ",
+      "ዓርብ",
+      "ቅዳሜ"
+    ],
+    "weekdaysShort": [
+      "እሑድ",
+      "ሰኞ",
+      "ማክ",
+      "ረቡ",
+      "ሐሙ",
+      "ዓርብ",
+      "ቅዳ"
+    ],
+    "today": "ዛሬ",
+    "tomorrow": "ነገ",
+    "noClasses": "በዚህ ቀን ክፍለ ጊዜ የለም።",
+    "booked": "ከ{total} {n} ተመዝግበዋል",
+    "waiting": "{n} በመጠባበቅ ላይ",
+    "full": "ሞልቷል",
+    "spotsLeft": "{n} ቦታዎች ቀርተዋል",
+    "cancelled": "ተሰርዟል",
+    "roster": "የተመዘገቡ",
+    "waitlist": "ተጠባባቂዎች",
+    "rosterEmpty": "እስካሁን የተመዘገበ የለም።",
+    "present": "ተገኝቷል",
+    "noShow": "አልመጣም",
+    "undo": "መልስ",
+    "attendanceLater": "መገኘት መመዝገብ የሚጀምረው ክፍለ ጊዜው ከመጀመሩ 30 ደቂቃ በፊት ነው።",
+    "addMember": "አባል አስመዝግብ",
+    "searchMember": "በስም፣ በስልክ ወይም በቁጥር ይፈልጉ",
+    "book": "አስመዝግብ",
+    "cancelBooking": "ምዝገባውን ሰርዝ",
+    "cancelClass": "ይህን ክፍለ ጊዜ ሰርዝ",
+    "cancelReason": "ለምን? የተመዘገቡ አባላት ይነገራቸዋል።",
+    "confirmCancelClass": "ክፍለ ጊዜውን ሰርዝ",
+    "statuses": {
+      "booked": "ተመዝግቧል",
+      "waitlisted": "ተጠባባቂ",
+      "attended": "ተገኝቷል",
+      "no_show": "አልመጣም",
+      "cancelled": "ተሰርዟል"
+    },
+    "position": "በተጠባባቂ ዝርዝር #{n}",
+    "myClasses": "የእኔ ክፍለ ጊዜዎች",
+    "myClassesEmpty": "በሚቀጥለው ሳምንት የተመደበልዎት ክፍለ ጊዜ የለም።",
+    "settingsBookingDays": "አባላት አስቀድመው መመዝገብ የሚችሉት (ቀናት)",
+    "settingsCutoff": "ያለ ቅጣት መሰረዝ የሚቻለው እስከ (ሰዓታት በፊት)",
+    "settingsEnabled": "የቡድን ክፍለ ጊዜዎች",
+    "minutes": "{n} ደቂቃ"
   }
 }

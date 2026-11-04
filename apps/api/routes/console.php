@@ -1,6 +1,7 @@
 <?php
 
 use App\CheckIns\BranchHours;
+use App\Classes\Timetable;
 use App\Memberships\Freezes;
 use App\Models\CheckIn;
 use App\Models\Membership;
@@ -77,3 +78,9 @@ Schedule::command('check-ins:close-day')->dailyAt('00:10')->timezone(config('gym
 
 // Expired app tokens are removed once a day.
 Schedule::command('sanctum:prune-expired --hours=24')->dailyAt('03:15')->timezone(config('gym.timezone'));
+
+Artisan::command('classes:generate', function (Timetable $timetable) {
+    $this->info('Created '.$timetable->generate().' class sessions.');
+})->purpose('Turn the weekly class timetable into dated sessions for the coming weeks');
+
+Schedule::command('classes:generate')->dailyAt('00:20')->timezone(config('gym.timezone'));

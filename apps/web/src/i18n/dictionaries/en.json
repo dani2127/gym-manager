@@ -48,7 +48,8 @@
     "tabs": {
       "home": "Pass",
       "membership": "Membership",
-      "settings": "Settings"
+      "settings": "Settings",
+      "classes": "Classes"
     },
     "photoAlt": "A member holding a phone at the gym entrance turnstile"
   },
@@ -114,7 +115,8 @@
     "pricing": "Plans & prices",
     "door": "Lockers & kiosks",
     "transfers": "Payments to check",
-    "freezes": "Freezes"
+    "freezes": "Freezes",
+    "classes": "Classes"
   },
   "branches": {
     "title": "Branches",
@@ -889,6 +891,25 @@
       "callOff": "Call off pause",
       "frozen": "Paused",
       "backOn": "Back on {date}"
+    },
+    "classes": {
+      "title": "Classes",
+      "subtitle": "Book a place. If a class is full, join the waitlist and we'll move you in when a place opens.",
+      "book": "Book",
+      "join": "Join waitlist",
+      "cancel": "Cancel",
+      "leave": "Leave waitlist",
+      "booked": "You're booked",
+      "waiting": "Waitlist #{n}",
+      "credits": "{n} class credits left on {plan}",
+      "creditsUnlimited": "Unlimited classes on {plan}",
+      "notIncluded": "Classes aren't included in {plan}.",
+      "empty": "No classes in the coming days.",
+      "myBookings": "My classes",
+      "lateWarning": "Cancelling now still uses the class credit.",
+      "full": "Full",
+      "left": "{n} left",
+      "with": "with {name}"
     }
   },
   "memberAccess": {
@@ -1047,5 +1068,97 @@
     "settingRequire": "Require two-step login for owners and managers",
     "settingRequireHint": "They can't open the staff screens until it's on. Receptionists and trainers can still choose.",
     "signedOutOne": "Signed out 1 other device."
+  },
+  "classes": {
+    "title": "Classes",
+    "description": "Group classes at this branch: who's booked, the waitlist and attendance.",
+    "adminTitle": "Classes and timetable",
+    "adminDescription": "Class types for the gym, and each branch's rooms and weekly timetable. The timetable turns into bookable classes four weeks ahead.",
+    "types": "Class types",
+    "typesEmpty": "No class types yet. Add the classes your gym runs, like Spinning or Yoga.",
+    "addType": "Add class type",
+    "nameEn": "Name (English)",
+    "nameAm": "Name (Amharic)",
+    "color": "Colour",
+    "duration": "Length (minutes)",
+    "capacity": "Places",
+    "active": "Offered",
+    "inactive": "Not offered",
+    "colors": {
+      "track": "Red",
+      "infield": "Green",
+      "amber": "Amber",
+      "sky": "Blue",
+      "plum": "Purple",
+      "graphite": "Grey"
+    },
+    "rooms": "Rooms",
+    "roomsEmpty": "No rooms yet. Add a studio or room so members know where to go.",
+    "addRoom": "Add room",
+    "roomName": "Room name",
+    "remove": "Remove",
+    "timetable": "Weekly timetable",
+    "timetableEmpty": "Nothing on the timetable yet.",
+    "addSlot": "Add to timetable",
+    "classType": "Class",
+    "weekday": "Day",
+    "startTime": "Starts",
+    "trainer": "Trainer",
+    "room": "Room",
+    "none": "None",
+    "weekdays": [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ],
+    "weekdaysShort": [
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat"
+    ],
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "noClasses": "No classes on this day.",
+    "booked": "{n} of {total} booked",
+    "waiting": "{n} waiting",
+    "full": "Full",
+    "spotsLeft": "{n} places left",
+    "cancelled": "Cancelled",
+    "roster": "Booked",
+    "waitlist": "Waitlist",
+    "rosterEmpty": "Nobody booked yet.",
+    "present": "Here",
+    "noShow": "No-show",
+    "undo": "Undo",
+    "attendanceLater": "Attendance opens 30 minutes before the class.",
+    "addMember": "Book a member in",
+    "searchMember": "Search name, phone or number",
+    "book": "Book",
+    "cancelBooking": "Cancel booking",
+    "cancelClass": "Cancel this class",
+    "cancelReason": "Why? Booked members are told.",
+    "confirmCancelClass": "Cancel class",
+    "statuses": {
+      "booked": "Booked",
+      "waitlisted": "Waitlist",
+      "attended": "Here",
+      "no_show": "No-show",
+      "cancelled": "Cancelled"
+    },
+    "position": "#{n} on the waitlist",
+    "myClasses": "My classes",
+    "myClassesEmpty": "No classes assigned to you in the next week.",
+    "settingsBookingDays": "Members can book up to (days ahead)",
+    "settingsCutoff": "Free cancellation until (hours before)",
+    "settingsEnabled": "Group classes",
+    "minutes": "{n} min"
   }
 }

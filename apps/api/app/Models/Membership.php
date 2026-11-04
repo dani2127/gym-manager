@@ -70,6 +70,16 @@ class Membership extends Model
         $query->whereIn('status', ['pending_payment', 'active', 'frozen']);
     }
 
+    /** Whether the plan opens this branch for this member (home branch, all, or selected ones). */
+    public function coversBranch(Branch $branch, Member $member): bool
+    {
+        return match ($this->plan_snapshot['access_scope'] ?? 'home_branch') {
+            'all_branches' => true,
+            'selected' => in_array($branch->id, $this->plan_snapshot['branch_ids'] ?? [], true),
+            default => $member->home_branch_id === $branch->id,
+        };
+    }
+
     public function planName(?string $locale = null): string
     {
         $names = $this->plan_snapshot['name'] ?? [];

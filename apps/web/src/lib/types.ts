@@ -62,6 +62,9 @@ export type Settings = {
   "tax.prices_inclusive": boolean;
   "freeze.enabled": boolean;
   "security.require_two_factor": boolean;
+  "classes.enabled": boolean;
+  "classes.booking_days": number;
+  "classes.cancel_cutoff_hours": number;
   "lockers.enabled": boolean;
   "chapa.enabled": boolean;
 };
@@ -382,4 +385,65 @@ export type TransferReview = {
   branch: { id: string; name: string };
   member: NonNullable<CheckIn["member"]> | null;
   invoice: { id: string; number: string; total_cents: number; balance_cents: number; status: InvoiceStatus };
+};
+
+export type ClassColor = "track" | "infield" | "amber" | "sky" | "plum" | "graphite";
+
+export type ClassType = {
+  id: string;
+  name: string;
+  name_translations: { en: string; am: string | null };
+  description: string | null;
+  color: ClassColor;
+  default_duration_min: number;
+  default_capacity: number;
+  is_active: boolean;
+};
+
+export type Room = { id: string; name: string; capacity: number | null };
+
+export type ClassSchedule = {
+  id: string;
+  class_type: ClassType | null;
+  trainer: { id: string; name: string } | null;
+  room: Room | null;
+  weekday: number;
+  start_time: string;
+  duration_min: number;
+  capacity: number;
+  is_active: boolean;
+};
+
+export type ClassSession = {
+  id: string;
+  class_type: ClassType | null;
+  trainer: { id: string; name: string } | null;
+  room: Room | null;
+  branch: { id: string; name: string } | null;
+  starts_at: string;
+  ends_at: string;
+  capacity: number;
+  booked_count: number;
+  waitlist_count: number;
+  spots_left: number;
+  status: "scheduled" | "cancelled";
+  cancel_reason: string | null;
+};
+
+export type ClassBookingStatus = "booked" | "waitlisted" | "cancelled" | "attended" | "no_show";
+
+export type ClassBooking = {
+  id: string;
+  status: ClassBookingStatus;
+  waitlist_position: number | null;
+  late_cancel: boolean;
+  booked_at: string;
+  member: NonNullable<CheckIn["member"]> | null;
+  session: ClassSession | null;
+};
+
+export type MemberClass = ClassSession & {
+  my_booking: { status: ClassBookingStatus; waitlist_position: number | null } | null;
+  can_book: boolean;
+  reason: string | null;
 };

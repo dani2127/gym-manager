@@ -4,21 +4,28 @@ namespace Database\Seeders;
 
 use App\Billing\Ledger;
 use App\Billing\Pricing;
+use App\Classes\Bookings;
+use App\Classes\Timetable;
 use App\Enums\AccountType;
 use App\Enums\BranchRole;
 use App\Models\Branch;
+use App\Models\ClassSchedule;
+use App\Models\ClassSession;
+use App\Models\ClassType;
 use App\Models\DiscountRule;
 use App\Models\Fee;
 use App\Models\Member;
 use App\Models\MemberGroup;
 use App\Models\Organization;
 use App\Models\Plan;
+use App\Models\Room;
 use App\Models\User;
 use App\Support\Settings\SettingsRepository;
 use App\Support\Tenancy\Tenant;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Demo data for local development. Sign in with organization "demo-gym",
@@ -57,6 +64,55 @@ class DatabaseSeeder extends Seeder
 
         $members = $this->seedMembers($organization, [$bole, $piassa]);
         $this->seedCatalogAndSales($organization, $bole, $members, User::where('phone', '+251911000003')->first());
+        $this->seedClasses($organization, $bole, User::where('phone', '+251911000004')->first());
+    }
+
+    /** A week of classes at Bole, led by the demo trainer, with a few bookings. */
+    private function seedClasses(Organization $organization, Branch $bole, User $trainer): void
+    {
+        $type = fn (string $en, string $am, string $color, int $minutes, int $capacity) => ClassType::create([
+            'organization_id' => $organization->id, 'name' => ['en' => $en, 'am' => $am], 'color' => $color,
+            'default_duration_min' => $minutes, 'default_capacity' => $capacity,
+        ]);
+        $spin = $type('Spinning', 'ስፒኒንግ', 'track', 45, 12);
+        $yoga = $type('Yoga', 'ዮጋ', 'infield', 60, 15);
+        $hiit = $type('HIIT', 'ኤች.አይ.አይ.ቲ', 'amber', 30, 20);
+        $box = $type('Boxing', 'ቦክስ', 'plum', 60, 10);
+
+        $studio = Room::create(['organization_id' => $organization->id, 'branch_id' => $bole->id, 'name' => 'Studio A', 'capacity' => 20]);
+        $spinRoom = Room::create(['organization_id' => $organization->id, 'branch_id' => $bole->id, 'name' => 'Spin room', 'capacity' => 12]);
+
+        $slots = [
+            [$spin, $spinRoom, [1, 3, 5], '06:30', 45, 12],
+            [$hiit, $studio, [2, 4], '07:00', 30, 20],
+            [$yoga, $studio, [1, 3, 6], '18:00', 60, 15],
+            [$box, $studio, [2, 4], '18:30', 60, 10],
+            [$spin, $spinRoom, [6], '09:00', 45, 12],
+        ];
+        foreach ($slots as [$classType, $room, $days, $time, $minutes, $capacity]) {
+            foreach ($days as $weekday) {
+                ClassSchedule::create([
+                    'organization_id' => $organization->id, 'branch_id' => $bole->id, 'class_type_id' => $classType->id,
+                    'trainer_id' => $trainer->id, 'room_id' => $room->id, 'weekday' => $weekday, 'start_time' => $time,
+                    'duration_min' => $minutes, 'capacity' => $capacity, 'valid_from' => now()->subWeek()->toDateString(),
+                ]);
+            }
+        }
+        app(Timetable::class)->generate();
+
+        // Fill the next few classes a little so the screens have something to show.
+        $members = Member::withoutGlobalScopes()->where('organization_id', $organization->id)->where('home_branch_id', $bole->id)->get();
+        $bookings = app(Bookings::class);
+        ClassSession::withoutGlobalScopes()->where('branch_id', $bole->id)->orderBy('starts_at')->limit(6)->get()
+            ->each(function (ClassSession $session, int $i) use ($members, $bookings) {
+                $members->shuffle($i)->take(3 + $i)->each(function (Member $member) use ($session, $bookings) {
+                    try {
+                        $bookings->book($session, $member, null, byStaff: true);
+                    } catch (ValidationException) {
+                        // Not every demo member has a membership that allows classes.
+                    }
+                });
+            });
     }
 
     /**

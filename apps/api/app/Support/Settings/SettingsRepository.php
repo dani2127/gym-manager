@@ -24,6 +24,10 @@ class SettingsRepository
             'freeze.enabled' => ['rules' => ['boolean'], 'default' => (bool) config('gym.features.freeze')],
             'lockers.enabled' => ['rules' => ['boolean'], 'default' => (bool) config('gym.features.lockers')],
             'chapa.enabled' => ['rules' => ['boolean'], 'default' => (bool) config('gym.features.chapa')],
+            'classes.enabled' => ['rules' => ['boolean'], 'default' => true],
+            // How many days ahead members can book, and how close to the start they can still cancel for free.
+            'classes.booking_days' => ['rules' => ['integer', 'min:1', 'max:28'], 'default' => 7],
+            'classes.cancel_cutoff_hours' => ['rules' => ['integer', 'min:0', 'max:48'], 'default' => 2],
             // Gym-wide only: branches can't override it.
             'security.require_two_factor' => ['rules' => ['boolean'], 'default' => false, 'organization_only' => true],
         ];

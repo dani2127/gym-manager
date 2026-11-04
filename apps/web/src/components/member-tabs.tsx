@@ -1,13 +1,13 @@
 "use client";
 
-import { CreditCard, ReceiptText, Settings2 } from "lucide-react";
+import { CalendarDays, CreditCard, ReceiptText, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { hasLocale } from "@/i18n/config";
 
 /** Bottom tabs of the member app. Hidden on sign-in and setup. */
-export function MemberTabs({ labels }: { labels: { home: string; membership: string; settings: string } }) {
+export function MemberTabs({ labels }: { labels: { home: string; classes: string; membership: string; settings: string } }) {
   const pathname = usePathname();
   const [, first, ...rest] = pathname.split("/");
   const current = "/" + (hasLocale(first) ? rest : [first, ...rest]).join("/");
@@ -16,12 +16,13 @@ export function MemberTabs({ labels }: { labels: { home: string; membership: str
 
   const tabs = [
     { href: "/app", label: labels.home, icon: CreditCard },
+    { href: "/app/classes", label: labels.classes, icon: CalendarDays },
     { href: "/app/membership", label: labels.membership, icon: ReceiptText },
     { href: "/app/settings", label: labels.settings, icon: Settings2 },
   ];
 
   return (
-    <nav className="sticky bottom-0 grid grid-cols-3 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
+    <nav className="sticky bottom-0 grid grid-cols-4 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
       {tabs.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}

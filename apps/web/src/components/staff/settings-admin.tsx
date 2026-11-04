@@ -98,6 +98,25 @@ export function SettingsAdmin() {
             <Toggle label={t.chapa} checked={settings["chapa.enabled"]} disabled={!editable} onChange={(v) => save({ "chapa.enabled": v })} />
           </div>
         </Card>
+        <Card title={dict.classes.title}>
+          <div className="space-y-4">
+            <Toggle label={dict.classes.settingsEnabled} checked={settings["classes.enabled"]} disabled={!editable} onChange={(v) => save({ "classes.enabled": v })} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={dict.classes.settingsBookingDays}>
+                {(p) => (
+                  <Input {...p} type="number" min={1} max={28} defaultValue={settings["classes.booking_days"]} disabled={!editable}
+                    onBlur={(e) => Number(e.target.value) !== settings["classes.booking_days"] && save({ "classes.booking_days": Number(e.target.value) })} />
+                )}
+              </Field>
+              <Field label={dict.classes.settingsCutoff}>
+                {(p) => (
+                  <Input {...p} type="number" min={0} max={48} defaultValue={settings["classes.cancel_cutoff_hours"]} disabled={!editable}
+                    onBlur={(e) => Number(e.target.value) !== settings["classes.cancel_cutoff_hours"] && save({ "classes.cancel_cutoff_hours": Number(e.target.value) })} />
+                )}
+              </Field>
+            </div>
+          </div>
+        </Card>
         <Card title={dict.security.title}>
           <Toggle
             label={dict.security.settingRequire}

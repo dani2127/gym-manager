@@ -171,13 +171,7 @@ class CheckInGate
     /** The plan's branch access, as sold (from the snapshot). */
     private function validAt(Membership $membership, Member $member, Branch $branch): bool
     {
-        $snapshot = $membership->plan_snapshot;
-
-        return match ($snapshot['access_scope'] ?? 'home_branch') {
-            'all_branches' => true,
-            'selected' => in_array($branch->id, $snapshot['branch_ids'] ?? [], true),
-            default => $member->home_branch_id === $branch->id,
-        };
+        return $membership->coversBranch($branch, $member);
     }
 
     /** A visit pass counts one visit per day, however often the member comes and goes. */

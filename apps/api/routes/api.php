@@ -25,6 +25,10 @@ use App\Http\Controllers\Api\V1\CheckIns\KioskAdminController;
 use App\Http\Controllers\Api\V1\CheckIns\KioskController;
 use App\Http\Controllers\Api\V1\CheckIns\LockerController;
 use App\Http\Controllers\Api\V1\CheckIns\MemberCardController;
+use App\Http\Controllers\Api\V1\Classes\ClassScheduleController;
+use App\Http\Controllers\Api\V1\Classes\ClassSessionController;
+use App\Http\Controllers\Api\V1\Classes\ClassTypeController;
+use App\Http\Controllers\Api\V1\Classes\RoomController;
 use App\Http\Controllers\Api\V1\Me\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\Me\PhoneVerificationController;
 use App\Http\Controllers\Api\V1\Me\ProfileController;
@@ -32,6 +36,7 @@ use App\Http\Controllers\Api\V1\Me\SessionController;
 use App\Http\Controllers\Api\V1\Me\TelegramController;
 use App\Http\Controllers\Api\V1\Me\TwoFactorController;
 use App\Http\Controllers\Api\V1\MemberApp\MemberAppController;
+use App\Http\Controllers\Api\V1\MemberApp\MemberClassController;
 use App\Http\Controllers\Api\V1\MemberApp\MemberFreezeController;
 use App\Http\Controllers\Api\V1\MemberApp\MemberShopController;
 use App\Http\Controllers\Api\V1\Members\MemberAppAccessController;
@@ -104,6 +109,10 @@ Route::prefix('v1')->group(function () {
                 Route::post('/invoices/{invoice}/transfers', [MemberShopController::class, 'transfer'])->middleware('throttle:check-in');
                 Route::post('/memberships/{membership}/freezes', [MemberFreezeController::class, 'store']);
                 Route::delete('/freezes/{freeze}', [MemberFreezeController::class, 'cancel']);
+                Route::get('/classes', [MemberClassController::class, 'index']);
+                Route::post('/classes/{classSession}/book', [MemberClassController::class, 'book']);
+                Route::delete('/classes/{classSession}/booking', [MemberClassController::class, 'cancel']);
+                Route::get('/class-bookings', [MemberClassController::class, 'bookings']);
             });
         });
 
@@ -133,6 +142,27 @@ Route::prefix('v1')->group(function () {
             Route::delete('/member-groups/{memberGroup}', [MemberGroupController::class, 'destroy']);
             Route::get('/members/{member}/memberships', [MembershipController::class, 'index']);
             Route::get('/freezes', [FreezeController::class, 'index']);
+
+            // Classes: types (owner), rooms and timetable (managers), sessions, rosters, attendance.
+            Route::get('/class-types', [ClassTypeController::class, 'index']);
+            Route::post('/class-types', [ClassTypeController::class, 'store']);
+            Route::patch('/class-types/{classType}', [ClassTypeController::class, 'update']);
+            Route::get('/branches/{branch}/rooms', [RoomController::class, 'index']);
+            Route::post('/branches/{branch}/rooms', [RoomController::class, 'store']);
+            Route::patch('/branches/{branch}/rooms/{room}', [RoomController::class, 'update']);
+            Route::delete('/branches/{branch}/rooms/{room}', [RoomController::class, 'destroy']);
+            Route::get('/branches/{branch}/class-schedules', [ClassScheduleController::class, 'index']);
+            Route::post('/branches/{branch}/class-schedules', [ClassScheduleController::class, 'store']);
+            Route::patch('/branches/{branch}/class-schedules/{classSchedule}', [ClassScheduleController::class, 'update']);
+            Route::delete('/branches/{branch}/class-schedules/{classSchedule}', [ClassScheduleController::class, 'destroy']);
+            Route::get('/class-sessions', [ClassSessionController::class, 'index']);
+            Route::post('/branches/{branch}/class-sessions', [ClassSessionController::class, 'store']);
+            Route::get('/class-sessions/{classSession}', [ClassSessionController::class, 'show']);
+            Route::patch('/class-sessions/{classSession}', [ClassSessionController::class, 'update']);
+            Route::post('/class-sessions/{classSession}/cancel', [ClassSessionController::class, 'cancel']);
+            Route::post('/class-sessions/{classSession}/bookings', [ClassSessionController::class, 'book']);
+            Route::delete('/class-bookings/{classBooking}', [ClassSessionController::class, 'cancelBooking']);
+            Route::post('/class-bookings/{classBooking}/attendance', [ClassSessionController::class, 'attendance']);
             Route::post('/memberships/{membership}/freezes', [FreezeController::class, 'store']);
             Route::post('/freezes/{freeze}/approve', [FreezeController::class, 'approve']);
             Route::post('/freezes/{freeze}/reject', [FreezeController::class, 'reject']);

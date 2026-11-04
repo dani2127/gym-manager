@@ -2,6 +2,7 @@
 
 import {
   BadgeDollarSign,
+  CalendarDays,
   Building2,
   Contact,
   Dumbbell,
@@ -70,6 +71,7 @@ function useNav() {
   const desk = access.desk && branch && handlesMoneyAt(me, branch.id);
   const { data: branchSettings } = useSWR<{ settings: Record<string, unknown> }>(desk ? `/branches/${branch.id}/settings` : null, swrFetcher);
   const freezing = Boolean(branchSettings?.settings["freeze.enabled"]);
+  const classes = branchSettings ? branchSettings.settings["classes.enabled"] !== false : false;
   const { data: freezes } = useSWR<{ meta: { requested: number } }>(desk && freezing ? `/freezes?branch=${branch.id}` : null, swrFetcher, { refreshInterval: 30_000 });
 
   const work: NavItem[] = [
@@ -77,6 +79,7 @@ function useNav() {
     { href: "/members", label: dict.nav.members, icon: Contact },
     ...(access.desk ? [{ href: "/invoices", label: dict.nav.invoices, icon: ReceiptText }] : []),
     ...(access.desk ? [{ href: "/payments", label: dict.nav.transfers, icon: Smartphone, badge: transfers?.meta.waiting }] : []),
+    ...(desk && classes ? [{ href: "/classes", label: dict.nav.classes, icon: CalendarDays }] : []),
     ...(desk && freezing ? [{ href: "/freezes", label: dict.nav.freezes, icon: Snowflake, badge: freezes?.meta.requested }] : []),
     ...(access.trainer ? [{ href: "/trainer", label: dict.nav.trainer, icon: Dumbbell }] : []),
   ];
@@ -86,6 +89,7 @@ function useNav() {
         { href: "/admin", label: dict.staff.admin.title, icon: LayoutGrid, exact: true },
         { href: "/admin/branches", label: dict.nav.branches, icon: Building2 },
         { href: "/admin/pricing", label: dict.nav.pricing, icon: BadgeDollarSign },
+        ...(me.user.account_type === "owner" || me.branches.some((b) => b.role === "manager") ? [{ href: "/admin/classes", label: dict.nav.classes, icon: CalendarDays }] : []),
         ...(me.user.account_type === "owner" || me.branches.some((b) => b.role === "manager") ? [{ href: "/admin/door", label: dict.nav.door, icon: KeyRound }] : []),
         ...(me.abilities.manage_staff ? [{ href: "/admin/staff", label: dict.nav.staff, icon: Users }] : []),
         { href: "/admin/settings", label: dict.nav.settings, icon: Settings2 },
