@@ -10,6 +10,8 @@ use App\Models\Member;
 use App\Models\Membership;
 use App\Models\MembershipFreeze;
 use App\Models\Payment;
+use App\Models\PtEnrollment;
+use App\Models\PtSession;
 use App\Models\User;
 use App\Notifications\PaymentReviewedNotification;
 use App\Support\Audit;
@@ -79,6 +81,22 @@ class Ledger
                     'visits_remaining' => $quote->plan->hasVisits() ? $quote->plan->visit_count : null,
                     'status' => 'pending_payment',
                     'invoice_id' => $invoice->id,
+                    'sold_by' => $seller->id,
+                ]);
+            }
+
+            if ($quote->ptPackage && $quote->ptTrainer && $member) {
+                PtEnrollment::create([
+                    'organization_id' => $branch->organization_id,
+                    'branch_id' => $branch->id,
+                    'member_id' => $member->id,
+                    'trainer_id' => $quote->ptTrainer->id,
+                    'pt_package_id' => $quote->ptPackage->id,
+                    'invoice_id' => $invoice->id,
+                    'package_snapshot' => $quote->ptPackage->snapshot(),
+                    'sessions_total' => $quote->ptPackage->sessions_count,
+                    'sessions_remaining' => $quote->ptPackage->sessions_count,
+                    'status' => 'pending_payment',
                     'sold_by' => $seller->id,
                 ]);
             }
@@ -274,6 +292,9 @@ class Ledger
             $locked->payments()->where('status', 'awaiting_verification')->update(['status' => 'rejected', 'rejection_reason' => $reason]);
             MembershipFreeze::whereIn('membership_id', $locked->memberships()->pluck('id'))->whereIn('status', MembershipFreeze::OPEN)->update(['status' => 'cancelled']);
             $locked->memberships()->update(['status' => 'cancelled']);
+            $enrollments = $locked->ptEnrollments()->pluck('id');
+            PtSession::whereIn('pt_enrollment_id', $enrollments)->where('status', 'scheduled')->update(['status' => 'cancelled']);
+            PtEnrollment::whereIn('id', $enrollments)->update(['status' => 'cancelled']);
             $locked->forceFill(['status' => 'void', 'voided_at' => now(), 'voided_by' => $by->id, 'void_reason' => $reason])->save();
         });
 
@@ -297,5 +318,12 @@ class Ledger
             $membership->status = 'active';
             $membership->save();
         });
+
+        // Personal training: the validity runs from the day it's paid.
+        $invoice->ptEnrollments()->where('status', 'pending_payment')->get()->each(fn (PtEnrollment $enrollment) => $enrollment->forceFill([
+            'status' => 'active',
+            'starts_on' => $today,
+            'ends_on' => $this->pricing->endsOn($enrollment->package_snapshot['validity_days'] ?? null, $today),
+        ])->save());
     }
 }

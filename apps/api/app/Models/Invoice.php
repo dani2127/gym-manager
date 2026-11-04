@@ -69,6 +69,12 @@ class Invoice extends Model
         return $this->hasMany(Membership::class);
     }
 
+    /** @return HasMany<PtEnrollment, $this> */
+    public function ptEnrollments(): HasMany
+    {
+        return $this->hasMany(PtEnrollment::class);
+    }
+
     public function balanceCents(): int
     {
         return $this->status === 'void' ? 0 : max(0, $this->total_cents - $this->paid_cents);

@@ -39,12 +39,17 @@ use App\Http\Controllers\Api\V1\MemberApp\MemberAppController;
 use App\Http\Controllers\Api\V1\MemberApp\MemberClassController;
 use App\Http\Controllers\Api\V1\MemberApp\MemberFreezeController;
 use App\Http\Controllers\Api\V1\MemberApp\MemberShopController;
+use App\Http\Controllers\Api\V1\MemberApp\MemberTrainingController;
 use App\Http\Controllers\Api\V1\Members\MemberAppAccessController;
 use App\Http\Controllers\Api\V1\Members\MemberController;
 use App\Http\Controllers\Api\V1\Members\MemberGroupController;
 use App\Http\Controllers\Api\V1\Members\MemberPhotoController;
 use App\Http\Controllers\Api\V1\Memberships\FreezeController;
 use App\Http\Controllers\Api\V1\MetaController;
+use App\Http\Controllers\Api\V1\Training\PtPackageController;
+use App\Http\Controllers\Api\V1\Training\PtSaleController;
+use App\Http\Controllers\Api\V1\Training\TrainerProfileController;
+use App\Http\Controllers\Api\V1\Training\TrainingController;
 use App\Http\Controllers\Api\V1\Webhooks\TelegramWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -85,6 +90,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/two-factor/recovery-codes', [TwoFactorController::class, 'recoveryCodes']);
             Route::delete('/two-factor', [TwoFactorController::class, 'destroy']);
             Route::get('/sessions', [SessionController::class, 'index']);
+            Route::get('/trainer-profile', [TrainerProfileController::class, 'show']);
+            Route::put('/trainer-profile', [TrainerProfileController::class, 'update']);
             Route::post('/sessions/sign-out-others', [SessionController::class, 'destroyOthers']);
             Route::post('/telegram/link', [TelegramController::class, 'link']);
             Route::delete('/telegram', [TelegramController::class, 'unlink']);
@@ -113,6 +120,7 @@ Route::prefix('v1')->group(function () {
                 Route::post('/classes/{classSession}/book', [MemberClassController::class, 'book']);
                 Route::delete('/classes/{classSession}/booking', [MemberClassController::class, 'cancel']);
                 Route::get('/class-bookings', [MemberClassController::class, 'bookings']);
+                Route::get('/training', [MemberTrainingController::class, 'index']);
             });
         });
 
@@ -163,6 +171,21 @@ Route::prefix('v1')->group(function () {
             Route::post('/class-sessions/{classSession}/bookings', [ClassSessionController::class, 'book']);
             Route::delete('/class-bookings/{classBooking}', [ClassSessionController::class, 'cancelBooking']);
             Route::post('/class-bookings/{classBooking}/attendance', [ClassSessionController::class, 'attendance']);
+
+            // Personal training: packages (owner), desk sales, trainers' clients and sessions.
+            Route::get('/pt-packages', [PtPackageController::class, 'index']);
+            Route::post('/pt-packages', [PtPackageController::class, 'store']);
+            Route::patch('/pt-packages/{ptPackage}', [PtPackageController::class, 'update']);
+            Route::post('/branches/{branch}/pt-sales/quote', [PtSaleController::class, 'quote']);
+            Route::post('/branches/{branch}/pt-sales', [PtSaleController::class, 'store']);
+            Route::get('/members/{member}/pt-enrollments', [TrainingController::class, 'memberEnrollments']);
+            Route::get('/pt-clients', [TrainingController::class, 'clients']);
+            Route::get('/branches/{branch}/trainers', [TrainingController::class, 'trainers']);
+            Route::get('/pt-sessions', [TrainingController::class, 'sessions']);
+            Route::post('/pt-enrollments/{ptEnrollment}/sessions', [TrainingController::class, 'schedule']);
+            Route::post('/pt-sessions/{ptSession}/status', [TrainingController::class, 'mark']);
+            Route::post('/pt-sessions/{ptSession}/cancel', [TrainingController::class, 'cancel']);
+            Route::patch('/pt-sessions/{ptSession}/notes', [TrainingController::class, 'notes']);
             Route::post('/memberships/{membership}/freezes', [FreezeController::class, 'store']);
             Route::post('/freezes/{freeze}/approve', [FreezeController::class, 'approve']);
             Route::post('/freezes/{freeze}/reject', [FreezeController::class, 'reject']);

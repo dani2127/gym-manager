@@ -18,10 +18,14 @@ use App\Models\Member;
 use App\Models\MemberGroup;
 use App\Models\Organization;
 use App\Models\Plan;
+use App\Models\PtEnrollment;
+use App\Models\PtPackage;
 use App\Models\Room;
+use App\Models\TrainerProfile;
 use App\Models\User;
 use App\Support\Settings\SettingsRepository;
 use App\Support\Tenancy\Tenant;
+use App\Training\PersonalTraining;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
@@ -65,6 +69,26 @@ class DatabaseSeeder extends Seeder
         $members = $this->seedMembers($organization, [$bole, $piassa]);
         $this->seedCatalogAndSales($organization, $bole, $members, User::where('phone', '+251911000003')->first());
         $this->seedClasses($organization, $bole, User::where('phone', '+251911000004')->first());
+        $this->seedTraining($organization, $bole, User::where('phone', '+251911000004')->first(), User::where('phone', '+251911000003')->first());
+    }
+
+    /** Two PT packages, and one sold to a member with sessions on the calendar. */
+    private function seedTraining(Organization $organization, Branch $bole, User $trainer, User $reception): void
+    {
+        TrainerProfile::create(['organization_id' => $organization->id, 'user_id' => $trainer->id, 'bio' => ['en' => 'Strength and conditioning coach. Ten years helping beginners get strong safely.', 'am' => 'የጥንካሬ እና የአካል ብቃት አሰልጣኝ።'], 'specialties' => ['Strength', 'Weight loss', 'Boxing']]);
+        PtPackage::create(['organization_id' => $organization->id, 'name' => ['en' => '5 PT sessions', 'am' => '5 የግል ስልጠናዎች'], 'sessions_count' => 5, 'price_cents' => 400000, 'validity_days' => 45, 'sort' => 1]);
+        $ten = PtPackage::create(['organization_id' => $organization->id, 'name' => ['en' => '10 PT sessions', 'am' => '10 የግል ስልጠናዎች'], 'sessions_count' => 10, 'price_cents' => 750000, 'validity_days' => 90, 'sort' => 2]);
+
+        $member = Member::withoutGlobalScopes()->where('organization_id', $organization->id)->where('member_no', 3)->first();
+        $quote = app(Pricing::class)->quotePt($bole, $ten, $trainer);
+        app(Ledger::class)->sell($quote, $bole, $member, $reception, ['method' => 'cash', 'amount_cents' => $quote->totalCents()]);
+
+        $enrollment = PtEnrollment::withoutGlobalScopes()->where('member_id', $member->id)->first();
+        $training = app(PersonalTraining::class);
+        $tz = $organization->timezone ?: config('gym.timezone');
+        foreach ([1, 3, 5] as $days) {
+            $training->schedule($enrollment, Carbon::now($tz)->addDays($days)->setTime(17, 0)->utc(), 60, $trainer);
+        }
     }
 
     /** A week of classes at Bole, led by the demo trainer, with a few bookings. */

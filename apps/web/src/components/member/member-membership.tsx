@@ -5,6 +5,7 @@ import useSWR from "swr";
 
 import { InvoiceStatusBadge, MembershipStateBadge } from "@/components/billing/badges";
 import { PauseCard } from "@/components/member/member-pause";
+import { MemberTraining } from "@/components/member/member-training";
 import { useMember } from "@/components/member/use-member";
 import { useDictionary } from "@/i18n/dictionary-context";
 import { API_URL, swrFetcher } from "@/lib/api";
@@ -25,6 +26,8 @@ export function MemberMembership() {
       <h1 className="font-bib text-4xl">{t.title}</h1>
 
       {memberships && <PauseCard memberships={memberships.data} onChanged={() => mutate()} />}
+
+      <MemberTraining />
 
       <Section title={t.memberships} empty={t.noMemberships} items={memberships?.data}>
         {(m) => (

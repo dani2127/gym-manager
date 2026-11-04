@@ -4,6 +4,8 @@ namespace App\Billing;
 
 use App\Models\DiscountRule;
 use App\Models\Plan;
+use App\Models\PtPackage;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /** A priced sale before anything is saved: what the desk preview shows. */
@@ -17,6 +19,9 @@ final readonly class Quote
         public ?DiscountRule $discount,
         public ?Carbon $startsOn,
         public ?Carbon $endsOn,
+        // A personal-training sale: the package and the trainer it's with.
+        public ?PtPackage $ptPackage = null,
+        public ?User $ptTrainer = null,
     ) {}
 
     public function subtotalCents(): int

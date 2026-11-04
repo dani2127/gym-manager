@@ -4,6 +4,7 @@ import { useState } from "react";
 import useSWR from "swr";
 
 import { Roster } from "@/components/classes/roster";
+import { TrainerPt } from "@/components/training/trainer-pt";
 import { ClassSummary, classDay } from "@/components/classes/shared";
 import { Alert, Card, PageHeader } from "@/components/ui";
 import { useDictionary } from "@/i18n/dictionary-context";
@@ -19,6 +20,7 @@ export function TrainerHome() {
   const { me } = useSession();
   const t = dict.classes;
   const [picked, setPicked] = useState<string | null>(null);
+  const [tab, setTab] = useState<"classes" | "pt">("classes");
   const allowed = workspaces(me).trainer;
   const { data, mutate } = useSWR<{ data: ClassSession[] }>(allowed ? "/class-sessions?mine=1&days=7" : null, swrFetcher, { refreshInterval: 30_000 });
 
@@ -29,7 +31,15 @@ export function TrainerHome() {
 
   return (
     <>
-      <PageHeader title={t.myClasses} description={dict.staff.trainer.body} />
+      <PageHeader title={dict.staff.trainer.title} description={dict.staff.trainer.body} />
+      <div role="tablist" className="mb-4 inline-grid grid-cols-2 gap-1 rounded-[6px] bg-surface-2 p-1">
+        {(["classes", "pt"] as const).map((name) => (
+          <button key={name} type="button" role="tab" aria-selected={tab === name} onClick={() => setTab(name)} className="min-h-10 cursor-pointer rounded-[5px] px-5 text-sm font-semibold text-graphite aria-selected:bg-surface aria-selected:text-ink aria-selected:shadow-sm">
+            {name === "classes" ? dict.training.tabClasses : dict.training.tabPt}
+          </button>
+        ))}
+      </div>
+      {tab === "pt" ? <TrainerPt /> : (
       <div className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
         <Card>
           {!data ? (
@@ -63,6 +73,7 @@ export function TrainerHome() {
           </Card>
         )}
       </div>
+      )}
     </>
   );
 }

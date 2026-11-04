@@ -12,7 +12,7 @@ import { apiFetch, swrFetcher } from "@/lib/api";
 import { birrToCents, centsToBirr, formatDate, formatMoney } from "@/lib/format";
 import { isOwner } from "@/lib/roles";
 import { useSession } from "@/lib/session";
-import type { AccessScope, DiscountKind, DiscountRule, Fee, FeeKind, PaymentAccount, Plan, PlanType, Settings } from "@/lib/types";
+import type { AccessScope, DiscountKind, DiscountRule, Fee, FeeKind, PaymentAccount, Plan, PlanType, PtPackage, Settings } from "@/lib/types";
 
 type Editing<T> = T | "new" | null;
 
@@ -31,6 +31,7 @@ export function PricingAdmin() {
         <PlansCard editable={owner} />
         <FeesCard editable={owner} />
         {owner && <DiscountsCard />}
+        <PtPackagesCard editable={owner} />
         {owner && <PaymentAccountsCard />}
       </div>
     </>
@@ -407,6 +408,103 @@ function FeeForm({ fee, onDone, onCancel }: { fee?: Fee; onDone: () => void; onC
       <div className="rounded-[6px] border border-line bg-surface px-4">
         <Toggle label={t.active} checked={active} onChange={setActive} />
       </div>
+      <FormActions busy={busy} onCancel={onCancel} />
+    </form>
+  );
+}
+
+/* ---------------------------------------------------- Personal training */
+
+function PtPackagesCard({ editable }: { editable: boolean }) {
+  const { locale, dict } = useDictionary();
+  const t = dict.training;
+  const { data, mutate } = useSWR<{ data: PtPackage[] }>("/pt-packages", swrFetcher);
+  const [editing, setEditing] = useState<Editing<PtPackage>>(null);
+  const done = () => {
+    setEditing(null);
+    mutate();
+  };
+
+  return (
+    <Card title={t.packages} actions={editable && editing === null && <AddButton label={t.addPackage} onClick={() => setEditing("new")} />}>
+      {editing === "new" && <PtPackageForm onDone={done} onCancel={() => setEditing(null)} />}
+      {!data ? (
+        <div className="h-16 animate-pulse rounded-[6px] bg-surface-2" />
+      ) : data.data.length === 0 && editing !== "new" ? (
+        <p className="text-sm text-graphite">{t.packagesEmpty}</p>
+      ) : (
+        <ul className="divide-y divide-line">
+          {data.data.map((pkg) =>
+            editing !== "new" && editing?.id === pkg.id ? (
+              <li key={pkg.id} className="py-4">
+                <PtPackageForm pkg={pkg} onDone={done} onCancel={() => setEditing(null)} />
+              </li>
+            ) : (
+              <li key={pkg.id} className="flex items-center gap-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold">
+                    {pkg.name}
+                    {!pkg.is_active && <span className="ml-2"><OffBadge label={dict.billing.pricing.inactive} /></span>}
+                  </p>
+                  <p className="text-xs text-graphite">
+                    {format(t.packageLine, { sessions: String(pkg.sessions_count), days: String(pkg.validity_days) })} · {pkg.trainer ? `${t.onlyTrainer} ${pkg.trainer.name}` : t.anyTrainer}
+                  </p>
+                </div>
+                <span className="tabular font-semibold">{formatMoney(pkg.price_cents, locale)}</span>
+                {editable && editing === null && <EditButton label={`${dict.common.edit}: ${pkg.name}`} onClick={() => setEditing(pkg)} />}
+              </li>
+            ),
+          )}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+function PtPackageForm({ pkg, onDone, onCancel }: { pkg?: PtPackage; onDone: () => void; onCancel: () => void }) {
+  const { dict } = useDictionary();
+  const t = dict.training;
+  const { busy, error, general, run } = useFormAction();
+  const [active, setActive] = useState(pkg?.is_active ?? true);
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    run(async () => {
+      await apiFetch(pkg ? `/pt-packages/${pkg.id}` : "/pt-packages", {
+        method: pkg ? "PATCH" : "POST",
+        json: {
+          name: names(form),
+          sessions_count: Number(form.get("sessions")),
+          validity_days: Number(form.get("validity")),
+          price_cents: birrToCents(String(form.get("price") ?? "")),
+          is_active: active,
+        },
+      });
+      onDone();
+    });
+  }
+
+  return (
+    <form onSubmit={submit} className="mb-4 space-y-4 rounded-[6px] border border-line-strong bg-ground/40 p-4" noValidate>
+      {general && <Alert tone="error">{general}</Alert>}
+      <NameFields value={pkg?.name_translations} error={error?.field("name.en") ?? error?.field("name")} />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label={t.sessions} error={error?.field("sessions_count")}>
+          {(p) => <Input {...p} name="sessions" type="number" min={1} max={200} defaultValue={pkg?.sessions_count ?? 10} required />}
+        </Field>
+        <Field label={t.validity} error={error?.field("validity_days")}>
+          {(p) => <Input {...p} name="validity" type="number" min={1} max={730} defaultValue={pkg?.validity_days ?? 90} required />}
+        </Field>
+        <Field label={t.price} error={error?.field("price_cents")}>
+          {(p) => <Input {...p} name="price" inputMode="decimal" className="tabular" defaultValue={pkg ? centsToBirr(pkg.price_cents) : ""} required />}
+        </Field>
+      </div>
+      {pkg && (
+        <div className="rounded-[6px] border border-line bg-surface px-4">
+          <Toggle label={dict.billing.pricing.active} checked={active} onChange={setActive} />
+        </div>
+      )}
       <FormActions busy={busy} onCancel={onCancel} />
     </form>
   );

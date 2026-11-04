@@ -7,6 +7,7 @@ import { useState, type FormEvent } from "react";
 import useSWR from "swr";
 
 import { MemberInvoicesCard, MembershipsCard } from "@/components/billing/member-billing";
+import { PersonalTrainingCard } from "@/components/training/member-pt-card";
 import { CheckInPopup } from "@/components/checkins/check-in-popup";
 import { useLockersEnabled } from "@/components/checkins/locker-picker";
 import { MemberCardPanel } from "@/components/checkins/member-card";
@@ -130,6 +131,7 @@ export function MemberProfile({ id }: { id: string }) {
             </Card>
 
             <MembershipsCard member={member} />
+            <PersonalTrainingCard member={member} />
             <MemberInvoicesCard member={member} />
           </div>
 

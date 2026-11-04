@@ -313,6 +313,12 @@ pt_sessions     id · pt_enrollment_id FK · trainer_id FK · member_id FK · br
 ```
 Trainer policies only expose rows linked to their own `trainer_id`.
 
+**As built in M9.** (No separate `trainers` table: a trainer is a user with the trainer role at a branch, and `trainer_profiles` holds the bio and specialties.)
+- **Packages:** owners keep PT packages (sessions, price, validity days, optionally one trainer only). The desk sells one from the member page through the normal ledger: an invoice line for the package with the branch's tax, and a `pending_payment` enrollment with the chosen trainer. Full payment activates it, and the validity counts from that day. Voiding the invoice cancels it and its upcoming sessions.
+- **Sessions:** the trainer, or the desk where it was sold, schedules sessions inside the package dates. Scheduled plus used sessions can't exceed the package, and a session can't clash with the trainer's other PT sessions or classes, or with the member's other sessions. Done and no-show each use a session, undo gives it back, and the last one used completes the package. Marking opens 15 minutes before the start. `training:expire` (00:15) expires packages past their last day and cancels their upcoming sessions.
+- **Privacy:** a trainer sees only their own clients and sessions. Session notes are visible only to the trainer who wrote them; the desk and members never receive them.
+- **Screens:** pricing gets a PT packages card (owner). The member page gets a Personal training card (sell, sessions left, schedule, upcoming). `/trainer` gets two tabs, Classes and Personal training (this week's sessions with done, no-show and notes, plus clients with scheduling). My account gets a trainer profile card. The member app's Membership tab shows the package, sessions left, the next sessions and the trainer's public profile.
+
 ### J. POS & inventory (ported from legacy)
 ```
 products         id · organization_id FK · sku · barcode NULL · name JSON · price_cents · is_active   UQ(organization_id, barcode)
@@ -420,7 +426,7 @@ row and `tax.prices_inclusive`; the rate is snapshotted on the invoice.
 | — | **MVP line: one real branch can run on M0–M6** | Pilot at one branch | |
 | **M7** | Membership freezing (toggle, rules, approvals, auto-unfreeze) | Freeze moves the end date; door refuses while frozen; auto-unfreeze | ✅ Done |
 | **M8** | Classes: types, rooms, schedules, sessions, booking, waitlist, attendance | Book from the app; full class waitlists and moves people in; attendance | ✅ Done |
-| **M9** | Trainer portal & PT packages / sessions | | |
+| **M9** | Trainer portal & PT packages / sessions | Sell a package, schedule without clashes, done/no-show uses sessions, private notes | ✅ Done |
 | **M10** | Chapa integration & renewal links | | |
 | **M11** | POS & per-branch inventory (ported) | | |
 | **M12** | Reports (revenue by branch/method, VAT, attendance, expiring) + **Telegram bot & WhatsApp delivery**, SMS fallback | | |

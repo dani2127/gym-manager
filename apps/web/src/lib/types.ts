@@ -447,3 +447,54 @@ export type MemberClass = ClassSession & {
   can_book: boolean;
   reason: string | null;
 };
+
+export type PtPackage = {
+  id: string;
+  name: string;
+  name_translations: { en: string; am: string | null };
+  sessions_count: number;
+  price_cents: number;
+  validity_days: number;
+  trainer: { id: string; name: string } | null;
+  is_active: boolean;
+};
+
+export type PtSessionStatus = "scheduled" | "completed" | "no_show" | "cancelled";
+
+export type PtSession = {
+  id: string;
+  starts_at: string;
+  ends_at: string;
+  status: PtSessionStatus;
+  trainer: { id: string; name: string } | null;
+  member: NonNullable<CheckIn["member"]> | null;
+  branch: { id: string; name: string } | null;
+  enrollment: { id: string; package: string; sessions_remaining: number } | null;
+  trainer_notes?: string | null;
+};
+
+export type TrainerProfile = {
+  id: string;
+  name: string;
+  bio: string | null;
+  bio_translations: { en: string; am: string | null } | null;
+  specialties: string[];
+  is_public: boolean;
+};
+
+export type PtEnrollment = {
+  id: string;
+  package: string;
+  trainer: { id: string; name: string } | null;
+  member: NonNullable<CheckIn["member"]> | null;
+  branch: { id: string; name: string } | null;
+  sessions_total: number;
+  sessions_remaining: number;
+  sessions_scheduled: number;
+  starts_on: string | null;
+  ends_on: string | null;
+  status: "pending_payment" | "active" | "completed" | "expired" | "cancelled";
+  invoice?: { id: string; number: string; balance_cents: number } | null;
+  upcoming?: PtSession[];
+  trainer_profile?: TrainerProfile | null;
+};

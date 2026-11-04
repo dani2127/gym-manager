@@ -6,6 +6,7 @@ use App\Memberships\Freezes;
 use App\Models\CheckIn;
 use App\Models\Membership;
 use App\Services\Telegram\TelegramClient;
+use App\Training\PersonalTraining;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
@@ -84,3 +85,9 @@ Artisan::command('classes:generate', function (Timetable $timetable) {
 })->purpose('Turn the weekly class timetable into dated sessions for the coming weeks');
 
 Schedule::command('classes:generate')->dailyAt('00:20')->timezone(config('gym.timezone'));
+
+Artisan::command('training:expire', function (PersonalTraining $training) {
+    $this->info('Expired '.$training->expire(Carbon::parse(Carbon::now(config('gym.timezone'))->toDateString())).' personal-training packages.');
+})->purpose('Expire personal-training packages past their last day');
+
+Schedule::command('training:expire')->dailyAt('00:15')->timezone(config('gym.timezone'));

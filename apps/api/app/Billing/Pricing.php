@@ -9,6 +9,8 @@ use App\Models\Member;
 use App\Models\MemberGroup;
 use App\Models\Membership;
 use App\Models\Plan;
+use App\Models\PtPackage;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -43,6 +45,24 @@ class Pricing
             discount: $plan ? $discount : null,
             startsOn: $plan ? $startsOn : null,
             endsOn: $plan && $startsOn ? $this->endsOn($plan->duration_days, $startsOn) : null,
+        );
+    }
+
+    /** Prices a personal-training package with the branch's tax. */
+    public function quotePt(Branch $branch, PtPackage $package, User $trainer): Quote
+    {
+        $tax = TaxConfig::forBranch($branch);
+        $taxed = $tax->apply($package->price_cents);
+
+        return new Quote(
+            lines: [new QuoteLine('pt_package', $package, $package->name, 1, $package->price_cents, 0, null, $taxed['tax'], $taxed['total'])],
+            tax: $tax,
+            plan: null,
+            discount: null,
+            startsOn: null,
+            endsOn: null,
+            ptPackage: $package,
+            ptTrainer: $trainer,
         );
     }
 
