@@ -53,7 +53,7 @@ class StaffController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'phone' => ['required', 'string', new EthiopianPhone],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users')->where('organization_id', $actor->organization_id)],
-            'password' => ['required', Password::min(8)],
+            'password' => ['required', Password::defaults()],
             ...$this->assignmentRules(required: true),
         ]);
 
@@ -94,7 +94,7 @@ class StaffController extends Controller
             'name' => ['sometimes', 'string', 'max:120'],
             'phone' => ['sometimes', 'string', new EthiopianPhone],
             'email' => ['sometimes', 'nullable', 'email', 'max:255', Rule::unique('users')->where('organization_id', $actor->organization_id)->ignore($staff->id)],
-            'password' => ['sometimes', Password::min(8)],
+            'password' => ['sometimes', Password::defaults()],
             'status' => ['sometimes', 'in:active,disabled'],
             ...$this->assignmentRules(required: false),
         ]);

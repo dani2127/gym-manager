@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 
+import { DevicesCard, TwoFactorCard } from "@/components/account/security";
 import { useFormAction } from "@/components/staff/use-form-action";
 import { Alert, Button, Card, Field, Input, PageHeader, Select } from "@/components/ui";
 import { LOCALE_COOKIE } from "@/i18n/config";
@@ -20,6 +21,11 @@ export function AccountPage() {
         <TelegramCard />
         <PasswordCard />
         <PhoneCard />
+      </div>
+      <h2 id="security" className="mt-8 mb-3 text-lg font-semibold">{dict.security.title}</h2>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <TwoFactorCard />
+        <DevicesCard />
       </div>
     </>
   );

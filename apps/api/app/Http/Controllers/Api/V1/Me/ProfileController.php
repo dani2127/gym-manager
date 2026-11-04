@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Me;
 
+use App\Auth\TwoFactor;
 use App\Enums\BranchRole;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BranchResource;
@@ -15,7 +16,7 @@ use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
-    public function show(Request $request, Tenant $tenant): JsonResponse
+    public function show(Request $request, Tenant $tenant, TwoFactor $twoFactor): JsonResponse
     {
         $user = $request->user();
 
@@ -35,6 +36,10 @@ class ProfileController extends Controller
                 'locale' => $user->locale,
                 'account_type' => $user->account_type,
                 'telegram_linked' => $user->telegramChatId() !== null,
+            ],
+            'security' => [
+                'two_factor_enabled' => $user->hasEnabledTwoFactorAuthentication(),
+                'two_factor_required' => $twoFactor->requiredFor($user),
             ],
             'organization' => new OrganizationResource($tenant->organization()),
             'branches' => BranchResource::collection($branches),
@@ -69,11 +74,13 @@ class ProfileController extends Controller
     {
         $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', Password::min(8)],
+            'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
         $user = $request->user();
         $user->forceFill(['password' => $request->input('password')])->save();
+        // A changed password signs out every other device.
+        SessionController::signOutOthers($request);
 
         Audit::record('auth.password_changed', $user);
 

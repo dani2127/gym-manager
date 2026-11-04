@@ -27,7 +27,7 @@ class MemberSetupController extends Controller
             'organization' => ['required', 'string', 'max:63'],
             'phone' => ['required', 'string', 'max:20'],
             'code' => ['required', 'string', 'max:12'],
-            'password' => ['required', 'confirmed', Password::min(8)],
+            'password' => ['required', 'confirmed', Password::defaults()],
             'device_name' => ['nullable', 'string', 'max:100'],
         ]);
 

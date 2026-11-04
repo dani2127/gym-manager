@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\MemberSetupController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RegisterOrganizationController;
+use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Billing\InvoiceController;
 use App\Http\Controllers\Api\V1\Billing\MembershipController;
 use App\Http\Controllers\Api\V1\Billing\PaymentAccountController;
@@ -27,7 +28,9 @@ use App\Http\Controllers\Api\V1\CheckIns\MemberCardController;
 use App\Http\Controllers\Api\V1\Me\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\Me\PhoneVerificationController;
 use App\Http\Controllers\Api\V1\Me\ProfileController;
+use App\Http\Controllers\Api\V1\Me\SessionController;
 use App\Http\Controllers\Api\V1\Me\TelegramController;
+use App\Http\Controllers\Api\V1\Me\TwoFactorController;
 use App\Http\Controllers\Api\V1\MemberApp\MemberAppController;
 use App\Http\Controllers\Api\V1\MemberApp\MemberFreezeController;
 use App\Http\Controllers\Api\V1\MemberApp\MemberShopController;
@@ -51,6 +54,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/password/forgot', [PasswordResetController::class, 'sendCode'])->middleware('throttle:otp');
         Route::post('/password/reset', [PasswordResetController::class, 'reset'])->middleware('throttle:otp-verify');
         Route::post('/member-setup', MemberSetupController::class)->middleware('throttle:otp-verify');
+        Route::post('/two-factor-challenge', TwoFactorChallengeController::class)->middleware('throttle:two-factor');
     });
 
     Route::post('/webhooks/telegram', TelegramWebhookController::class);
@@ -70,6 +74,13 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [ProfileController::class, 'show']);
             Route::patch('/', [ProfileController::class, 'update']);
             Route::put('/password', [ProfileController::class, 'updatePassword']);
+            Route::get('/two-factor', [TwoFactorController::class, 'show']);
+            Route::post('/two-factor', [TwoFactorController::class, 'store']);
+            Route::post('/two-factor/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:two-factor');
+            Route::post('/two-factor/recovery-codes', [TwoFactorController::class, 'recoveryCodes']);
+            Route::delete('/two-factor', [TwoFactorController::class, 'destroy']);
+            Route::get('/sessions', [SessionController::class, 'index']);
+            Route::post('/sessions/sign-out-others', [SessionController::class, 'destroyOthers']);
             Route::post('/telegram/link', [TelegramController::class, 'link']);
             Route::delete('/telegram', [TelegramController::class, 'unlink']);
             Route::post('/phone/verification', [PhoneVerificationController::class, 'send'])->middleware('throttle:otp');
@@ -97,7 +108,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Staff workspaces (desk, admin, trainer).
-        Route::middleware('staff')->group(function () {
+        Route::middleware(['staff', 'two-factor'])->group(function () {
             Route::apiResource('branches', BranchController::class)->except('destroy');
             Route::put('/branches/{branch}/opening-hours', [OpeningHoursController::class, 'update']);
             Route::get('/branches/{branch}/closures', [BranchClosureController::class, 'index']);

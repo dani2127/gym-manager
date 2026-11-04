@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  */
 class SettingsRepository
 {
-    /** @return array<string, array{rules: array<int, string>, default: mixed}> */
+    /** @return array<string, array{rules: array<int, string>, default: mixed, organization_only?: bool}> */
     public function definitions(): array
     {
         return [
@@ -24,6 +24,8 @@ class SettingsRepository
             'freeze.enabled' => ['rules' => ['boolean'], 'default' => (bool) config('gym.features.freeze')],
             'lockers.enabled' => ['rules' => ['boolean'], 'default' => (bool) config('gym.features.lockers')],
             'chapa.enabled' => ['rules' => ['boolean'], 'default' => (bool) config('gym.features.chapa')],
+            // Gym-wide only: branches can't override it.
+            'security.require_two_factor' => ['rules' => ['boolean'], 'default' => false, 'organization_only' => true],
         ];
     }
 
@@ -54,7 +56,7 @@ class SettingsRepository
         $branchValues = $branch ? $stored->where('branch_id', $branch->id)->pluck('value', 'key') : collect();
 
         return collect($this->definitions())
-            ->map(fn (array $definition, string $key) => $branchValues[$key] ?? $orgValues[$key] ?? $definition['default'])
+            ->map(fn (array $definition, string $key) => (empty($definition['organization_only']) ? $branchValues[$key] ?? null : null) ?? $orgValues[$key] ?? $definition['default'])
             ->all();
     }
 
@@ -78,6 +80,9 @@ class SettingsRepository
     {
         DB::transaction(function () use ($organization, $values, $branch) {
             foreach (array_intersect_key($values, $this->definitions()) as $key => $value) {
+                if ($branch && ! empty($this->definitions()[$key]['organization_only'])) {
+                    continue;
+                }
                 $query = Setting::withoutGlobalScopes()
                     ->where('organization_id', $organization->id)
                     ->where('branch_id', $branch?->id)

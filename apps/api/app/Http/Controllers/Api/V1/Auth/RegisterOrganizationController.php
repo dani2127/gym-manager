@@ -29,7 +29,7 @@ class RegisterOrganizationController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'phone' => ['required', 'string', new EthiopianPhone],
             'email' => ['nullable', 'email', 'max:255'],
-            'password' => ['required', 'confirmed', Password::min(8)],
+            'password' => ['required', 'confirmed', Password::defaults()],
             'locale' => ['nullable', 'in:en,am'],
             'device_name' => ['nullable', 'string', 'max:100'],
         ]);

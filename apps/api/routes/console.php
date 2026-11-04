@@ -74,3 +74,6 @@ Artisan::command('check-ins:close-day', function (BranchHours $hours) {
 })->purpose('Check out everyone still marked inside from earlier days');
 
 Schedule::command('check-ins:close-day')->dailyAt('00:10')->timezone(config('gym.timezone'));
+
+// Expired app tokens are removed once a day.
+Schedule::command('sanctum:prune-expired --hours=24')->dailyAt('03:15')->timezone(config('gym.timezone'));

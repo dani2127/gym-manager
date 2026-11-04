@@ -17,14 +17,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
+use Laravel\Fortify\Fortify;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['organization_id', 'account_type', 'name', 'phone', 'email', 'password', 'locale', 'status'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements HasLocalePreference
 {
     /** @use HasFactory<UserFactory> */
-    use BelongsToOrganization, HasApiTokens, HasFactory, HasPublicUlid, Notifiable;
+    use BelongsToOrganization, HasApiTokens, HasFactory, HasPublicUlid, Notifiable, TwoFactorAuthenticatable;
 
     /** Mirrors the column defaults so freshly created models are complete. */
     protected $attributes = [
@@ -39,8 +42,25 @@ class User extends Authenticatable implements HasLocalePreference
             'account_type' => AccountType::class,
             'phone_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /** The authenticator app shows "Gym name (phone)", so staff of several gyms can tell entries apart. */
+    public function twoFactorQrCodeUrl()
+    {
+        return app(TwoFactorAuthenticationProvider::class)->qrCodeUrl(
+            $this->organization()->withoutGlobalScopes()->value('name') ?? config('app.name'),
+            $this->phone,
+            Fortify::currentEncrypter()->decrypt($this->two_factor_secret)
+        );
+    }
+
+    /** Owners and managers handle the money and settings, so the gym can make two-step login compulsory for them. */
+    public function isOwnerOrManager(): bool
+    {
+        return $this->isOwner() || $this->branches()->wherePivot('role', BranchRole::Manager->value)->exists();
     }
 
     /** @return BelongsToMany<Branch, $this, BranchUser> */

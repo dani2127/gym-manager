@@ -12,6 +12,7 @@ import {
   Menu,
   ReceiptText,
   ScanLine,
+  ShieldCheck,
   Smartphone,
   Settings2,
   Snowflake,
@@ -25,6 +26,7 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import useSWR from "swr";
 
+import { TwoFactorCard } from "@/components/account/security";
 import { Logo } from "@/components/brand/logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Alert, Button } from "@/components/ui";
@@ -119,9 +121,77 @@ function Shell({ children }: { children: ReactNode }) {
       )}
 
       <main className="min-w-0 flex-1">
-        <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8 sm:py-8">{children}</div>
+        <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8 sm:py-8">
+          <SecurityGate>{children}</SecurityGate>
+        </div>
       </main>
     </div>
+  );
+}
+
+/**
+ * When the gym makes two-step login compulsory, owners and managers without it
+ * see only the setup (the API refuses staff screens anyway). Otherwise they get
+ * a reminder they can dismiss.
+ */
+function SecurityGate({ children }: { children: ReactNode }) {
+  const { dict } = useDictionary();
+  const { me } = useSession();
+  const current = useCurrentPath();
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return window.localStorage.getItem("gym.2fa-banner") === "hidden";
+    } catch {
+      return false;
+    }
+  });
+  const t = dict.security;
+  const leads = me.user.account_type === "owner" || me.branches.some((b) => b.role === "manager");
+  const { two_factor_enabled: enabled, two_factor_required: required } = me.security;
+
+  if (required && !enabled && current !== "/account") {
+    return (
+      <div className="mx-auto max-w-xl space-y-4">
+        <div className="flex items-start gap-3">
+          <ShieldCheck aria-hidden className="mt-1 h-7 w-7 shrink-0 text-track" />
+          <div>
+            <h1 className="text-2xl font-semibold">{t.requiredTitle}</h1>
+            <p className="mt-1 text-sm text-graphite">{t.requiredBody}</p>
+          </div>
+        </div>
+        <TwoFactorCard />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {leads && !enabled && !dismissed && current !== "/account" && (
+        <div className="mb-5 flex flex-wrap items-center gap-3 rounded-[6px] border border-amber/40 bg-amber-soft px-4 py-3 text-sm text-amber">
+          <ShieldCheck aria-hidden className="h-5 w-5 shrink-0" />
+          <span className="flex-1 font-medium">{t.bannerBody}</span>
+          <Link href="/account#security" className="font-semibold underline-offset-2 hover:underline">
+            {t.bannerAction}
+          </Link>
+          <button
+            type="button"
+            aria-label={dict.common.close}
+            onClick={() => {
+              setDismissed(true);
+              try {
+                window.localStorage.setItem("gym.2fa-banner", "hidden");
+              } catch {
+                // Showing it again next time is fine.
+              }
+            }}
+            className="cursor-pointer rounded p-1 hover:bg-amber/10"
+          >
+            <X aria-hidden className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+      {children}
+    </>
   );
 }
 

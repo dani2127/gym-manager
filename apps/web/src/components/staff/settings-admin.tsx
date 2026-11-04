@@ -12,6 +12,7 @@ import type { Settings } from "@/lib/types";
 /** Organization-wide tax and feature settings. Each change saves immediately. */
 export function SettingsAdmin() {
   const { dict } = useDictionary();
+  const { refresh: refreshMe } = useSession();
   const { me } = useSession();
   const { data, mutate } = useSWR<{ settings: Settings }>("/settings", swrFetcher);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +30,8 @@ export function SettingsAdmin() {
         optimisticData: { settings: { ...settings, ...patch } },
         rollbackOnError: true,
       });
+      // The rule can lock the owner out of staff screens until they set it up.
+      if ("security.require_two_factor" in patch) await refreshMe();
     } catch (e) {
       setError(e instanceof ApiError ? (Object.values(e.errors)[0]?.[0] ?? e.message) : dict.common.error);
     }
@@ -94,6 +97,15 @@ export function SettingsAdmin() {
             <Toggle label={t.lockers} checked={settings["lockers.enabled"]} disabled={!editable} onChange={(v) => save({ "lockers.enabled": v })} />
             <Toggle label={t.chapa} checked={settings["chapa.enabled"]} disabled={!editable} onChange={(v) => save({ "chapa.enabled": v })} />
           </div>
+        </Card>
+        <Card title={dict.security.title}>
+          <Toggle
+            label={dict.security.settingRequire}
+            description={dict.security.settingRequireHint}
+            checked={settings["security.require_two_factor"]}
+            disabled={!editable}
+            onChange={(v) => save({ "security.require_two_factor": v })}
+          />
         </Card>
       </div>
     </>

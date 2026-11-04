@@ -27,7 +27,7 @@ which is kept read-only in [`legacy/`](legacy/) for porting reference.
 | Layer | Choice | Notes |
 |---|---|---|
 | Backend | **Laravel 13** (PHP 8.3+), REST under `/api/v1` | `apps/api` |
-| Auth | **Sanctum**: cookie sessions for the web app, bearer tokens for mobile | `statefulApi()` enabled |
+| Auth | **Sanctum**: cookie sessions for the web app, bearer tokens for mobile; **Fortify** for two-step login | `statefulApi()` enabled; Fortify routes off, only its 2FA pieces are used |
 | Real time | **Laravel Reverb** | Private channel `branch.{id}.desk` for check-in pop-ups |
 | Jobs | Redis queues (Horizon later) | Notifications, PDFs, Chapa webhooks |
 | Scheduler | `schedule:work` container | Expiries, unfreezes, class generation, reminders |
@@ -351,6 +351,14 @@ notifications             Laravel default table (in-app / PWA notifications)
 - **Paying:** `/app/pay/{invoice}` shows the accounts with copy buttons. The member picks Telebirr or bank, enters the transaction / FT number and amount and attaches a screenshot (`POST /me/member/invoices/{invoice}/transfers`, multipart). The screenshot is re-encoded to JPEG (max 1600 px, metadata dropped) on the private disk under `transfers/{org}/`. One waiting transfer per invoice; the amount can't exceed what is owed.
 - **References:** stored trimmed and upper-cased and unique per method across every payment status, so a rejected or reused number can never be sent again. Desk sales and desk invoice payments by Telebirr or bank also require the reference.
 - **Desk queue:** "Payments to check" (`GET /payments/transfers?branch=&status=waiting|reviewed`, with a waiting count for the nav badge and the front-desk banner). The desk opens the screenshot (`/payments/{id}/proof`), approves (optionally a corrected amount; the invoice and membership activate as with cash) or rejects with a reason the member sees. `PaymentChanged` on `branch.{id}.desk` refreshes open desks live, and the member gets a Telegram message when their chat is linked. Voiding an invoice rejects any waiting transfer.
+
+### Sign-in security (hardening before M8)
+- **Foundation:** official Laravel pieces only. Sanctum sessions and tokens, bcrypt hashing, CSRF, RateLimiter, Password rules, Gates and Policies. Login is throttled per gym, phone and IP, and an unknown phone takes as long to check as a wrong password.
+- **Two-step login (staff):** Laravel Fortify's two-factor actions with an authenticator app (TOTP) and 8 single-use recovery codes. Secrets are stored encrypted. Login with the right password returns an encrypted, single-use challenge (5 minutes) instead of a session or token; `POST /auth/two-factor-challenge` with the code or a recovery code completes it. A code can't be reused. Members don't use it.
+- **Compulsory option:** the gym-wide setting `security.require_two_factor` (branches can't override it) closes the staff API (403 `two_factor_required`) to owners and managers without two-step login. The web app then shows only the setup. Receptionists and trainers can choose.
+- **Devices:** `GET /me/sessions` lists browser sessions and app tokens, and `POST /me/sessions/sign-out-others` ends the rest (password needed). A password change signs out other devices, and a reset signs out all. Production keeps sessions in the database (`SESSION_DRIVER=database`) so this works.
+- **Passwords and tokens:** in production, new passwords are checked against known breaches (Have I Been Pwned, k-anonymity, fails open). App tokens expire after 30 days (`SANCTUM_TOKEN_EXPIRATION`) and are pruned nightly. Cookies are HttpOnly, Secure and encrypted in production.
+- **Still to do:** an SMS fallback for codes (needs an Ethiopian SMS provider, planned for M12) and the independent review in M13.
 
 ### Freezing (as built in M7)
 - **Rules:** the gym switch `freeze.enabled` plus each plan's `freeze_allowed`, `max_freeze_days` (total days per membership) and `max_freezes` (count), read from the membership's plan snapshot. A paid membership that is running or about to start can be frozen; one freeze is open at a time; it starts today or later, on or before the last day.

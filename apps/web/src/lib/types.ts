@@ -33,6 +33,7 @@ export type Me = {
     account_type: "owner" | "staff" | "member";
     telegram_linked: boolean;
   };
+  security: { two_factor_enabled: boolean; two_factor_required: boolean };
   organization: { id: string; name: string; slug: string; currency: string };
   branches: Branch[];
   abilities: {
@@ -60,6 +61,7 @@ export type Settings = {
   "tax.rate": number;
   "tax.prices_inclusive": boolean;
   "freeze.enabled": boolean;
+  "security.require_two_factor": boolean;
   "lockers.enabled": boolean;
   "chapa.enabled": boolean;
 };

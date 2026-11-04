@@ -41,7 +41,7 @@ class PasswordResetController extends Controller
             'organization' => ['required', 'string', 'max:63'],
             'phone' => ['required', 'string', 'max:20'],
             'code' => ['required', 'digits:6'],
-            'password' => ['required', 'confirmed', Password::min(8)],
+            'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
         $user = $this->findUser($request);

@@ -7,16 +7,30 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
+use Laravel\Fortify\Fortify;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->app->scoped(Tenant::class);
+        // Fortify only supplies the two-step login pieces; our controllers own the routes.
+        Fortify::ignoreRoutes();
     }
 
     public function boot(): void
     {
+        // In production, new passwords are also checked against known data breaches
+        // (Have I Been Pwned; only a hash prefix leaves the server).
+        Password::defaults(fn () => app()->isProduction() ? Password::min(8)->uncompromised() : Password::min(8));
+
+        // Two-step codes: few tries per pending login, so six digits can't be guessed.
+        RateLimiter::for('two-factor', fn (Request $request) => [
+            Limit::perMinutes(5, 5)->by('2fa:'.($request->hasSession() ? $request->session()->getId() : '').'|'.$request->input('challenge')),
+            Limit::perHour(30)->by('2fa-ip:'.$request->ip()),
+        ]);
+
         // Sending a code costs a Telegram message, so it is tightly limited.
         RateLimiter::for('otp', fn (Request $request) => [
             Limit::perMinutes(10, 3)->by('otp-send:'.$this->otpSubject($request)),

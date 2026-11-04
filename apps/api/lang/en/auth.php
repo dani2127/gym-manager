@@ -28,4 +28,9 @@ return [
     'role_not_assignable' => 'Only the owner can assign the manager role.',
 
     'telegram_link_first' => 'Connect Telegram first: tap the button and press Start in the bot.',
+    'two_factor_expired' => 'The sign-in took too long. Enter your phone and password again.',
+    'two_factor_invalid' => 'That code is not right. Check the code in your authenticator app and try again.',
+    'two_factor_already_on' => 'Two-step login is already on.',
+    'two_factor_required_cannot_disable' => 'Your gym requires two-step login for owners and managers, so it can\'t be turned off.',
+    'two_factor_setup_required' => 'Your gym requires two-step login. Turn it on in My account to continue.',
 ];

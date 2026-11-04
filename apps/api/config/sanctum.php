@@ -50,7 +50,8 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Bearer tokens (future mobile apps) expire; browser sessions follow SESSION_LIFETIME.
+    'expiration' => env('SANCTUM_TOKEN_EXPIRATION', 60 * 24 * 30),
 
     /*
     |--------------------------------------------------------------------------
